@@ -24,6 +24,7 @@ namespace crpropa {
 class NuclearDecay: public Module {
 private:
 	double limit;
+	double thinning;
 	bool haveElectrons;
 	bool havePhotons;
 	bool haveNeutrinos;
@@ -36,7 +37,7 @@ private:
 	std::vector<std::vector<DecayMode> > decayTable; // decayTable[Z * 31 + N] = vector<DecayMode>
 
 public:
-	NuclearDecay(bool electrons = false, bool photons = false, bool neutrinos = false, double limit = 0.1);
+	NuclearDecay(bool electrons = false, bool photons = false, bool neutrinos = false, double thinning = .0, double hyperSampling = 0., double limit = 0.1);
 	void setLimit(double limit);
 	void setHaveElectrons(bool b);
 	void setHavePhotons(bool b);
