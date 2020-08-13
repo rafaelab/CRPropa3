@@ -10,11 +10,12 @@
 
 namespace crpropa {
 
-ElectronPairProduction::ElectronPairProduction(PhotonField photonField,
-		bool haveElectrons, double limit) {
+ElectronPairProduction::ElectronPairProduction(PhotonField photonField, bool haveElectrons, double thinning, int nSamples, double limit) {
 	setPhotonField(photonField);
 	this->haveElectrons = haveElectrons;
 	this->limit = limit;
+	this->thinning = thinning;
+	this->maximumSamples = nSamples;
 }
 
 void ElectronPairProduction::setPhotonField(PhotonField photonField) {
@@ -102,8 +103,10 @@ void ElectronPairProduction::process(Candidate *c) const {
 	if (not (isNucleus(id)))
 		return; // only nuclei
 
-	double lf = c->current.getLorentzFactor();
 	double z = c->getRedshift();
+	double E0 = c->current.getEnergy();
+	double w0 = c->getWeight();
+	double lf = c->current.getLorentzFactor();
 	double losslen = lossLength(id, lf, z);  // energy loss length
 	if (losslen >= std::numeric_limits<double>::max())
 		return;
@@ -118,10 +121,14 @@ void ElectronPairProduction::process(Candidate *c) const {
 		Random &random = Random::instance();
 
 		// draw pairs as long as their energy is smaller than the pair production energy loss
+		double dE0 = dE;
+		std::vector<double> energies;
+		int counter = 0;
 		while (dE > 0) {
 			size_t j = random.randBin(tabSpectrum[i]);
 			double Ee = pow(10, 6.95 + (j + random.rand()) * 0.1) * eV;
 			double Epair = 2 * Ee; // NOTE: electron and positron in general don't have same lab frame energy, but averaged over many draws the result is consistent
+			
 			// if the remaining energy is not sufficient check for random accepting
 			if (Epair > dE)
 				if (random.rand() > (dE / Epair))
@@ -130,9 +137,42 @@ void ElectronPairProduction::process(Candidate *c) const {
 			// create pair and repeat with remaining energy
 			dE -= Epair;
 			Vector3d pos = random.randomInterpolatedPosition(c->previous.getPosition(), c->current.getPosition());
-			c->addSecondary( 11, Ee, pos);
-			c->addSecondary(-11, Ee, pos);
+			
+
+			// only activate the "per-step" sampling if maximumSamples is explicitly set.
+			if (maximumSamples > 0) {
+				if (counter >= maximumSamples) 
+					break;			
+			}
+
+			// store energies in array
+			energies.push_back(Epair);
+			
+			counter++; 
 		}
+
+		// while loop before gave total energy which is just a fraction of the required
+		double w1 = 1;
+		if (maximumSamples > 0 && dE > 0)
+			w1 = 1. / (1. - dE / dE0); 
+
+		// loop over sampled photons and attribute weights accordingly
+		for (int i = 0; i < energies.size(); i++) {
+			double Enew = energies[i] / 2.;
+			double f = Enew / (E0 - dE0);
+			double w = w0 * w1 / pow(f, thinning);
+
+			// thinning procedure: accepts only a few random secondaries
+			if (random.rand() < pow(f, thinning)) {
+				Vector3d pos = random.randomInterpolatedPosition(c->previous.getPosition(), c->current.getPosition());
+				c->addSecondary( 11, Enew, pos, w);
+			}
+			if (random.rand() < pow(1 - f, thinning)) {
+				Vector3d pos = random.randomInterpolatedPosition(c->previous.getPosition(), c->current.getPosition());
+				c->addSecondary(-11, Enew, pos, w);
+			}
+		}
+
 	}
 
 	c->current.setLorentzFactor(lf * (1 - loss));

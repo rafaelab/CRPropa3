@@ -28,10 +28,11 @@ private:
 	std::vector<std::vector<double> > tabSpectrum; /*< electron/positron cdf(Ee|log10(gamma)) for log10(Ee/eV)=7-24 in 170 steps and log10(gamma)=6-13 in 70 steps and*/
 	double limit; ///< fraction of energy loss length to limit the next step
 	bool haveElectrons;
+	double thinning; ///< thinning parameter for weighted-sampling (maximum 1, minimum 0)
+	int maximumSamples; ///< maximum number of samples of synchrotron photons (break condition; defaults to 100; 0 or <0 means no sampling)
 
 public:
-	ElectronPairProduction(PhotonField photonField = CMB, bool haveElectrons =
-			false, double limit = 0.1);
+	ElectronPairProduction(PhotonField photonField = CMB, bool haveElectrons = false, double thinning = 0, int nSamples = 0, double limit = 0.1);
 
 	void setPhotonField(PhotonField photonField);
 	void setHaveElectrons(bool haveElectrons);

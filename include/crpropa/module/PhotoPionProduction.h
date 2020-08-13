@@ -36,6 +36,7 @@ protected:
 	bool haveElectrons;
 	bool haveAntiNucleons;
 	bool haveRedshiftDependence;
+	double thinning;
 
 public:
 	PhotoPionProduction(
@@ -44,6 +45,7 @@ public:
 		bool neutrinos = false,
 		bool electrons = false,
 		bool antiNucleons = false,
+		double thinning = 0.,
 		double limit = 0.1,
 		bool haveRedshiftDependence = false);
 	void setPhotonField(PhotonField photonField);

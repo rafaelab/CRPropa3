@@ -22,6 +22,7 @@ private:
 	PhotonField photonField;
 	double limit; // fraction of mean free path for limiting the next step
 	bool havePhotons;
+	double thinning;
 
 	struct Branch {
 		int channel; // number of emitted (n, p, H2, H3, He3, He4)
@@ -42,7 +43,7 @@ private:
 	static const size_t nlg; // number of Lorentz-factor steps
 
 public:
-	PhotoDisintegration(PhotonField photonField = CMB, bool havePhotons = false, double limit = 0.1);
+	PhotoDisintegration(PhotonField photonField = CMB, bool havePhotons = false, double thinning = 0., double limit = 0.1);
 
 	void setPhotonField(PhotonField photonField);
 	void setHavePhotons(bool havePhotons);

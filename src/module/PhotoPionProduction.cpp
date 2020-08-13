@@ -15,13 +15,14 @@
 
 namespace crpropa {
 
-PhotoPionProduction::PhotoPionProduction(PhotonField field, bool photons, bool neutrinos, bool electrons, bool antiNucleons, double l, bool redshift) {
+PhotoPionProduction::PhotoPionProduction(PhotonField field, bool photons, bool neutrinos, bool electrons, bool antiNucleons, double thin, double l, bool redshift) {
 	havePhotons = photons;
 	haveNeutrinos = neutrinos;
 	haveElectrons = electrons;
 	haveAntiNucleons = antiNucleons;
 	haveRedshiftDependence = redshift;
 	limit = l;
+	thinning = thin;
 	setPhotonField(field);
 }
 
@@ -237,6 +238,8 @@ void PhotoPionProduction::performInteraction(Candidate *candidate, bool onProton
 		sophiaevent_(nature, Ein, eps, outputEnergy, outPartID, nParticles);
 	}
 
+	double w0 = candidate->getWeight();
+
 	Random &random = Random::instance();
 	Vector3d pos = random.randomInterpolatedPosition(candidate->previous.getPosition(), candidate->current.getPosition());
 	std::vector<int> pnType;  // filled with either 13 (proton) or 14 (neutron)
@@ -267,16 +270,31 @@ void PhotoPionProduction::performInteraction(Candidate *candidate, bool onProton
 				}
 			break;
 		case 1: // photon
-			if (havePhotons)
-				candidate->addSecondary(22, Eout, pos);
+			if (havePhotons) {
+				double f = Eout / E;
+				if (random.rand() < pow(f, thinning)) {
+					double w = w0 / pow(f, thinning);
+					candidate->addSecondary(22, Eout, pos, w);
+				}
+			}
 			break;
 		case 2: // positron
-			if (haveElectrons)
-				candidate->addSecondary(sign * -11, Eout, pos);
+			if (haveElectrons) {
+				double f = Eout / E;
+				if (random.rand() < pow(f, thinning)) {
+					double w = w0 / pow(f, thinning);
+					candidate->addSecondary(sign * -11, Eout, pos, w);
+				}
+			}
 			break;
 		case 3: // electron
-			if (haveElectrons)
-				candidate->addSecondary(sign * 11, Eout, pos);
+			if (haveElectrons) {
+				double f = Eout / E;
+				if (random.rand() < pow(f, thinning)) {
+					double w = w0 / pow(f, thinning);
+					candidate->addSecondary(sign * 11, Eout, pos, w);
+				}
+			}
 			break;
 		case 15: // nu_e
 			if (haveNeutrinos)

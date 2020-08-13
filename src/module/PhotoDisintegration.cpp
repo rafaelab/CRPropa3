@@ -17,8 +17,9 @@ const double PhotoDisintegration::lgmin = 6;  // minimum log10(Lorentz-factor)
 const double PhotoDisintegration::lgmax = 14; // maximum log10(Lorentz-factor)
 const size_t PhotoDisintegration::nlg = 201;  // number of Lorentz-factor steps
 
-PhotoDisintegration::PhotoDisintegration(PhotonField f, bool havePhotons, double limit) {
+PhotoDisintegration::PhotoDisintegration(PhotonField f, bool havePhotons, double thinning, double limit) {
 	setPhotonField(f);
+	this->thinning = thinning;
 	this->havePhotons = havePhotons;
 	this->limit = limit;
 }
@@ -250,8 +251,11 @@ void PhotoDisintegration::performInteraction(Candidate *candidate, int channel) 
 	if (not havePhotons)
 		return;
 
-	// create photons
+	double w0 = candidate->getWeight();
 	double z = candidate->getRedshift();
+	double E0 = candidate->current.getEnergy() * (1 + z);
+
+	// create photons
 	double lg = log10(candidate->current.getLorentzFactor() * (1 + z));
 	double lf = candidate->current.getLorentzFactor();
 
@@ -266,7 +270,12 @@ void PhotoDisintegration::performInteraction(Candidate *candidate, int channel) 
 		// boost to lab frame
 		double cosTheta = 2 * random.rand() - 1;
 		double E = pdPhoton[key][i].energy * lf * (1 - cosTheta);
-		candidate->addSecondary(22, E, pos);
+
+		double f = E / E0;
+		if (random.rand() < pow(f, thinning)) {
+			double w = w0 / pow(f, thinning);
+			candidate->addSecondary(22, E, pos, w);
+		}
 	}
 }
 
