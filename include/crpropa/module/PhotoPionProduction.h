@@ -31,12 +31,12 @@ protected:
 	std::vector<double> tabProtonRate; ///< interaction rate in [1/m] for protons
 	std::vector<double> tabNeutronRate; ///< interaction rate in [1/m] for neutrons
 	double limit; ///< fraction of mean free path to limit the next step
+	double thinning; ///< thinning parameter
 	bool havePhotons;
 	bool haveNeutrinos;
 	bool haveElectrons;
 	bool haveAntiNucleons;
 	bool haveRedshiftDependence;
-	double thinning;
 
 public:
 	PhotoPionProduction(
@@ -45,7 +45,7 @@ public:
 		bool neutrinos = false,
 		bool electrons = false,
 		bool antiNucleons = false,
-		double thinning = 0.,
+		double thinning = 1,
 		double limit = 0.1,
 		bool haveRedshiftDependence = false);
 	void setPhotonField(PhotonField photonField);

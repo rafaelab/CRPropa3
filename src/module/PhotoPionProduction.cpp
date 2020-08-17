@@ -15,14 +15,13 @@
 
 namespace crpropa {
 
-PhotoPionProduction::PhotoPionProduction(PhotonField field, bool photons, bool neutrinos, bool electrons, bool antiNucleons, double thin, double l, bool redshift) {
+PhotoPionProduction::PhotoPionProduction(PhotonField field, bool photons, bool neutrinos, bool electrons, bool antiNucleons, double thinning, double l, bool redshift) {
 	havePhotons = photons;
 	haveNeutrinos = neutrinos;
 	haveElectrons = electrons;
 	haveAntiNucleons = antiNucleons;
 	haveRedshiftDependence = redshift;
 	limit = l;
-	thinning = thin;
 	setPhotonField(field);
 }
 
@@ -212,6 +211,7 @@ void PhotoPionProduction::performInteraction(Candidate *candidate, bool onProton
 	double E = candidate->current.getEnergy();
 	double EpA = E / A;
 	double z = candidate->getRedshift();
+	double w0 = candidate->getWeight();
 
 	// SOPHIA simulates interactions only for protons / neutrons.
 	// For anti-protons / neutrons assume charge symmetry and change all
@@ -237,8 +237,6 @@ void PhotoPionProduction::performInteraction(Candidate *candidate, bool onProton
 	{
 		sophiaevent_(nature, Ein, eps, outputEnergy, outPartID, nParticles);
 	}
-
-	double w0 = candidate->getWeight();
 
 	Random &random = Random::instance();
 	Vector3d pos = random.randomInterpolatedPosition(candidate->previous.getPosition(), candidate->current.getPosition());
@@ -272,7 +270,7 @@ void PhotoPionProduction::performInteraction(Candidate *candidate, bool onProton
 		case 1: // photon
 			if (havePhotons) {
 				double f = Eout / E;
-				if (random.rand() < pow(f, thinning)) {
+				if (random.rand() < f) {
 					double w = w0 / pow(f, thinning);
 					candidate->addSecondary(22, Eout, pos, w);
 				}
@@ -281,19 +279,19 @@ void PhotoPionProduction::performInteraction(Candidate *candidate, bool onProton
 		case 2: // positron
 			if (haveElectrons) {
 				double f = Eout / E;
-				if (random.rand() < pow(f, thinning)) {
+				if (random.rand() < f) {
 					double w = w0 / pow(f, thinning);
 					candidate->addSecondary(sign * -11, Eout, pos, w);
-				}
+				} 
 			}
 			break;
 		case 3: // electron
 			if (haveElectrons) {
 				double f = Eout / E;
-				if (random.rand() < pow(f, thinning)) {
+				if (random.rand() < f) {
 					double w = w0 / pow(f, thinning);
 					candidate->addSecondary(sign * 11, Eout, pos, w);
-				}
+				} 
 			}
 			break;
 		case 15: // nu_e
