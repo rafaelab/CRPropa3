@@ -12,26 +12,34 @@ namespace crpropa {
 
 ElectronPairProduction::ElectronPairProduction(PhotonField photonField, bool haveElectrons, double thinning, int nSamples, double limit) {
 	setPhotonField(photonField);
-	this->haveElectrons = haveElectrons;
-	this->limit = limit;
-	this->thinning = thinning;
-	this->maximumSamples = nSamples;
+	setHaveElectrons(haveElectrons);
+	setLimit(limit);
+	setThinning(thinning);
+	setMaximumSamples(nSamples);
 }
 
-void ElectronPairProduction::setPhotonField(PhotonField photonField) {
-	this->photonField = photonField;
+void ElectronPairProduction::setPhotonField(PhotonField field) {
+	photonField = field;
 	std::string fname = photonFieldName(photonField);
 	setDescription("ElectronPairProduction: " + fname);
 	initRate(getDataPath("ElectronPairProduction/lossrate_" + fname + ".txt"));
 	initSpectrum(getDataPath("ElectronPairProduction/spectrum_" + fname.substr(0,3) + ".txt"));
 }
 
-void ElectronPairProduction::setHaveElectrons(bool haveElectrons) {
-	this->haveElectrons = haveElectrons;
+void ElectronPairProduction::setHaveElectrons(bool b) {
+	haveElectrons = b;
 }
 
-void ElectronPairProduction::setLimit(double limit) {
-	this->limit = limit;
+void ElectronPairProduction::setLimit(double lim) {
+	limit = lim;
+}
+
+void ElectronPairProduction::setThinning(double thin) {
+	thinning = thin;
+}
+
+void ElectronPairProduction::setMaximumSamples(int nSamples) {
+	maximumSamples = nSamples;
 }
 
 void ElectronPairProduction::initRate(std::string filename) {
@@ -136,8 +144,6 @@ void ElectronPairProduction::process(Candidate *c) const {
 
 			// create pair and repeat with remaining energy
 			dE -= Epair;
-			Vector3d pos = random.randomInterpolatedPosition(c->previous.getPosition(), c->current.getPosition());
-			
 
 			// only activate the "per-step" sampling if maximumSamples is explicitly set.
 			if (maximumSamples > 0) {

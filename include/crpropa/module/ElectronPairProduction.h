@@ -37,6 +37,8 @@ public:
 	void setPhotonField(PhotonField photonField);
 	void setHaveElectrons(bool haveElectrons);
 	void setLimit(double limit);
+	void setThinning(double thinning);
+	void setMaximumSamples(int nSamples);
 
 	void initRate(std::string filename);
 	void initSpectrum(std::string filename);
