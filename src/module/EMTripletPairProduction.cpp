@@ -10,31 +10,36 @@ namespace crpropa {
 
 static const double mec2 = mass_electron * c_squared;
 
-EMTripletPairProduction::EMTripletPairProduction(PhotonField photonField, bool haveElectrons, double thinning, double limit) {
+EMTripletPairProduction::EMTripletPairProduction(PhotonField photonField, bool haveElectrons, double thinning, double sampling, double limit) {
 	setPhotonField(photonField);
 	setHaveElectrons(haveElectrons);
 	setLimit(limit);
 	setThinning(thinning);
+	setSampling(sampling);
 }
 
-void EMTripletPairProduction::setPhotonField(PhotonField photonField) {
-	this->photonField = photonField;
+void EMTripletPairProduction::setPhotonField(PhotonField field) {
+	photonField = field;
 	std::string fname = photonFieldName(photonField);
 	setDescription("EMTripletPairProduction: " + fname);
 	initRate(getDataPath("EMTripletPairProduction/rate_" + fname + ".txt"));
 	initCumulativeRate(getDataPath("EMTripletPairProduction/cdf_" + fname + ".txt"));
 }
 
-void EMTripletPairProduction::setHaveElectrons(bool haveElectrons) {
-	this->haveElectrons = haveElectrons;
+void EMTripletPairProduction::setHaveElectrons(bool b) {
+	haveElectrons = b;
 }
 
-void EMTripletPairProduction::setLimit(double limit) {
-	this->limit = limit;
+void EMTripletPairProduction::setLimit(double l) {
+	limit = l;
 }
 
-void EMTripletPairProduction::setThinning(double thinning) {
-	this->thinning = thinning;
+void EMTripletPairProduction::setThinning(double t) {
+	thinning = t;
+}
+
+void EMTripletPairProduction::setSampling(double s) {
+	sampling = s;
 }
 
 void EMTripletPairProduction::initRate(std::string filename) {
@@ -132,11 +137,17 @@ void EMTripletPairProduction::performInteraction(Candidate *candidate) const {
 		Vector3d pos = random.randomInterpolatedPosition(candidate->previous.getPosition(), candidate->current.getPosition());
 		if (random.rand() < pow(1 - f, thinning)) {
 			double w = w0 / pow(1 - f, thinning);
-			candidate->addSecondary(11, Epp / (1 + z), pos, w);
+			if (sampling == 1)
+				candidate->addSecondary(11, Epp / (1 + z), pos, w);
+			else
+				candidate->addSecondarySample(11, Epp / (1 + z), pos, w, sampling);
 		}
 		if (random.rand() < pow(f, thinning)) {
 			double w = w0 / pow(f, thinning);
-			candidate->addSecondary(-11, Epp / (1 + z), pos, w);
+			if (sampling == 1)
+				candidate->addSecondary(-11, Epp / (1 + z), pos, w);
+			else
+				candidate->addSecondarySample(-11, Epp / (1 + z), pos, w, sampling);
 		}
 	}
 	// Update the primary particle energy.

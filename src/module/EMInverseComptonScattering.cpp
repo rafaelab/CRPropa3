@@ -11,31 +11,36 @@ namespace crpropa {
 
 static const double mec2 = mass_electron * c_squared;
 
-EMInverseComptonScattering::EMInverseComptonScattering(PhotonField photonField, bool havePhotons, double thinning, double limit) {
+EMInverseComptonScattering::EMInverseComptonScattering(PhotonField photonField, bool havePhotons, double thinning, double sampling, double limit) {
 	setPhotonField(photonField);
 	setHavePhotons(havePhotons);
 	setLimit(limit);
 	setThinning(thinning);
+	setSampling(sampling);
 }
 
-void EMInverseComptonScattering::setPhotonField(PhotonField photonField) {
-	this->photonField = photonField;
+void EMInverseComptonScattering::setPhotonField(PhotonField field) {
+	photonField = field;
 	std::string fname = photonFieldName(photonField);
 	setDescription("EMInverseComptonScattering: " + fname);
 	initRate(getDataPath("EMInverseComptonScattering/rate_" + fname + ".txt"));
 	initCumulativeRate(getDataPath("EMInverseComptonScattering/cdf_" + fname + ".txt"));
 }
 
-void EMInverseComptonScattering::setHavePhotons(bool havePhotons) {
-	this->havePhotons = havePhotons;
+void EMInverseComptonScattering::setHavePhotons(bool b) {
+	havePhotons = b;
 }
 
-void EMInverseComptonScattering::setLimit(double limit) {
-	this->limit = limit;
+void EMInverseComptonScattering::setLimit(double l) {
+	limit = l;
 }
 
-void EMInverseComptonScattering::setThinning(double thinning) {
-	this->thinning = thinning;
+void EMInverseComptonScattering::setThinning(double t) {
+	thinning = t;
+}
+
+void EMInverseComptonScattering::setSampling(double s) {
+	sampling = s;
 }
 
 void EMInverseComptonScattering::initRate(std::string filename) {
@@ -196,7 +201,10 @@ void EMInverseComptonScattering::performInteraction(Candidate *candidate) const 
 		if (random.rand() < pow(1 - f, thinning)) {
 			double w = w0 / pow(1 - f, thinning);
 			Vector3d pos = random.randomInterpolatedPosition(candidate->previous.getPosition(), candidate->current.getPosition());
-			candidate->addSecondary(22, Esecondary / (1 + z), pos, w);
+			if (sampling == 1)
+				candidate->addSecondary(22, Esecondary / (1 + z), pos, w);
+			else
+				candidate->addSecondarySample(22, Esecondary / (1 + z), pos, w, sampling);
 		}
 	}
 

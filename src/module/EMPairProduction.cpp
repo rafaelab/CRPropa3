@@ -11,31 +11,36 @@ namespace crpropa {
 
 static const double mec2 = mass_electron * c_squared;
 
-EMPairProduction::EMPairProduction(PhotonField photonField, bool haveElectrons, double thinning, double limit) {
+EMPairProduction::EMPairProduction(PhotonField photonField, bool haveElectrons, double thinning, double sampling, double limit) {
 	setPhotonField(photonField);
 	setThinning(thinning);
+	setSampling(sampling);
 	setLimit(limit);
 	setHaveElectrons(haveElectrons);
 }
 
-void EMPairProduction::setPhotonField(PhotonField photonField) {
-	this->photonField = photonField;
+void EMPairProduction::setPhotonField(PhotonField field) {
+	photonField = field;
 	std::string fname = photonFieldName(photonField);
 	setDescription("EMPairProduction: " + fname);
 	initRate(getDataPath("EMPairProduction/rate_" + fname + ".txt"));
 	initCumulativeRate(getDataPath("EMPairProduction/cdf_" + fname + ".txt"));
 }
 
-void EMPairProduction::setHaveElectrons(bool haveElectrons) {
-	this->haveElectrons = haveElectrons;
+void EMPairProduction::setHaveElectrons(bool b) {
+	haveElectrons = b;
 }
 
-void EMPairProduction::setLimit(double limit) {
-	this->limit = limit;
+void EMPairProduction::setLimit(double l) {
+	limit = l;
 }
 
-void EMPairProduction::setThinning(double thinning) {
-	this->thinning = thinning;
+void EMPairProduction::setThinning(double t) {
+	thinning = t;
+}
+
+void EMPairProduction::setSampling(double s) {
+	sampling = s;
 }
 
 void EMPairProduction::initRate(std::string filename) {
@@ -205,11 +210,17 @@ void EMPairProduction::performInteraction(Candidate *candidate) const {
 	// apply sampling
 	if (random.rand() < pow(f, thinning)) {
 		double w = w0 / pow(f, thinning);
-		candidate->addSecondary(11, Ep / (1 + z), pos, w);
+		if (sampling == 1)
+			candidate->addSecondary(11, Ee / (1 + z), pos, w);
+		else
+			candidate->addSecondarySample(11, Ee / (1 + z), pos, w, sampling);
 	}
-	if (random.rand() < pow(1 - f, thinning)){
+	if (random.rand() < pow(1 - f, thinning)) {
 		double w = w0 / pow(1 - f, thinning);
-		candidate->addSecondary(-11, Ee / (1 + z), pos, w);	
+		if (sampling == 1)
+			candidate->addSecondary(-11, Ee / (1 + z), pos, w);
+		else
+			candidate->addSecondarySample(-11, Ee / (1 + z), pos, w, sampling);
 	}
 }
 

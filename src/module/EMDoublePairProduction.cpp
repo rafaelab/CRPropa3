@@ -8,30 +8,35 @@
 
 namespace crpropa {
 
-EMDoublePairProduction::EMDoublePairProduction(PhotonField photonField, bool haveElectrons, double thinning, double limit) {
+EMDoublePairProduction::EMDoublePairProduction(PhotonField photonField, bool haveElectrons, double thinning, double sampling, double limit) {
 	setPhotonField(photonField);
 	setHaveElectrons(haveElectrons);
 	setLimit(limit);
 	setThinning(thinning);
+	setSampling(sampling);
 }
 
-void EMDoublePairProduction::setPhotonField(PhotonField photonField) {
-	this->photonField = photonField;
+void EMDoublePairProduction::setPhotonField(PhotonField field) {
+	photonField = field;
 	std::string fname = photonFieldName(photonField);
 	setDescription("EMDoublePairProduction: " + fname);
 	initRate(getDataPath("EMDoublePairProduction/rate_" + fname + ".txt"));
 }
 
-void EMDoublePairProduction::setHaveElectrons(bool haveElectrons) {
-	this->haveElectrons = haveElectrons;
+void EMDoublePairProduction::setHaveElectrons(bool b) {
+	haveElectrons = b;
 }
 
-void EMDoublePairProduction::setLimit(double limit) {
-	this->limit = limit;
+void EMDoublePairProduction::setLimit(double l) {
+	limit = l;
 }
 
-void EMDoublePairProduction::setThinning(double thinning) {
-	this->thinning = thinning;
+void EMDoublePairProduction::setThinning(double t) {
+	thinning = t;
+}
+
+void EMDoublePairProduction::setSampling(double s) {
+	sampling = s;
 }
 
 void EMDoublePairProduction::initRate(std::string filename) {
