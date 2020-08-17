@@ -41,7 +41,7 @@ public:
 		PhotonField photonField = CMB, //!< target photon background
 		bool haveElectrons = false,    //!< switch to create secondary electron pair
 		double thinning = 0,           //!< weighted sampling of secondaries (0: all particles are tracked; 1: maximum thinning)
-		double sampling = 1,           //!< random uniform sampling (1: all secondaries are added)
+		double sampling = 1.,           //!< random uniform sampling (1: all secondaries are added)
 		double limit = 0.1             //!< step size limit as fraction of mean free path
 		);
 
