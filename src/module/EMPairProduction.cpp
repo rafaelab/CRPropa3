@@ -218,7 +218,7 @@ void EMPairProduction::performInteraction(Candidate *candidate) const {
 	if (random.rand() < pow(1 - f, thinning)) {
 		double w = w0 / pow(1 - f, thinning);
 		if (sampling == 1)
-			candidate->addSecondary(-11, Ee / (1 + z), pos, w);
+			candidate->addSecondary(-11, Ep / (1 + z), pos, w);
 		else
 			candidate->addSecondarySample(-11, Ee / (1 + z), pos, w, sampling);
 	}
