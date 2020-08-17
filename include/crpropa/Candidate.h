@@ -5,6 +5,7 @@
 #include "crpropa/Referenced.h"
 #include "crpropa/AssocVector.h"
 #include "crpropa/Variant.h"
+#include "crpropa/Random.h"
 
 #include <vector>
 #include <map>
@@ -120,6 +121,7 @@ public:
 	inline void addSecondary(ref_ptr<Candidate> c) { addSecondary(c.get()); };
 	void addSecondary(int id, double energy, double weight = 1);
 	void addSecondary(int id, double energy, Vector3d position, double weight = 1);
+	void addSecondarySample(int id, double energy, Vector3d position, double weight = 1, double sampling = 0);
 	void clearSecondaries();
 
 	std::string getDescription() const;

@@ -156,6 +156,12 @@ void Candidate::addSecondary(int id, double energy, Vector3d position, double we
 	secondaries.push_back(secondary);
 }
 
+void Candidate::addSecondarySample(int id, double energy, Vector3d position, double weight, double sampling) {
+	Random &random = Random::instance();
+	if (random.rand() < sampling)
+		addSecondary(id, energy, position, weight / sampling);
+}
+
 void Candidate::clearSecondaries() {
 	secondaries.clear();
 }
