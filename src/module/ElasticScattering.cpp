@@ -19,8 +19,9 @@ const double ElasticScattering::epsmin = log10(2 * eV) + 3;    // log10 minimum 
 const double ElasticScattering::epsmax = log10(2 * eV) + 8.12; // log10 maximum photon background energy in nucleus rest frame for elastic scattering
 const size_t ElasticScattering::neps = 513; // number of photon background energies in nucleus rest frame
 
-ElasticScattering::ElasticScattering(PhotonField f) {
+ElasticScattering::ElasticScattering(PhotonField f, double thin) {
 	setPhotonField(f);
+	setThinning(thin);
 }
 
 void ElasticScattering::setPhotonField(PhotonField photonField) {
@@ -29,6 +30,10 @@ void ElasticScattering::setPhotonField(PhotonField photonField) {
 	setDescription("ElasticScattering: " + fname);
 	initRate(getDataPath("ElasticScattering/rate_" + fname.substr(0,3) + ".txt"));
 	initCDF(getDataPath("ElasticScattering/cdf_" + fname.substr(0,3) + ".txt"));
+}
+
+void ElasticScattering::setThinning(double t) {
+	thinning = t;
 }
 
 void ElasticScattering::initRate(std::string filename) {
@@ -82,6 +87,8 @@ void ElasticScattering::initCDF(std::string filename) {
 void ElasticScattering::process(Candidate *candidate) const {
 	int id = candidate->current.getId();
 	double z = candidate->getRedshift();
+	double w0 = candidate->getWeight();
+	double E0 = candidate->current.getEnergy() * (1 + z);
 
 	if (not isNucleus(id))
 		return;
@@ -116,9 +123,13 @@ void ElasticScattering::process(Candidate *candidate) const {
 		// boost to lab frame
 		double cosTheta = 2 * random.rand() - 1;
 		double E = eps * candidate->current.getLorentzFactor() * (1. - cosTheta);
+		double f = E / E0;
 
 		Vector3d pos = random.randomInterpolatedPosition(candidate->previous.getPosition(), candidate->current.getPosition());
-		candidate->addSecondary(22, E, pos);
+		if (random.rand() < pow(f, thinning)) {
+			double w = w0 / pow(f, thinning);
+			candidate->addSecondary(22, E, pos, w);
+		}
 
 		// repeat with remaining step
 		step -= randDist;

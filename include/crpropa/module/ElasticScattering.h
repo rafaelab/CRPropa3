@@ -26,8 +26,11 @@ private:
     static const double epsmax; // maximum log10(eps / J)
     static const size_t neps;   // number of eps steps
 
+    double thinning;   // thinning of secondary photons
+
 public:
-    ElasticScattering(PhotonField photonField = CMB);
+    ElasticScattering(PhotonField photonField = CMB, double thinning = 0.);
+    void setThinning(double t);
     void initRate(std::string filename);
     void initCDF(std::string filename);
     void setPhotonField(PhotonField photonField);
