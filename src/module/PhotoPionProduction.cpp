@@ -15,20 +15,23 @@
 
 namespace crpropa {
 
-PhotoPionProduction::PhotoPionProduction(PhotonField field, bool photons, bool neutrinos, bool electrons, bool antiNucleons, double thinning, double l, bool redshift) {
-	havePhotons = photons;
-	haveNeutrinos = neutrinos;
-	haveElectrons = electrons;
-	haveAntiNucleons = antiNucleons;
-	haveRedshiftDependence = redshift;
-	limit = l;
+PhotoPionProduction::PhotoPionProduction(PhotonField field, bool photons, bool neutrinos, bool electrons, bool antiNucleons, double thinPhotons, double thinNeutrinos, double thinElectrons, double l, bool redshift) {
+	setHavePhotons(photons);
+	setHaveNeutrinos(neutrinos);
+	setHaveElectrons(electrons);
+	setHaveAntiNucleons(antiNucleons);
 	setPhotonField(field);
+	setHaveRedshiftDependence(redshift);
+	setLimit(l);
+	setThinningElectrons(thinElectrons);
+	setThinningPhotons(thinPhotons);
+	setThinningNeutrinos(thinNeutrinos);
 }
 
 void PhotoPionProduction::setPhotonField(PhotonField field) {
-	photonField = field;
+	this->photonField = field;
 	if (haveRedshiftDependence) {
-		if (field==CMB){
+		if (field == CMB){
 			std::cout << "PhotoPionProduction: tabulated redshift dependence not needed for CMB, switching off" << std::endl;
 			haveRedshiftDependence = false;
 		}
@@ -70,6 +73,18 @@ void PhotoPionProduction::setHaveRedshiftDependence(bool b) {
 
 void PhotoPionProduction::setLimit(double l) {
 	limit = l;
+}
+
+void PhotoPionProduction::setThinningElectrons(double t) {
+	thinningElectrons = t;
+}
+
+void PhotoPionProduction::setThinningPhotons(double t) {
+	thinningPhotons = t;
+}
+
+void PhotoPionProduction::setThinningNeutrinos(double t) {
+	thinningNeutrinos = t;
 }
 
 void PhotoPionProduction::initRate(std::string filename) {
@@ -212,6 +227,7 @@ void PhotoPionProduction::performInteraction(Candidate *candidate, bool onProton
 	double EpA = E / A;
 	double z = candidate->getRedshift();
 	double w0 = candidate->getWeight();
+	double E0 = E * (1 + z);
 
 	// SOPHIA simulates interactions only for protons / neutrons.
 	// For anti-protons / neutrons assume charge symmetry and change all
@@ -270,8 +286,8 @@ void PhotoPionProduction::performInteraction(Candidate *candidate, bool onProton
 		case 1: // photon
 			if (havePhotons) {
 				double f = Eout / E;
-				if (random.rand() < f) {
-					double w = w0 / pow(f, thinning);
+				if (random.rand() < pow(f, thinningPhotons)) {
+					double w = w0 / pow(f, thinningPhotons);
 					candidate->addSecondary(22, Eout, pos, w);
 				}
 			}
@@ -279,8 +295,8 @@ void PhotoPionProduction::performInteraction(Candidate *candidate, bool onProton
 		case 2: // positron
 			if (haveElectrons) {
 				double f = Eout / E;
-				if (random.rand() < f) {
-					double w = w0 / pow(f, thinning);
+				if (random.rand() < pow(f, thinningElectrons)) {
+					double w = w0 / pow(f, thinningElectrons);
 					candidate->addSecondary(sign * -11, Eout, pos, w);
 				} 
 			}
@@ -288,8 +304,8 @@ void PhotoPionProduction::performInteraction(Candidate *candidate, bool onProton
 		case 3: // electron
 			if (haveElectrons) {
 				double f = Eout / E;
-				if (random.rand() < f) {
-					double w = w0 / pow(f, thinning);
+				if (random.rand() < pow(f, thinningElectrons)) {
+					double w = w0 / pow(f, thinningElectrons);
 					candidate->addSecondary(sign * 11, Eout, pos, w);
 				} 
 			}
@@ -297,8 +313,8 @@ void PhotoPionProduction::performInteraction(Candidate *candidate, bool onProton
 		case 15: // nu_e
 			if (haveNeutrinos) {
 				double f = Eout / E;
-				if (random.rand() < f) {
-					double w = w0 / pow(f, thinning);
+				if (random.rand() < pow(f, thinningNeutrinos)) {
+					double w = w0 / pow(f, thinningNeutrinos);
 					candidate->addSecondary(sign * 12, Eout, pos, w);
 				} 
 			}
@@ -306,17 +322,17 @@ void PhotoPionProduction::performInteraction(Candidate *candidate, bool onProton
 		case 16: // anti-nu_e
 			if (haveNeutrinos) {
 				double f = Eout / E;
-				if (random.rand() < f) {
-					double w = w0 / pow(f, thinning);
-					candidate->addSecondary(sign * 12, Eout, pos, w);
+				if (random.rand() < pow(f, thinningNeutrinos)) {
+					double w = w0 / pow(f, thinningNeutrinos);
+					candidate->addSecondary(sign * -12, Eout, pos, w);
 				} 
 			}
 			break;
 		case 17: // nu_mu
 			if (haveNeutrinos) {
 				double f = Eout / E;
-				if (random.rand() < f) {
-					double w = w0 / pow(f, thinning);
+				if (random.rand() < pow(f, thinningNeutrinos)) {
+					double w = w0 / pow(f, thinningNeutrinos);
 					candidate->addSecondary(sign * 14, Eout, pos, w);
 				} 
 			}
@@ -324,8 +340,8 @@ void PhotoPionProduction::performInteraction(Candidate *candidate, bool onProton
 		case 18: // anti-nu_mu
 			if (haveNeutrinos) {
 				double f = Eout / E;
-				if (random.rand() < f) {
-					double w = w0 / pow(f, thinning);
+				if (random.rand() < pow(f, thinningNeutrinos)) {
+					double w = w0 / pow(f, thinningNeutrinos);
 					candidate->addSecondary(sign * -14, Eout, pos, w);
 				} 
 			}

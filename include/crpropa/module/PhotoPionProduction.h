@@ -31,7 +31,9 @@ protected:
 	std::vector<double> tabProtonRate; ///< interaction rate in [1/m] for protons
 	std::vector<double> tabNeutronRate; ///< interaction rate in [1/m] for neutrons
 	double limit; ///< fraction of mean free path to limit the next step
-	double thinning; ///< thinning parameter
+	double thinningNeutrinos; ///< thinning parameter for neutrinos
+	double thinningPhotons; ///< thinning parameter for photons/electrons
+	double thinningElectrons; ///< thinning parameter for photons/electrons
 	bool havePhotons;
 	bool haveNeutrinos;
 	bool haveElectrons;
@@ -45,7 +47,9 @@ public:
 		bool neutrinos = false,
 		bool electrons = false,
 		bool antiNucleons = false,
-		double thinning = 1,
+		double thinningPhotons = 0.,
+		double thinningNeutrinos = 0.,
+		double thinningElectrons = 0.,
 		double limit = 0.1,
 		bool haveRedshiftDependence = false);
 	void setPhotonField(PhotonField photonField);
@@ -55,6 +59,9 @@ public:
 	void setHaveAntiNucleons(bool b);
 	void setHaveRedshiftDependence(bool b);
 	void setLimit(double limit);
+	void setThinningNeutrinos(double thinning);
+	void setThinningElectrons(double thinning);
+	void setThinningPhotons(double thinning);
 	void initRate(std::string filename);
 	double nucleonMFP(double gamma, double z, bool onProton) const;
 	double nucleiModification(int A, int X) const;
