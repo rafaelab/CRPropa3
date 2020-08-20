@@ -295,20 +295,40 @@ void PhotoPionProduction::performInteraction(Candidate *candidate, bool onProton
 			}
 			break;
 		case 15: // nu_e
-			if (haveNeutrinos)
-				candidate->addSecondary(sign * 12, Eout, pos);
+			if (haveNeutrinos) {
+				double f = Eout / E;
+				if (random.rand() < f) {
+					double w = w0 / pow(f, thinning);
+					candidate->addSecondary(sign * 12, Eout, pos, w);
+				} 
+			}
 			break;
 		case 16: // anti-nu_e
-			if (haveNeutrinos)
-				candidate->addSecondary(sign * -12, Eout, pos);
+			if (haveNeutrinos) {
+				double f = Eout / E;
+				if (random.rand() < f) {
+					double w = w0 / pow(f, thinning);
+					candidate->addSecondary(sign * 12, Eout, pos, w);
+				} 
+			}
 			break;
 		case 17: // nu_mu
-			if (haveNeutrinos)
-				candidate->addSecondary(sign * 14, Eout, pos);
+			if (haveNeutrinos) {
+				double f = Eout / E;
+				if (random.rand() < f) {
+					double w = w0 / pow(f, thinning);
+					candidate->addSecondary(sign * 14, Eout, pos, w);
+				} 
+			}
 			break;
 		case 18: // anti-nu_mu
-			if (haveNeutrinos)
-				candidate->addSecondary(sign * -14, Eout, pos);
+			if (haveNeutrinos) {
+				double f = Eout / E;
+				if (random.rand() < f) {
+					double w = w0 / pow(f, thinning);
+					candidate->addSecondary(sign * -14, Eout, pos, w);
+				} 
+			}
 			break;
 		default:
 			throw std::runtime_error("PhotoPionProduction: unexpected particle " + kiss::str(pType));

@@ -261,8 +261,13 @@ void NuclearDecay::betaDecay(Candidate *candidate, bool isBetaPlus) const {
 			candidate->addSecondary(electronId, E, pos, w);
 		}
 	}
-	if (haveNeutrinos)
-		candidate->addSecondary(neutrinoId, Enu, pos);
+	if (haveNeutrinos) {
+		double f = Enu / E0;
+		if (random.rand() < pow(f, thinning)) {
+			double w = w0 / pow(f, thinning);
+			candidate->addSecondary(neutrinoId, Enu, pos, w);
+		}
+	}
 }
 
 void NuclearDecay::nucleonEmission(Candidate *candidate, int dA, int dZ) const {
