@@ -13,12 +13,14 @@
 
 namespace crpropa {
 
-NuclearDecay::NuclearDecay(bool electrons, bool photons, bool neutrinos, double thin, double l) {
-	haveElectrons = electrons;
-	havePhotons = photons;
-	haveNeutrinos = neutrinos;
-	thinning = thin;
-	limit = l;
+NuclearDecay::NuclearDecay(bool electrons, bool photons, bool neutrinos, double thinElectrons, double thinPhotons, double thinNeutrinos, double l) {
+	setHaveElectrons(electrons);
+	setHavePhotons(photons);
+	setHaveNeutrinos(neutrinos);
+	setThinningElectrons(thinElectrons);
+	setThinningPhotons(thinPhotons);
+	setThinningNeutrinos(thinNeutrinos);
+	setLimit(l);
 	setDescription("NuclearDecay");
 
 	// load decay table
@@ -67,6 +69,18 @@ void NuclearDecay::setHaveNeutrinos(bool b) {
 
 void NuclearDecay::setLimit(double l) {
 	limit = l;
+}
+
+void NuclearDecay::setThinningNeutrinos(double t) {
+	thinningNeutrinos = t;
+}
+
+void NuclearDecay::setThinningElectrons(double t) {
+	thinningElectrons = t;
+}
+
+void NuclearDecay::setThinningPhotons(double t) {
+	thinningPhotons = t;
 }
 
 void NuclearDecay::process(Candidate *candidate) const {
@@ -178,8 +192,8 @@ void NuclearDecay::gammaEmission(Candidate *candidate, int channel) const {
 		double E = energy[i] * candidate->current.getLorentzFactor() * (1. - cosTheta);
 
 		double f = E / E0;
-		if (random.rand() < pow(f, thinning)) {
-			double w = w0 / pow(f, thinning);
+		if (random.rand() < pow(f, thinningPhotons)) {
+			double w = w0 / pow(f, thinningPhotons);
 			candidate->addSecondary(22, E, pos, w);
 		}
 	}
@@ -192,7 +206,6 @@ void NuclearDecay::betaDecay(Candidate *candidate, bool isBetaPlus) const {
 	int A = massNumber(id);
 	int Z = chargeNumber(id);
 	double w0 = candidate->getWeight();
-
 
 	// beta- decay
 	int electronId = 11; // electron
@@ -256,15 +269,15 @@ void NuclearDecay::betaDecay(Candidate *candidate, bool isBetaPlus) const {
 	Vector3d pos = random.randomInterpolatedPosition(candidate->previous.getPosition(), candidate->current.getPosition());
 	if (haveElectrons) {
 		double f = Ee / E0;
-		if (random.rand() < pow(f, thinning)) {
-			double w = w0 / pow(f, thinning);
-			candidate->addSecondary(electronId, E, pos, w);
+		if (random.rand() < pow(f, thinningElectrons)) {
+			double w = w0 / pow(f, thinningElectrons);
+			candidate->addSecondary(electronId, Ee, pos, w);
 		}
 	}
 	if (haveNeutrinos) {
 		double f = Enu / E0;
-		if (random.rand() < pow(f, thinning)) {
-			double w = w0 / pow(f, thinning);
+		if (random.rand() < pow(f, thinningNeutrinos)) {
+			double w = w0 / pow(f, thinningNeutrinos);
 			candidate->addSecondary(neutrinoId, Enu, pos, w);
 		}
 	}
