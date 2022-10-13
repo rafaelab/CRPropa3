@@ -14,18 +14,20 @@
 namespace crpropa {
 
 NuclearDecay::NuclearDecay(bool electrons, bool photons, bool neutrinos, double l) {
-	haveElectrons = electrons;
-	havePhotons = photons;
-	haveNeutrinos = neutrinos;
-	limit = l;
+	setHavePhotons(photons);
+	setHaveElectrons(electrons);
+	setHaveNeutrinos(neutrinos);
+	setLimit(l);
+	setThinningElectrons(0);
+	setThinningPhotons(0);
+	setThinningNeutrinos(0);
 	setDescription("NuclearDecay");
 
 	// load decay table
 	std::string filename = getDataPath("nuclear_decay.txt");
 	std::ifstream infile(filename.c_str());
 	if (!infile.good())
-		throw std::runtime_error(
-				"crpropa::NuclearDecay: could not open file " + filename);
+		throw std::runtime_error("crpropa::NuclearDecay: could not open file " + filename);
 
 	decayTable.resize(27 * 31);
 	std::string line;
@@ -66,6 +68,18 @@ void NuclearDecay::setHaveNeutrinos(bool b) {
 
 void NuclearDecay::setLimit(double l) {
 	limit = l;
+}
+
+void NuclearDecay::setThinningElectrons(double t) {
+	thinningElectrons = t;
+}
+
+void NuclearDecay::setThinningPhotons(double t) {
+	thinningPhotons = t;
+}
+
+void NuclearDecay::setThinningNeutrinos(double t) {
+	thinningNeutrinos = t;
 }
 
 void NuclearDecay::process(Candidate *candidate) const {
@@ -145,6 +159,8 @@ void NuclearDecay::gammaEmission(Candidate *candidate, int channel) const {
 	int id = candidate->current.getId();
 	int Z = chargeNumber(id);
 	int N = massNumber(id) - Z;
+	double z = candidate->getRedshift();
+	double E0 = candidate->current.getEnergy() * (1 + z);
 
 	// get photon energies and emission probabilities for decay channel
 	const std::vector<DecayMode> &decays = decayTable[Z * 31 + N];
@@ -168,10 +184,18 @@ void NuclearDecay::gammaEmission(Candidate *candidate, int channel) const {
 		// check if photon of specific energy is emitted
 		if (random.rand() > intensity[i])
 			continue;
+
 		// create secondary photon; boost to lab frame
 		double cosTheta = 2 * random.rand() - 1;
 		double E = energy[i] * candidate->current.getLorentzFactor() * (1. - cosTheta);
-		candidate->addSecondary(22, E, pos);
+
+		double f = E / E0; // energy fraction taken by secondary
+
+		// add secondary photon
+		if (random.rand() < pow(f, thinningPhotons)) {
+			double w = 1 / pow(f, thinningPhotons);
+			candidate->addSecondary(22, E, pos, w);
+		}
 	}
 }
 
@@ -180,6 +204,8 @@ void NuclearDecay::betaDecay(Candidate *candidate, bool isBetaPlus) const {
 	int id = candidate->current.getId();
 	int A = massNumber(id);
 	int Z = chargeNumber(id);
+	double z = candidate->getRedshift();
+	double E0 = candidate->current.getEnergy() * (1 + z);
 
 	// beta- decay
 	int electronId = 11; // electron
@@ -193,12 +219,9 @@ void NuclearDecay::betaDecay(Candidate *candidate, bool isBetaPlus) const {
 	}
 
 	// update candidate, nuclear recoil negligible
-	try
-	{
+	try {
 		candidate->current.setId(nucleusId(A, Z + dZ));
-	}
-	catch (std::runtime_error &e)
-	{
+	} catch (std::runtime_error &e) {
 		KISS_LOG_ERROR<< "Something went wrong in the NuclearDecay\n" << "Please report this error on https://github.com/CRPropa/CRPropa3/issues including your simulation setup and the following random seed:\n" << Random::instance().getSeed_base64();
 		throw;
 	}
@@ -245,11 +268,24 @@ void NuclearDecay::betaDecay(Candidate *candidate, bool isBetaPlus) const {
 	double Ee = gamma * (E - p * cosTheta);
 	double Enu = gamma * (Q + me - E) * (1 + cosTheta);  // pnu*c ~ Enu
 
+	// draw random position
 	Vector3d pos = random.randomInterpolatedPosition(candidate->previous.getPosition(), candidate->current.getPosition());
-	if (haveElectrons)
-		candidate->addSecondary(electronId, Ee, pos);
-	if (haveNeutrinos)
-		candidate->addSecondary(neutrinoId, Enu, pos);
+	
+	if (haveElectrons) {
+		double f = Ee / E0;
+		if (random.rand() < pow(f, thinningElectrons)) {
+			double w = 1 / pow(f, thinningElectrons);
+			candidate->addSecondary(electronId, Ee, pos, w);
+		}
+	}
+
+	if (haveNeutrinos) {
+		double f = Enu / E0;
+		if (random.rand() < pow(f, thinningNeutrinos)) {
+			double w = 1 / pow(f, thinningNeutrinos);
+			candidate->addSecondary(neutrinoId, Enu, pos, w);
+		}
+	}
 }
 
 void NuclearDecay::nucleonEmission(Candidate *candidate, int dA, int dZ) const {
@@ -259,12 +295,9 @@ void NuclearDecay::nucleonEmission(Candidate *candidate, int dA, int dZ) const {
 	int Z = chargeNumber(id);
 	double EpA = candidate->current.getEnergy() / double(A);
 
-	try
-	{
+	try {
 		candidate->current.setId(nucleusId(A - dA, Z - dZ));
-	}
-	catch (std::runtime_error &e)
-	{
+	} catch (std::runtime_error &e) {
 		KISS_LOG_ERROR<< "Something went wrong in the NuclearDecay\n" << "Please report this error on https://github.com/CRPropa/CRPropa3/issues including your simulation setup and the following random seed:\n" << Random::instance().getSeed_base64();
 		throw;
 	}
@@ -272,16 +305,12 @@ void NuclearDecay::nucleonEmission(Candidate *candidate, int dA, int dZ) const {
 	candidate->current.setEnergy(EpA * (A - dA));
 	Vector3d pos = random.randomInterpolatedPosition(candidate->previous.getPosition(),candidate->current.getPosition());
 
-	try
-	{
+	try {
 		candidate->addSecondary(nucleusId(dA, dZ), EpA * dA, pos);
-	}
-	catch (std::runtime_error &e)
-	{
+	} catch (std::runtime_error &e) {
 		KISS_LOG_ERROR<< "Something went wrong in the NuclearDecay\n" << "Please report this error on https://github.com/CRPropa/CRPropa3/issues including your simulation setup and the following random seed:\n" << Random::instance().getSeed_base64();
 		throw;
 	}
-
 }
 
 double NuclearDecay::meanFreePath(int id, double gamma) {

@@ -27,13 +27,17 @@ private:
 	bool haveElectrons;
 	bool havePhotons;
 	bool haveNeutrinos;
+	double thinningElectrons;
+	double thinningNeutrinos;
+	double thinningPhotons;
+
 	struct DecayMode {
 		int channel; // (#beta- #beta+ #alpha #proton #neutron)
 		double rate; // decay rate in [1/m]
 		std::vector<double> energy; // photon energies of ensuing gamma decays
 		std::vector<double> intensity; // probabilities of ensuing gamma decays
 	};
-	std::vector<std::vector<DecayMode> > decayTable; // decayTable[Z * 31 + N] = vector<DecayMode>
+	std::vector<std::vector<DecayMode>> decayTable; // decayTable[Z * 31 + N] = vector<DecayMode>
 
 public:
 	/** Constructor.
@@ -47,6 +51,9 @@ public:
 	void setHaveElectrons(bool b);
 	void setHavePhotons(bool b);
 	void setHaveNeutrinos(bool b);
+	void setThinningElectrons(double thinning);
+	void setThinningPhotons(double thinning);
+	void setThinningNeutrinos(double thinning);
 	void process(Candidate *candidate) const;
 	void performInteraction(Candidate *candidate, int channel) const;
 	void gammaEmission(Candidate *candidate, int channel) const;
