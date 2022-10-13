@@ -10,11 +10,12 @@
 
 namespace crpropa {
 
-ElectronPairProduction::ElectronPairProduction(ref_ptr<PhotonField> photonField,
-		bool haveElectrons, double limit) {
+ElectronPairProduction::ElectronPairProduction(ref_ptr<PhotonField> photonField, bool electrons, double l) {
 	setPhotonField(photonField);
-	this->haveElectrons = haveElectrons;
-	this->limit = limit;
+	setHaveElectrons(electrons);
+	setLimit(l);
+	setThinningElectrons(0.);
+	setMaximumSamples(0);
 }
 
 void ElectronPairProduction::setPhotonField(ref_ptr<PhotonField> photonField) {
@@ -25,12 +26,20 @@ void ElectronPairProduction::setPhotonField(ref_ptr<PhotonField> photonField) {
 	initSpectrum(getDataPath("ElectronPairProduction/spectrum_" + fname.substr(0,3) + ".txt"));
 }
 
-void ElectronPairProduction::setHaveElectrons(bool haveElectrons) {
-	this->haveElectrons = haveElectrons;
+void ElectronPairProduction::setHaveElectrons(bool electrons) {
+	haveElectrons = electrons;
 }
 
-void ElectronPairProduction::setLimit(double limit) {
-	this->limit = limit;
+void ElectronPairProduction::setLimit(double l) {
+	limit = l;
+}
+
+void ElectronPairProduction::setThinningElectrons(double thinning) {
+	thinningElectrons = thinning;
+}
+
+void ElectronPairProduction::setMaximumSamples(int nSamples) {
+	maximumSamples = nSamples;
 }
 
 void ElectronPairProduction::initRate(std::string filename) {
@@ -104,6 +113,7 @@ void ElectronPairProduction::process(Candidate *c) const {
 
 	double lf = c->current.getLorentzFactor();
 	double z = c->getRedshift();
+	double E0 = c->current.getEnergy();
 	double losslen = lossLength(id, lf, z);  // energy loss length
 	if (losslen >= std::numeric_limits<double>::max())
 		return;
@@ -118,22 +128,64 @@ void ElectronPairProduction::process(Candidate *c) const {
 		Random &random = Random::instance();
 
 		// draw pairs as long as their energy is smaller than the pair production energy loss
+		int counter = 0;
+		double dE0 = dE;
+		std::vector<double> energies;
 		while (dE > 0) {
 			size_t j = random.randBin(tabSpectrum[i]);
 			double Ee = pow(10, 6.95 + (j + random.rand()) * 0.1) * eV;
 			double Epair = 2 * Ee; // NOTE: electron and positron in general don't have same lab frame energy, but averaged over many draws the result is consistent
 			// if the remaining energy is not sufficient check for random accepting
-			if (Epair > dE)
+			if (Epair > dE) {
 				if (random.rand() > (dE / Epair))
 					break; // not accepted
+			}
 
 			// create pair and repeat with remaining energy
 			dE -= Epair;
-			Vector3d pos = random.randomInterpolatedPosition(c->previous.getPosition(), c->current.getPosition());
-			c->addSecondary( 11, Ee, pos);
-			c->addSecondary(-11, Ee, pos);
+
+
+			// original
+			// Vector3d pos = random.randomInterpolatedPosition(c->previous.getPosition(), c->current.getPosition());
+			// c->addSecondary( 11, Ee, pos);
+			// c->addSecondary(-11, Ee, pos);
+
+			// activate the "per-step" sampling if maximumSamples is explicitly set
+			if (maximumSamples > 0) {
+				if (counter >= maximumSamples) 
+					break;			
+			}
+
+			// store electron energies in array
+			energies.push_back(Epair);
+
+			counter++;
 		}
-	}
+
+		// the while loop before gave the total energy, which is just a fraction of the required
+		// the factor w1 corrects the total energy due to the the uniform sampling
+		double w1 = 1;
+		if (maximumSamples > 0 && dE > 0)
+			w1 = 1. / (1. - dE / dE0); 
+
+		// loop over sampled photons and attribute weights accordingly
+		for (int i = 0; i < energies.size(); i++) {
+			double Enew = energies[i] / 2.;
+			double f = Enew / (E0 - dE0);
+			double w = w1 / pow(f, thinningElectrons);
+
+			// draw random position
+			Vector3d pos = random.randomInterpolatedPosition(c->previous.getPosition(), c->current.getPosition());
+
+			// thinning procedure: accepts only a few random secondaries
+			if (random.rand() < pow(f, thinningElectrons)) {
+				c->addSecondary( 11, Enew, pos, w);
+			}
+			if (random.rand() < pow(1 - f, thinningElectrons)) {
+				c->addSecondary(-11, Enew, pos, w);
+			}
+		}
+	} // haveElectrons
 
 	c->current.setLorentzFactor(lf * (1 - loss));
 	c->limitNextStep(limit * losslen);
