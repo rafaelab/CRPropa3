@@ -16,12 +16,15 @@
 namespace crpropa {
 
 PhotoPionProduction::PhotoPionProduction(ref_ptr<PhotonField> field, bool photons, bool neutrinos, bool electrons, bool antiNucleons, double l, bool redshift) {
-	havePhotons = photons;
-	haveNeutrinos = neutrinos;
-	haveElectrons = electrons;
-	haveAntiNucleons = antiNucleons;
-	haveRedshiftDependence = redshift;
-	limit = l;
+	setHavePhotons(photons);
+	setHaveNeutrinos(neutrinos);
+	setHaveElectrons(electrons);
+	setHaveAntiNucleons(antiNucleons);
+	setHaveRedshiftDependence(redshift);
+	setLimit(l);
+	setThinningElectrons(0.);
+	setThinningPhotons(0.);
+	setThinningNeutrinos(0.);
 	setPhotonField(field);
 }
 
@@ -69,6 +72,18 @@ void PhotoPionProduction::setHaveRedshiftDependence(bool b) {
 
 void PhotoPionProduction::setLimit(double l) {
 	limit = l;
+}
+
+void PhotoPionProduction::setThinningPhotons(double thinning) {
+	thinningPhotons = thinning;
+}
+
+void PhotoPionProduction::setThinningElectrons(double thinning) {
+	thinningElectrons = thinning;
+}
+
+void PhotoPionProduction::setThinningNeutrinos(double thinning) {
+	thinningNeutrinos = thinning;
 }
 
 void PhotoPionProduction::initRate(std::string filename) {
@@ -237,14 +252,20 @@ void PhotoPionProduction::performInteraction(Candidate *candidate, bool onProton
 	}
 
 	Random &random = Random::instance();
+
 	Vector3d pos = random.randomInterpolatedPosition(candidate->previous.getPosition(), candidate->current.getPosition());
+
 	std::vector<int> pnType;  // filled with either 13 (proton) or 14 (neutron)
 	std::vector<double> pnEnergy;  // corresponding energies of proton or neutron
+
 	if (nParticles == 0)
 		return;
+
 	for (int i = 0; i < nParticles; i++) { // loop over out-going particles
 		double Eout = outputEnergy[3][i] * GeV; // only the energy is used; could be changed for more detail
+		double f = Eout / E;
 		int pType = outPartID[i];
+
 		switch (pType) {
 		case 13: // proton
 		case 14: // neutron
@@ -266,32 +287,60 @@ void PhotoPionProduction::performInteraction(Candidate *candidate, bool onProton
 				}
 			break;
 		case 1: // photon
-			if (havePhotons)
-				candidate->addSecondary(22, Eout, pos);
+			if (havePhotons) {
+				if (random.rand() < pow(f, thinningPhotons)) {
+					double w = 1 / pow(f, thinningPhotons);
+					candidate->addSecondary(22, Eout, pos);
+				}
+			}
 			break;
 		case 2: // positron
-			if (haveElectrons)
-				candidate->addSecondary(sign * -11, Eout, pos);
+			if (haveElectrons) {
+				if (random.rand() < pow(f, thinningElectrons)) {
+					double w = 1 / pow(f, thinningElectrons);
+					candidate->addSecondary(sign * -11, Eout, pos, w);
+				} 
+			}
 			break;
 		case 3: // electron
-			if (haveElectrons)
-				candidate->addSecondary(sign * 11, Eout, pos);
+			if (haveElectrons) {
+				if (random.rand() < pow(f, thinningElectrons)) {
+					double w = 1 / pow(f, thinningElectrons);
+					candidate->addSecondary(sign * 11, Eout, pos, w);
+				} 
+			}
 			break;
 		case 15: // nu_e
-			if (haveNeutrinos)
-				candidate->addSecondary(sign * 12, Eout, pos);
+			if (haveNeutrinos) {
+				if (random.rand() < pow(f, thinningNeutrinos)) {
+					double w = 1 / pow(f, thinningNeutrinos);
+					candidate->addSecondary(sign * 12, Eout, pos, w);
+				} 
+			}
 			break;
 		case 16: // anti-nu_e
-			if (haveNeutrinos)
-				candidate->addSecondary(sign * -12, Eout, pos);
+			if (haveNeutrinos) {
+				if (random.rand() < pow(f, thinningNeutrinos)) {
+					double w = 1 / pow(f, thinningNeutrinos);
+					candidate->addSecondary(sign * -12, Eout, pos, w);
+				} 
+			}
 			break;
 		case 17: // nu_mu
-			if (haveNeutrinos)
-				candidate->addSecondary(sign * 14, Eout, pos);
+			if (haveNeutrinos) {
+				if (random.rand() < pow(f, thinningNeutrinos)) {
+					double w = 1 / pow(f, thinningNeutrinos);
+					candidate->addSecondary(sign * 14, Eout, pos, w);
+				}
+			}
 			break;
 		case 18: // anti-nu_mu
-			if (haveNeutrinos)
-				candidate->addSecondary(sign * -14, Eout, pos);
+			if (haveNeutrinos) {
+				if (random.rand() < pow(f, thinningNeutrinos)) {
+					double w = 1 / pow(f, thinningNeutrinos);
+					candidate->addSecondary(sign * -14, Eout, pos, w);
+				}
+			}
 			break;
 		default:
 			throw std::runtime_error("PhotoPionProduction: unexpected particle " + kiss::str(pType));

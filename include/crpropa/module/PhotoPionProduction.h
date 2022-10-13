@@ -36,6 +36,9 @@ protected:
 	bool haveElectrons;
 	bool haveAntiNucleons;
 	bool haveRedshiftDependence;
+	double thinningPhotons;
+	double thinningElectrons;
+	double thinningNeutrinos;
 
 	// called by: sampleEps
 	// - input: s [GeV^2]
@@ -109,6 +112,9 @@ public:
 	void setHaveAntiNucleons(bool b);
 	void setHaveRedshiftDependence(bool b);
 	void setLimit(double limit);
+	void setThinningPhotons(double t);
+	void setThinningElectrons(double t);
+	void setThinningNeutrinos(double t);
 	void initRate(std::string filename);
 	double nucleonMFP(double gamma, double z, bool onProton) const;
 	double nucleiModification(int A, int X) const;
