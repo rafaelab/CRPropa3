@@ -21,7 +21,7 @@ PhotoDisintegration::PhotoDisintegration(ref_ptr<PhotonField> f, bool photons, d
 	setPhotonField(f);
 	setHavePhotons(photons);
 	setLimit(l);
-	setThinningPhotons(0);
+	setThinning(0);
 }
 
 void PhotoDisintegration::setPhotonField(ref_ptr<PhotonField> photonField) {
@@ -37,12 +37,12 @@ void PhotoDisintegration::setHavePhotons(bool havePhotons) {
 	this->havePhotons = havePhotons;
 }
 
-void PhotoDisintegration::setLimit(double limit) {
-	this->limit = limit;
+void PhotoDisintegration::setLimit(double l) {
+	limit = l;
 }
 
-void PhotoDisintegration::setThinningPhotons(double thinning) {
-	thinningPhotons = thinning;
+void PhotoDisintegration::setThinning(double t) {
+	thinning = t;
 }
 
 void PhotoDisintegration::initRate(std::string filename) {
@@ -206,6 +206,7 @@ void PhotoDisintegration::process(Candidate *candidate) const {
 
 void PhotoDisintegration::performInteraction(Candidate *candidate, int channel) const {
 	KISS_LOG_DEBUG << "Photodisintegration::performInteraction. Channel " <<  channel << " on candidate " << candidate->getDescription(); 
+	
 	// parse disintegration channel
 	int nNeutron = digit(channel, 100000);
 	int nProton = digit(channel, 10000);
@@ -272,8 +273,8 @@ void PhotoDisintegration::performInteraction(Candidate *candidate, int channel) 
 
 		// add secondary photon
 		double f = E / E0;
-		if (random.rand() < pow(f, thinningPhotons)) {
-			double w = 1 / pow(f, thinningPhotons);
+		if (random.rand() < pow(f, thinning)) {
+			double w = 1 / pow(f, thinning);
 			candidate->addSecondary(22, E, pos, w);
 		}
 	}

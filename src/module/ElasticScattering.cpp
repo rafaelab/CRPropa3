@@ -21,6 +21,7 @@ const size_t ElasticScattering::neps = 513; // number of photon background energ
 
 ElasticScattering::ElasticScattering(ref_ptr<PhotonField> f) {
 	setPhotonField(f);
+	setThinning(0);
 }
 
 void ElasticScattering::setPhotonField(ref_ptr<PhotonField> photonField) {
@@ -29,6 +30,10 @@ void ElasticScattering::setPhotonField(ref_ptr<PhotonField> photonField) {
 	setDescription("ElasticScattering: " + fname);
 	initRate(getDataPath("ElasticScattering/rate_" + fname.substr(0,3) + ".txt"));
 	initCDF(getDataPath("ElasticScattering/cdf_" + fname.substr(0,3) + ".txt"));
+}
+
+void ElasticScattering::setThinning(double thinning) {
+	thinning = thinning;
 }
 
 void ElasticScattering::initRate(std::string filename) {
@@ -82,6 +87,7 @@ void ElasticScattering::initCDF(std::string filename) {
 void ElasticScattering::process(Candidate *candidate) const {
 	int id = candidate->current.getId();
 	double z = candidate->getRedshift();
+	double E0 = candidate->current.getEnergy() * (1 + z);
 
 	if (not isNucleus(id))
 		return;
@@ -116,9 +122,16 @@ void ElasticScattering::process(Candidate *candidate) const {
 		// boost to lab frame
 		double cosTheta = 2 * random.rand() - 1;
 		double E = eps * candidate->current.getLorentzFactor() * (1. - cosTheta);
+		double f = E / E0;
 
+		// draw random position for secondary photons
 		Vector3d pos = random.randomInterpolatedPosition(candidate->previous.getPosition(), candidate->current.getPosition());
-		candidate->addSecondary(22, E, pos);
+
+		// add secondary photons
+		if (random.rand() < pow(f, thinning)) {
+			double w = 1 / pow(f, thinning);
+			candidate->addSecondary(22, E, pos, w);
+		}
 
 		// repeat with remaining step
 		step -= randDist;

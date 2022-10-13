@@ -26,6 +26,8 @@ private:
 	static const double epsmax; // maximum log10(eps / J)
 	static const size_t neps;   // number of eps steps
 
+	double thinning;   // thinning of secondary photons
+
 public:
 	/** Constructor
 	 @param photonField		target photon field
@@ -34,6 +36,7 @@ public:
 	void initRate(std::string filename);
 	void initCDF(std::string filename);
 	void setPhotonField(ref_ptr<PhotonField> photonField);
+	void setThinning(double t);
 	void process(Candidate *candidate) const;
 };
 

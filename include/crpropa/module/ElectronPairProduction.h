@@ -28,7 +28,7 @@ private:
 	std::vector<std::vector<double> > tabSpectrum; /*< electron/positron cdf(Ee|log10(gamma)) for log10(Ee/eV)=7-24 in 170 steps and log10(gamma)=6-13 in 70 steps and*/
 	double limit; ///< fraction of energy loss length to limit the next step
 	bool haveElectrons;
-	double thinningElectrons; ///< thinning parameter for weighted-sampling (maximum 1, minimum 0)
+	double thinning; ///< thinning parameter for weighted-sampling (maximum 1, minimum 0)
 	int maximumSamples; ///< maximum number of samples of synchrotron photons (break condition; defaults to 100; 0 or <0 means no sampling)
 
 
@@ -38,7 +38,7 @@ public:
 	void setPhotonField(ref_ptr<PhotonField> photonField);
 	void setHaveElectrons(bool haveElectrons);
 	void setLimit(double limit);
-	void setThinningElectrons(double thinning);
+	void setThinning(double thinning);
 	void setMaximumSamples(int nSamples);
 
 	void initRate(std::string filename);

@@ -21,7 +21,7 @@ class PhotoDisintegration: public Module {
 private:
 	ref_ptr<PhotonField> photonField;
 	double limit; // fraction of mean free path for limiting the next step
-	double thinningPhotons; // thinning parameter for weighted-sampling (maximum 1, minimum 0)
+	double thinning; // thinning parameter for weighted-sampling (maximum 1, minimum 0)
 	bool havePhotons;
 
 	struct Branch {
@@ -53,7 +53,7 @@ public:
 	void setPhotonField(ref_ptr<PhotonField> photonField);
 	void setHavePhotons(bool havePhotons);
 	void setLimit(double limit);
-	void setThinningPhotons(double thinning);
+	void setThinning(double thinning);
 
 	void initRate(std::string filename);
 	void initBranching(std::string filename);

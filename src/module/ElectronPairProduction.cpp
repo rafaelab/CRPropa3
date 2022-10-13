@@ -14,7 +14,7 @@ ElectronPairProduction::ElectronPairProduction(ref_ptr<PhotonField> photonField,
 	setPhotonField(photonField);
 	setHaveElectrons(electrons);
 	setLimit(l);
-	setThinningElectrons(0.);
+	setThinning(0.);
 	setMaximumSamples(0);
 }
 
@@ -34,8 +34,8 @@ void ElectronPairProduction::setLimit(double l) {
 	limit = l;
 }
 
-void ElectronPairProduction::setThinningElectrons(double thinning) {
-	thinningElectrons = thinning;
+void ElectronPairProduction::setThinning(double t) {
+	thinning = t;
 }
 
 void ElectronPairProduction::setMaximumSamples(int nSamples) {
@@ -172,16 +172,16 @@ void ElectronPairProduction::process(Candidate *c) const {
 		for (int i = 0; i < energies.size(); i++) {
 			double Enew = energies[i] / 2.;
 			double f = Enew / (E0 - dE0);
-			double w = w1 / pow(f, thinningElectrons);
+			double w = w1 / pow(f, thinning);
 
 			// draw random position
 			Vector3d pos = random.randomInterpolatedPosition(c->previous.getPosition(), c->current.getPosition());
 
 			// thinning procedure: accepts only a few random secondaries
-			if (random.rand() < pow(f, thinningElectrons)) {
+			if (random.rand() < pow(f, thinning)) {
 				c->addSecondary( 11, Enew, pos, w);
 			}
-			if (random.rand() < pow(1 - f, thinningElectrons)) {
+			if (random.rand() < pow(1 - f, thinning)) {
 				c->addSecondary(-11, Enew, pos, w);
 			}
 		}
