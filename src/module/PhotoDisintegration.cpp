@@ -17,10 +17,11 @@ const double PhotoDisintegration::lgmin = 6;  // minimum log10(Lorentz-factor)
 const double PhotoDisintegration::lgmax = 14; // maximum log10(Lorentz-factor)
 const size_t PhotoDisintegration::nlg = 201;  // number of Lorentz-factor steps
 
-PhotoDisintegration::PhotoDisintegration(ref_ptr<PhotonField> f, bool havePhotons, double limit) {
+PhotoDisintegration::PhotoDisintegration(ref_ptr<PhotonField> f, bool photons, double l) {
 	setPhotonField(f);
-	this->havePhotons = havePhotons;
-	this->limit = limit;
+	setHavePhotons(photons);
+	setLimit(l);
+	setThinningPhotons(0);
 }
 
 void PhotoDisintegration::setPhotonField(ref_ptr<PhotonField> photonField) {
@@ -38,6 +39,10 @@ void PhotoDisintegration::setHavePhotons(bool havePhotons) {
 
 void PhotoDisintegration::setLimit(double limit) {
 	this->limit = limit;
+}
+
+void PhotoDisintegration::setThinningPhotons(double thinning) {
+	thinningPhotons = thinning;
 }
 
 void PhotoDisintegration::initRate(std::string filename) {
@@ -220,8 +225,7 @@ void PhotoDisintegration::performInteraction(Candidate *candidate, int channel) 
 	// create secondaries
 	Random &random = Random::instance();
 	Vector3d pos = random.randomInterpolatedPosition(candidate->previous.getPosition(), candidate->current.getPosition());
-	try
-	{
+	try {
 		for (size_t i = 0; i < nNeutron; i++)
 			candidate->addSecondary(nucleusId(1, 0), EpA, pos);
 		for (size_t i = 0; i < nProton; i++)
@@ -236,13 +240,11 @@ void PhotoDisintegration::performInteraction(Candidate *candidate, int channel) 
 			candidate->addSecondary(nucleusId(4, 2), EpA * 4, pos);
 
 
-	// update particle
-	  candidate->created = candidate->current;
+		// update particle
+		candidate->created = candidate->current;
 		candidate->current.setId(nucleusId(A + dA, Z + dZ));
 		candidate->current.setEnergy(EpA * (A + dA));
-	}
-	catch (std::runtime_error &e)
-	{
+	} catch (std::runtime_error &e) {
 		KISS_LOG_ERROR << "Something went wrong in the PhotoDisentigration\n" << "Please report this error on https://github.com/CRPropa/CRPropa3/issues including your simulation setup and the following random seed:\n" << Random::instance().getSeed_base64();
 		throw;
 	}
@@ -252,6 +254,7 @@ void PhotoDisintegration::performInteraction(Candidate *candidate, int channel) 
 
 	// create photons
 	double z = candidate->getRedshift();
+	double E0 = candidate->current.getEnergy() * (1 + z);
 	double lg = log10(candidate->current.getLorentzFactor() * (1 + z));
 	double lf = candidate->current.getLorentzFactor();
 
@@ -266,7 +269,13 @@ void PhotoDisintegration::performInteraction(Candidate *candidate, int channel) 
 		// boost to lab frame
 		double cosTheta = 2 * random.rand() - 1;
 		double E = pdPhoton[key][i].energy * lf * (1 - cosTheta);
-		candidate->addSecondary(22, E, pos);
+
+		// add secondary photon
+		double f = E / E0;
+		if (random.rand() < pow(f, thinningPhotons)) {
+			double w = 1 / pow(f, thinningPhotons);
+			candidate->addSecondary(22, E, pos, w);
+		}
 	}
 }
 
