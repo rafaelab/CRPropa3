@@ -13,9 +13,10 @@ namespace crpropa {
 /** @addtogroup Acceleration
  *  @{
  */
-
-/// @class StepLengthModifier
-/// @brief Modifies the steplength of an acceleration module.
+/**
+  @class StepLengthModifier
+  @brief Modifies the step length of an acceleration module.
+*/
 class StepLengthModifier : public Referenced {
   public:
 	/// Returns an update of the steplength
@@ -127,22 +128,18 @@ class QuasiLinearTheory : public StepLengthModifier {
 	double __minimumRigidity;
 
   public:
-	QuasiLinearTheory(double referenecEnergy = 1. * EeV,
-	                  double turbulenceIndex = 5. / 3,
-	                  double minimumRigidity = 0);
+	QuasiLinearTheory(double referenecEnergy = 1. * EeV, double turbulenceIndex = 5. / 3, double minimumRigidity = 0);
 	double modify(double steplength, Candidate *candidate);
 };
 
+/**
+  @class ParticleSplitting
+  @brief  Implements particle splitting, i.e. inverse thinning, to speed up  the simulation.
 
-/// @class ParticleSplitting
-/// @brief  Implements particle splitting, i.e. inverse thinning, to speed up
-///  the simulation.
-/// @details After crossing a surface a given number of times, the particle is
-/// split to N partilces with weight 1/N. This eases performance constraints in
-/// acceleration simulations due to the power law nature of many acceleration
-/// mechanisms.
-/// Thanks to Matthew Weiss, Penn State University for the first work on this
-/// feature in 2017.
+  @details After crossing a surface a given number of times, the particle is split to N partilces with weight 1/N. 
+  This eases performance constraints in  acceleration simulations due to the power law nature of many acceleration mechanisms.
+  Thanks to Matthew Weiss, Penn State University for the first work on this feature in 2017.
+*/
 class ParticleSplitting : public Module {
 	int numSplits;
 	int crossingThreshold;
@@ -159,9 +156,7 @@ class ParticleSplitting : public Module {
 	/// @params counterid             An unique string to identify the particle
 	///                               property used for counting. Useful if
 	///                               multiple splitting modules are present.
-	ParticleSplitting(Surface *surface, int crossingThreshold = 50,
-	                  int numSplits = 5, double minWeight = 0.01,
-	                  std::string counterid = "ParticleSplittingCounter");
+	ParticleSplitting(Surface *surface, int crossingThreshold = 50, int numSplits = 5, double minWeight = 0.01, std::string counterid = "ParticleSplittingCounter");
 
 	// update the candidate
 	void process(Candidate *candidate) const;

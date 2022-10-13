@@ -6,7 +6,8 @@
 namespace crpropa {
 
 AbstractAccelerationModule::AbstractAccelerationModule(double _stepLength)
-	: crpropa::Module(), stepLength(_stepLength) {}
+	: crpropa::Module(), stepLength(_stepLength) {
+	}
 
 
 void AbstractAccelerationModule::add(StepLengthModifier *modifier) {
@@ -14,9 +15,7 @@ void AbstractAccelerationModule::add(StepLengthModifier *modifier) {
 }
 
 
-void AbstractAccelerationModule::scatter(
-	crpropa::Candidate *candidate,
-	const crpropa::Vector3d &scatter_center_velocity) const {
+void AbstractAccelerationModule::scatter(crpropa::Candidate *candidate, const crpropa::Vector3d &scatter_center_velocity) const {
 	// particle momentum in lab frame
 	const double E = candidate->current.getEnergy();
 	const crpropa::Vector3d p = candidate->current.getMomentum();
@@ -33,8 +32,7 @@ void AbstractAccelerationModule::scatter(
 
 	// transform back
 	const double E_new = gamma * (Ep + scatter_center_velocity.dot(pp_new));
-	const crpropa::Vector3d p_new = (pp_new + scatter_center_velocity * Ep /
-		(crpropa::c_light * crpropa::c_light)) * gamma;
+	const crpropa::Vector3d p_new = (pp_new + scatter_center_velocity * Ep / (crpropa::c_light * crpropa::c_light)) * gamma;
 
 	// update candidate properties
 	candidate->current.setEnergy(E_new);
@@ -62,10 +60,8 @@ void AbstractAccelerationModule::process(crpropa::Candidate *candidate) const {
 }
 
 
-SecondOrderFermi::SecondOrderFermi(double scatterVelocity, double stepLength,
-								   unsigned int sizeOfPitchangleTable)
-	: AbstractAccelerationModule(stepLength),
-	  scatterVelocity(scatterVelocity) {
+SecondOrderFermi::SecondOrderFermi(double scatterVelocity, double stepLength, unsigned int sizeOfPitchangleTable)
+	: AbstractAccelerationModule(stepLength), scatterVelocity(scatterVelocity) {
 	setDescription("SecondOrderFermi Acceleration");
 	angle.resize(sizeOfPitchangleTable);
 	angleCDF.resize(sizeOfPitchangleTable);
@@ -101,11 +97,8 @@ double DirectedFlowOfScatterCenters::modify(double steplength, Candidate* candid
 }
 
 
-DirectedFlowScattering::DirectedFlowScattering(
-	crpropa::Vector3d scatterCenterVelocity, double stepLength)
-	: __scatterVelocity(scatterCenterVelocity),
-	  AbstractAccelerationModule(stepLength) {
-
+DirectedFlowScattering::DirectedFlowScattering(crpropa::Vector3d scatterCenterVelocity, double stepLength)
+	: __scatterVelocity(scatterCenterVelocity), AbstractAccelerationModule(stepLength) {
 	// In a directed field of scatter centers, the probability to encounter a
 	// scatter center depends on the direction of the candidate.
 	StepLengthModifier *mod = new DirectedFlowOfScatterCenters(__scatterVelocity);
@@ -119,32 +112,23 @@ crpropa::Vector3d DirectedFlowScattering::scatterCenterVelocity(
 }
 
 
-QuasiLinearTheory::QuasiLinearTheory(double referenecEnergy,
-									 double turbulenceIndex,
-									 double minimumRigidity)
-	: __referenceEnergy(referenecEnergy), __turbulenceIndex(turbulenceIndex),
-	  __minimumRigidity(minimumRigidity) {}
-
-
-double QuasiLinearTheory::modify(double steplength, Candidate* candidate)
-{
-	if (candidate->current.getRigidity() < __minimumRigidity)
-	{
-		return steplength * std::pow(__minimumRigidity /
-			(__referenceEnergy / eV), 2. - __turbulenceIndex);
+QuasiLinearTheory::QuasiLinearTheory(double referenecEnergy, double turbulenceIndex, double minimumRigidity) 
+	: __referenceEnergy(referenecEnergy), __turbulenceIndex(turbulenceIndex), __minimumRigidity(minimumRigidity) { 
 	}
-	else
-	{
-		return steplength * std::pow(candidate->current.getRigidity() /
-			(__referenceEnergy / eV), 2. - __turbulenceIndex);
+
+
+double QuasiLinearTheory::modify(double steplength, Candidate* candidate) {
+	if (candidate->current.getRigidity() < __minimumRigidity) {
+		return steplength * std::pow(__minimumRigidity / (__referenceEnergy / eV), 2. - __turbulenceIndex);
+	}
+	else {
+		return steplength * std::pow(candidate->current.getRigidity() / (__referenceEnergy / eV), 2. - __turbulenceIndex);
 	}
 }
 
 
-ParticleSplitting::ParticleSplitting(Surface *surface, int numSplits,
-		int	crossingThreshold, double minWeight, std::string counterid)
-	: surface(surface), crossingThreshold(crossingThreshold),
-	  numSplits(numSplits), minWeight(minWeight), counterid(counterid){};
+ParticleSplitting::ParticleSplitting(Surface *surface, int numSplits, int crossingThreshold, double minWeight, std::string counterid)
+	: surface(surface), crossingThreshold(crossingThreshold), numSplits(numSplits), minWeight(minWeight), counterid(counterid){};
 
 void ParticleSplitting::process(Candidate *candidate) const {
 	const double currentDistance =
