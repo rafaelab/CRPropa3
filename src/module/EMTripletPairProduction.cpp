@@ -10,31 +10,34 @@ namespace crpropa {
 
 static const double mec2 = mass_electron * c_squared;
 
-EMTripletPairProduction::EMTripletPairProduction(ref_ptr<PhotonField> photonField, bool haveElectrons, double thinning, double limit) {
+EMTripletPairProduction::EMTripletPairProduction(ref_ptr<PhotonField> photonField, bool haveElectrons, ref_ptr<Sampler> sampler, double limit) {
 	setPhotonField(photonField);
 	setHaveElectrons(haveElectrons);
 	setLimit(limit);
-	setThinning(thinning);
+	setSampler(sampler);
 }
 
-void EMTripletPairProduction::setPhotonField(ref_ptr<PhotonField> photonField) {
-	this->photonField = photonField;
+void EMTripletPairProduction::setPhotonField(ref_ptr<PhotonField> field) {
+	photonField = field;
 	std::string fname = photonField->getFieldName();
 	setDescription("EMTripletPairProduction: " + fname);
 	initRate(getDataPath("EMTripletPairProduction/rate_" + fname + ".txt"));
 	initCumulativeRate(getDataPath("EMTripletPairProduction/cdf_" + fname + ".txt"));
 }
 
-void EMTripletPairProduction::setHaveElectrons(bool haveElectrons) {
-	this->haveElectrons = haveElectrons;
+void EMTripletPairProduction::setHaveElectrons(bool b) {
+	haveElectrons = b;
 }
 
-void EMTripletPairProduction::setLimit(double limit) {
-	this->limit = limit;
+void EMTripletPairProduction::setLimit(double l) {
+	limit = l;
 }
 
-void EMTripletPairProduction::setThinning(double thinning) {
-	this->thinning = thinning;
+void EMTripletPairProduction::setSampler(ref_ptr<Sampler> s) {
+	if (s == NULL)
+		sampler = new SamplerNull();
+	else
+		sampler = s;
 }
 
 void EMTripletPairProduction::initRate(std::string filename) {
@@ -124,19 +127,18 @@ void EMTripletPairProduction::performInteraction(Candidate *candidate) const {
 	// This approx is valid only for alpha >=100 where alpha = p0*eps*costheta - E0*eps
 	// For our purposes, me << E0 --> p0~E0 --> alpha = E0*eps*(costheta - 1) >= 100
 	double Epp = 5.7e-1 * pow(eps / mec2, -0.56) * pow(E / mec2, 0.44) * mec2;
-
 	double f = Epp / E;
 
 	if (haveElectrons) {
 		Vector3d pos = random.randomInterpolatedPosition(candidate->previous.getPosition(), candidate->current.getPosition());
-		if (random.rand() < pow(1 - f, thinning)) {
-			double w = 1. / pow(1 - f, thinning);
-			candidate->addSecondary(11, Epp / (1 + z), pos, w);
-		}
-		if (random.rand() < pow(f, thinning)) {
-			double w = 1. / pow(f, thinning);
-			candidate->addSecondary(-11, Epp / (1 + z), pos, w);
-		}
+
+		// add secondaries
+		double we = sampler->computeWeight( 11, Epp / (1 + z), f);
+		double wp = sampler->computeWeight(-11, Epp / (1 + z), 1 - f);
+		if (wp > 0)
+			candidate->addSecondary(-11, Epp / (1 + z), pos, wp);
+		if (we > 0)
+			candidate->addSecondary( 11, Epp / (1 + z), pos, we);
 	}
 	// Update the primary particle energy.
 	// This is done after adding the secondaries to correctly set the secondaries parent

@@ -11,31 +11,34 @@ namespace crpropa {
 
 static const double mec2 = mass_electron * c_squared;
 
-EMPairProduction::EMPairProduction(ref_ptr<PhotonField> photonField, bool haveElectrons, double thinning, double limit) {
-	setPhotonField(photonField);
-	setThinning(thinning);
-	setLimit(limit);
-	setHaveElectrons(haveElectrons);
+EMPairProduction::EMPairProduction(ref_ptr<PhotonField> field, bool electrons, ref_ptr<Sampler>sampling, double l) {
+	setPhotonField(field);
+	setLimit(l);
+	setHaveElectrons(electrons);
+	setSampler(sampling);
 }
 
-void EMPairProduction::setPhotonField(ref_ptr<PhotonField> photonField) {
-	this->photonField = photonField;
+void EMPairProduction::setPhotonField(ref_ptr<PhotonField> field) {
+	photonField = field;
 	std::string fname = photonField->getFieldName();
 	setDescription("EMPairProduction: " + fname);
 	initRate(getDataPath("EMPairProduction/rate_" + fname + ".txt"));
 	initCumulativeRate(getDataPath("EMPairProduction/cdf_" + fname + ".txt"));
 }
 
-void EMPairProduction::setHaveElectrons(bool haveElectrons) {
-	this->haveElectrons = haveElectrons;
+void EMPairProduction::setHaveElectrons(bool b) {
+	haveElectrons = b;
 }
 
-void EMPairProduction::setLimit(double limit) {
-	this->limit = limit;
+void EMPairProduction::setLimit(double l) {
+	limit = l;
 }
 
-void EMPairProduction::setThinning(double thinning) {
-	this->thinning = thinning;
+void EMPairProduction::setSampler(ref_ptr<Sampler> s) {
+	if (s == NULL)
+		sampler = new SamplerNull();
+	else
+		sampler = s;
 }
 
 void EMPairProduction::initRate(std::string filename) {
@@ -205,15 +208,14 @@ void EMPairProduction::performInteraction(Candidate *candidate) const {
 
 	// sample random position along current step
 	Vector3d pos = random.randomInterpolatedPosition(candidate->previous.getPosition(), candidate->current.getPosition());
-	// apply sampling
-	if (random.rand() < pow(f, thinning)) {
-		double w = 1. / pow(f, thinning);
-		candidate->addSecondary(11, Ep / (1 + z), pos, w);
-	}
-	if (random.rand() < pow(1 - f, thinning)){
-		double w = 1. / pow(1 - f, thinning);
-		candidate->addSecondary(-11, Ee / (1 + z), pos, w);	
-	}
+
+	// add secondaries
+	double we = sampler->computeWeight( 11, Ee / (1 + z), f);
+	double wp = sampler->computeWeight(-11, Ep / (1 + z), 1 - f);
+	if (we > 0)
+		candidate->addSecondary( 11, Ee / (1 + z), pos, we);
+	if (wp > 0)
+		candidate->addSecondary(-11, Ep / (1 + z), pos, wp);
 }
 
 void EMPairProduction::process(Candidate *candidate) const {

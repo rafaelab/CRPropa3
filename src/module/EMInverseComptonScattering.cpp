@@ -11,31 +11,34 @@ namespace crpropa {
 
 static const double mec2 = mass_electron * c_squared;
 
-EMInverseComptonScattering::EMInverseComptonScattering(ref_ptr<PhotonField> photonField, bool havePhotons, double thinning, double limit) {
+EMInverseComptonScattering::EMInverseComptonScattering(ref_ptr<PhotonField> photonField, bool havePhotons, ref_ptr<Sampler> sampling, double limit) {
 	setPhotonField(photonField);
 	setHavePhotons(havePhotons);
 	setLimit(limit);
-	setThinning(thinning);
+	setSampler(sampling);
 }
 
-void EMInverseComptonScattering::setPhotonField(ref_ptr<PhotonField> photonField) {
-	this->photonField = photonField;
+void EMInverseComptonScattering::setPhotonField(ref_ptr<PhotonField> field) {
+	photonField = field;
 	std::string fname = photonField->getFieldName();
 	setDescription("EMInverseComptonScattering: " + fname);
 	initRate(getDataPath("EMInverseComptonScattering/rate_" + fname + ".txt"));
 	initCumulativeRate(getDataPath("EMInverseComptonScattering/cdf_" + fname + ".txt"));
 }
 
-void EMInverseComptonScattering::setHavePhotons(bool havePhotons) {
-	this->havePhotons = havePhotons;
+void EMInverseComptonScattering::setHavePhotons(bool b) {
+	havePhotons = b;
 }
 
-void EMInverseComptonScattering::setLimit(double limit) {
-	this->limit = limit;
+void EMInverseComptonScattering::setLimit(double l) {
+	limit = l;
 }
 
-void EMInverseComptonScattering::setThinning(double thinning) {
-	this->thinning = thinning;
+void EMInverseComptonScattering::setSampler(ref_ptr<Sampler> s) {
+	if (s == NULL)
+		sampler = new SamplerNull();
+	else
+		sampler = s;
 }
 
 void EMInverseComptonScattering::initRate(std::string filename) {
@@ -192,11 +195,11 @@ void EMInverseComptonScattering::performInteraction(Candidate *candidate) const 
 	double Esecondary = E - Enew;
 	double f = Enew / E;
 	if (havePhotons) {
-		if (random.rand() < pow(1 - f, thinning)) {
-			double w = 1. / pow(1 - f, thinning);
-			Vector3d pos = random.randomInterpolatedPosition(candidate->previous.getPosition(), candidate->current.getPosition());
+		Vector3d pos = random.randomInterpolatedPosition(candidate->previous.getPosition(), candidate->current.getPosition());
+
+		double w = sampler->computeWeight(22, Esecondary / (1 + z), f);
+		if (w > 0)
 			candidate->addSecondary(22, Esecondary / (1 + z), pos, w);
-		}
 	}
 
 	// update the primary particle energy; do this after adding the secondary to correctly set the secondary's parent
