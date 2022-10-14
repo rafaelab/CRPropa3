@@ -1,11 +1,15 @@
 #ifndef CRPROPA_EMINVERSECOMPTONSCATTERING_H
 #define CRPROPA_EMINVERSECOMPTONSCATTERING_H
 
-#include <fstream>
 #include <cmath>
+#include <fstream>
+#include <vector>
 
 #include "crpropa/Module.h"
 #include "crpropa/PhotonBackground.h"
+#include "crpropa/Referenced.h"
+#include "crpropa/Sampler.h"
+
 
 namespace crpropa {
 /**
@@ -27,9 +31,9 @@ namespace crpropa {
 class EMInverseComptonScattering: public Module {
 private:
 	ref_ptr<PhotonField> photonField;
+	ref_ptr<Sampler> sampler;
 	bool havePhotons;
 	double limit;
-	double thinning;
 
 	// tabulated interaction rate 1/lambda(E)
 	std::vector<double> tabEnergy;  //!< electron energy in [J]
@@ -44,15 +48,15 @@ public:
 	/** Constructor
 	 @param photonField		target photon field
 	 @param havePhotons		if true, add secondary photons as candidates
-	 @param thinning		weighted sampling of secondaries (0: all particles are tracked; 1: maximum thinning)
+	 @param sampler		    sampling object (see Sampling.h)
 	 @param limit			step size limit as fraction of mean free path
 	 */
-	EMInverseComptonScattering(ref_ptr<PhotonField> photonField, bool havePhotons = false, double thinning = 0, double limit = 0.1);
+	EMInverseComptonScattering(ref_ptr<PhotonField> photonField, bool havePhotons = false, ref_ptr<Sampler> sampler = NULL, double limit = 0.1);
 
 	void setPhotonField(ref_ptr<PhotonField> photonField);
 	void setHavePhotons(bool havePhotons);
 	void setLimit(double limit);
-	void setThinning(double thinning);
+	void setSampler(ref_ptr<Sampler> sampler);
 
 	void initRate(std::string filename);
 	void initCumulativeRate(std::string filename);

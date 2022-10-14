@@ -3,9 +3,13 @@
 
 #include <fstream>
 #include <cmath>
+#include <vector>
 
 #include "crpropa/Module.h"
 #include "crpropa/PhotonBackground.h"
+#include "crpropa/Referenced.h"
+#include "crpropa/Sampler.h"
+
 
 namespace crpropa {
 /**
@@ -27,9 +31,9 @@ namespace crpropa {
 class EMTripletPairProduction: public Module {
 private:
 	ref_ptr<PhotonField> photonField;
+	ref_ptr<Sampler> sampler;
 	bool haveElectrons;
 	double limit;
-	double thinning;
 
 	// tabulated interaction rate 1/lambda(E)
 	std::vector<double> tabEnergy;  //!< electron energy in [J]
@@ -44,15 +48,15 @@ public:
 	/** Constructor
 	 @param photonField		target photon field
 	 @param haveElectrons	if true, add secondary electrons as candidates
-	 @param thinning		weighted sampling of secondaries (0: all particles are tracked; 1: maximum thinning)
+	 @param sampler		    sampling object (see Sampling.h)
 	 @param limit			step size limit as fraction of mean free path
 	 */
-	EMTripletPairProduction(ref_ptr<PhotonField> photonField, bool haveElectrons = false, double thinning = 0, double limit = 0.1);
+	EMTripletPairProduction(ref_ptr<PhotonField> photonField, bool haveElectrons = false, ref_ptr<Sampler> sampler = NULL, double limit = 0.1);
 
 	void setPhotonField(ref_ptr<PhotonField> photonField);
 	void setHaveElectrons(bool haveElectrons);
 	void setLimit(double limit);
-	void setThinning(double thinning);
+	void setSampler(ref_ptr<Sampler> sampler);
 
 	void initRate(std::string filename);
 	void initCumulativeRate(std::string filename);
