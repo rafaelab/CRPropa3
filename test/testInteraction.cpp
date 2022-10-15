@@ -665,7 +665,6 @@ TEST(EMPairProduction, secondaries) {
 	ref_ptr<PhotonField> URB = new URB_Protheroe96();
 	EMPairProduction m(CMB_instance);
 	m.setHaveElectrons(true);
-	m.setThinning(0.);
 
 	std::vector< ref_ptr<PhotonField> > fields;
 	fields.push_back(CMB_instance);
@@ -751,7 +750,6 @@ TEST(EMDoublePairProduction, secondaries) {
 	ref_ptr<PhotonField> URB = new URB_Nitu21();
 	EMDoublePairProduction m(CMB_instance);
 	m.setHaveElectrons(true);
-	m.setThinning(0.);
 
 	std::vector< ref_ptr<PhotonField> > fields;
 	fields.push_back(CMB_instance);
