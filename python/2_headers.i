@@ -41,6 +41,8 @@ using namespace crpropa;   // for usage of namespace in header files, necessary
 %ignore operator crpropa::SourceList*;
 %ignore operator crpropa::SourceInterface*;
 %ignore operator crpropa::SourceFeature*;
+%ignore operator crpropa::Sampler*;
+%ignore operator crpropa::SamplerList*;
 %ignore operator crpropa::Candidate*;
 %ignore operator crpropa::Module*;
 %ignore operator crpropa::ModuleList*;
@@ -180,6 +182,7 @@ using namespace crpropa;   // for usage of namespace in header files, necessary
 %include "crpropa/ParticleID.h"
 %include "crpropa/ParticleMass.h"
 %include "crpropa/Version.h"
+
 
 %import "crpropa/Variant.h"
 
@@ -400,6 +403,11 @@ using namespace crpropa;   // for usage of namespace in header files, necessary
 %template(PhotonFieldRefPtr) crpropa::ref_ptr<crpropa::PhotonField>;
 %feature("director") crpropa::PhotonField;
 %include "crpropa/PhotonBackground.h"
+
+%implicitconv crpropa::ref_ptr<crpropa::Sampler>;
+%template(SamplerRefPtr) crpropa::ref_ptr<crpropa::Sampler>;
+%feature("director") crpropa::Sampler;
+%include "crpropa/Sampler.h"
 
 %implicitconv crpropa::ref_ptr<crpropa::AdvectionField>;
 %template(AdvectionFieldRefPtr) crpropa::ref_ptr<crpropa::AdvectionField>;
@@ -699,6 +707,3 @@ class ParticleCollectorIterator {
 %template(StepLengthModifierRefPtr) crpropa::ref_ptr<crpropa::StepLengthModifier>;
 %feature("director") crpropa::StepLengthModifier;
 %include "crpropa/module/Acceleration.h"
-
-
-

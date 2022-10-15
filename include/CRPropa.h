@@ -19,6 +19,7 @@
 #include "crpropa/PhotonPropagation.h"
 #include "crpropa/Random.h"
 #include "crpropa/Referenced.h"
+#include "crpropa/Sampler.h"
 #include "crpropa/Source.h"
 #include "crpropa/Units.h"
 #include "crpropa/Variant.h"
