@@ -1,9 +1,10 @@
 #ifndef CRPROPA_CANDIDATE_H
 #define CRPROPA_CANDIDATE_H
 
-#include "crpropa/ParticleState.h"
-#include "crpropa/Referenced.h"
 #include "crpropa/AssocVector.h"
+#include "crpropa/ParticleState.h"
+#include "crpropa/Random.h"
+#include "crpropa/Referenced.h"
 #include "crpropa/Variant.h"
 
 #include <vector>
@@ -118,10 +119,13 @@ public:
 	 Trajectory length and redshift are copied from the parent.
 	 */
 	void addSecondary(Candidate *c);
-	inline void addSecondary(ref_ptr<Candidate> c) { addSecondary(c.get()); };
+	inline void addSecondary(ref_ptr<Candidate> c) { 
+		addSecondary(c.get()); 
+	};
 	void addSecondary(int id, double energy, double w = 1.);
 	void addSecondary(int id, double energy, Vector3d position, double w = 1.);
-	void clearSecondaries();
+
+	void clearSecondaries();;
 
 	std::string getDescription() const;
 

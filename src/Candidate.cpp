@@ -132,8 +132,8 @@ void Candidate::addSecondary(int id, double energy, double w) {
 	ref_ptr<Candidate> secondary = new Candidate;
 	secondary->setRedshift(redshift);
 	secondary->setTrajectoryLength(trajectoryLength);
-  secondary->setWeight(weight * w);
-  secondary->source = source;
+	secondary->setWeight(weight * w);
+	secondary->source = source;
 	secondary->previous = previous;
 	secondary->created = previous;
 	secondary->current = current;
