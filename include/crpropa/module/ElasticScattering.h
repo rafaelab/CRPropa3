@@ -1,10 +1,22 @@
 #ifndef CRPROPA_ELASTICSCATTERING_H
 #define CRPROPA_ELASTICSCATTERING_H
 
-#include "crpropa/Module.h"
-#include "crpropa/PhotonBackground.h"
 
+#include <cmath>
+#include <limits>
+#include <sstream>
+#include <fstream>
+#include <stdexcept>
 #include <vector>
+
+#include "crpropa/Module.h"
+#include "crpropa/ParticleID.h"
+#include "crpropa/ParticleMass.h"
+#include "crpropa/PhotonBackground.h"
+#include "crpropa/Random.h"
+#include "crpropa/Sampler.h"
+#include "crpropa/Units.h"
+
 
 namespace crpropa {
 
@@ -15,6 +27,7 @@ namespace crpropa {
 class ElasticScattering: public Module {
 private:
 	ref_ptr<PhotonField> photonField;
+	ref_ptr<Sampler> sampler;
 
 	std::vector<double> tabRate; // elastic scattering rate
 	std::vector<std::vector<double> > tabCDF; // CDF as function of background photon energy
@@ -26,17 +39,15 @@ private:
 	static const double epsmax; // maximum log10(eps / J)
 	static const size_t neps;   // number of eps steps
 
-	double thinning;   // thinning of secondary photons
-
 public:
 	/** Constructor
 	 @param photonField		target photon field
 	 */
-	ElasticScattering(ref_ptr<PhotonField> photonField);
+	ElasticScattering(ref_ptr<PhotonField> photonField, ref_ptr<Sampler> sampler = NULL);
 	void initRate(std::string filename);
 	void initCDF(std::string filename);
 	void setPhotonField(ref_ptr<PhotonField> photonField);
-	void setThinning(double t);
+	void setSampler(ref_ptr<Sampler> sampler);
 	void process(Candidate *candidate) const;
 };
 

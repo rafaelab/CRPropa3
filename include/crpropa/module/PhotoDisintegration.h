@@ -1,11 +1,25 @@
 #ifndef CRPROPA_PHOTODISINTEGRATION_H
 #define CRPROPA_PHOTODISINTEGRATION_H
 
-#include "crpropa/Module.h"
-#include "crpropa/PhotonBackground.h"
-
-#include <vector>
+#include <cmath>
+#include <fstream>
+#include <limits>
 #include <map>
+#include <sstream>
+#include <stdexcept>
+#include <vector>
+
+#include "crpropa/Module.h"
+#include "crpropa/ParticleID.h"
+#include "crpropa/ParticleMass.h"
+#include "crpropa/PhotonBackground.h"
+#include "crpropa/Random.h"
+#include "crpropa/Sampler.h"
+#include "crpropa/Units.h"
+
+#include "kiss/logger.h"
+
+
 
 namespace crpropa {
 /**
@@ -20,8 +34,8 @@ namespace crpropa {
 class PhotoDisintegration: public Module {
 private:
 	ref_ptr<PhotonField> photonField;
+	ref_ptr<Sampler> sampler;
 	double limit; // fraction of mean free path for limiting the next step
-	double thinning; // thinning parameter for weighted-sampling (maximum 1, minimum 0)
 	bool havePhotons;
 
 	struct Branch {
@@ -48,12 +62,12 @@ public:
 	 @param havePhotons		if true, add secondary photons as candidates
 	 @param limit			step size limit as fraction of mean free path
 	 */
-	PhotoDisintegration(ref_ptr<PhotonField> photonField, bool havePhotons = false, double limit = 0.1);
+	PhotoDisintegration(ref_ptr<PhotonField> photonField, bool havePhotons = false, ref_ptr<Sampler> sampler = NULL, double limit = 0.1);
 
 	void setPhotonField(ref_ptr<PhotonField> photonField);
 	void setHavePhotons(bool havePhotons);
 	void setLimit(double limit);
-	void setThinning(double thinning);
+	void setSampler(ref_ptr<Sampler> sampler);
 
 	void initRate(std::string filename);
 	void initBranching(std::string filename);
