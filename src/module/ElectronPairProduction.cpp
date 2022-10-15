@@ -1,21 +1,14 @@
 #include "crpropa/module/ElectronPairProduction.h"
-#include "crpropa/Units.h"
-#include "crpropa/ParticleID.h"
-#include "crpropa/ParticleMass.h"
-#include "crpropa/Random.h"
 
-#include <fstream>
-#include <limits>
-#include <stdexcept>
 
 namespace crpropa {
 
-ElectronPairProduction::ElectronPairProduction(ref_ptr<PhotonField> photonField, bool electrons, double l) {
+ElectronPairProduction::ElectronPairProduction(ref_ptr<PhotonField> photonField, bool electrons, ref_ptr<Sampler> sampler, int maxSamples, double limit) {
 	setPhotonField(photonField);
 	setHaveElectrons(electrons);
-	setLimit(l);
-	setThinning(0.);
-	setMaximumSamples(0);
+	setLimit(limit);
+	setSampler(sampler);
+	setMaximumSamples(maxSamples);
 }
 
 void ElectronPairProduction::setPhotonField(ref_ptr<PhotonField> photonField) {
@@ -30,16 +23,19 @@ void ElectronPairProduction::setHaveElectrons(bool electrons) {
 	haveElectrons = electrons;
 }
 
+void ElectronPairProduction::setMaximumSamples(int nSamples) {
+	maximumSamples = nSamples;
+}
+
 void ElectronPairProduction::setLimit(double l) {
 	limit = l;
 }
 
-void ElectronPairProduction::setThinning(double t) {
-	thinning = t;
-}
-
-void ElectronPairProduction::setMaximumSamples(int nSamples) {
-	maximumSamples = nSamples;
+void ElectronPairProduction::setSampler(ref_ptr<Sampler> s) {
+	if (s == NULL)
+		sampler = new SamplerNull();
+	else
+		sampler = s;
 }
 
 void ElectronPairProduction::initRate(std::string filename) {
@@ -131,6 +127,7 @@ void ElectronPairProduction::process(Candidate *c) const {
 		int counter = 0;
 		double dE0 = dE;
 		std::vector<double> energies;
+
 		while (dE > 0) {
 			size_t j = random.randBin(tabSpectrum[i]);
 			double Ee = pow(10, 6.95 + (j + random.rand()) * 0.1) * eV;
@@ -144,47 +141,38 @@ void ElectronPairProduction::process(Candidate *c) const {
 			// create pair and repeat with remaining energy
 			dE -= Epair;
 
-
-			// original
-			// Vector3d pos = random.randomInterpolatedPosition(c->previous.getPosition(), c->current.getPosition());
-			// c->addSecondary( 11, Ee, pos);
-			// c->addSecondary(-11, Ee, pos);
-
-			// activate the "per-step" sampling if maximumSamples is explicitly set
 			if (maximumSamples > 0) {
-				if (counter >= maximumSamples) 
-					break;			
+				if (counter >= maximumSamples)
+					break;
 			}
 
-			// store electron energies in array
 			energies.push_back(Epair);
-
 			counter++;
 		}
 
 		// the while loop before gave the total energy, which is just a fraction of the required
 		// the factor w1 corrects the total energy due to the the uniform sampling
-		double w1 = 1;
+		double w0 = 1;
 		if (maximumSamples > 0 && dE > 0)
-			w1 = 1. / (1. - dE / dE0); 
+			w0 *= 1. / (1. - dE / dE0); 
 
-		// loop over sampled photons and attribute weights accordingly
+		// draw random position
+		Vector3d pos = random.randomInterpolatedPosition(c->previous.getPosition(), c->current.getPosition());
+
+		// loop over sampled electrons and attribute weights accordingly
 		for (int i = 0; i < energies.size(); i++) {
 			double Enew = energies[i] / 2.;
 			double f = Enew / (E0 - dE0);
-			double w = w1 / pow(f, thinning);
+	
+			double wp = w0 * sampler->computeWeight(-11, Enew, f, i);
+			double we = w0 * sampler->computeWeight( 11, Enew, f, i);
 
-			// draw random position
-			Vector3d pos = random.randomInterpolatedPosition(c->previous.getPosition(), c->current.getPosition());
-
-			// thinning procedure: accepts only a few random secondaries
-			if (random.rand() < pow(f, thinning)) {
-				c->addSecondary( 11, Enew, pos, w);
-			}
-			if (random.rand() < pow(1 - f, thinning)) {
-				c->addSecondary(-11, Enew, pos, w);
-			}
+			if (wp > 0)
+				c->addSecondary(-11, Enew, pos, wp);
+			if (we > 0)
+				c->addSecondary(11, Enew, pos, we);
 		}
+
 	} // haveElectrons
 
 	c->current.setLorentzFactor(lf * (1 - loss));
