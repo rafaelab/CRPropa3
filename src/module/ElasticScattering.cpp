@@ -1,14 +1,5 @@
 #include "crpropa/module/ElasticScattering.h"
-#include "crpropa/Units.h"
-#include "crpropa/ParticleID.h"
-#include "crpropa/ParticleMass.h"
-#include "crpropa/Random.h"
 
-#include <cmath>
-#include <limits>
-#include <sstream>
-#include <fstream>
-#include <stdexcept>
 
 namespace crpropa {
 
@@ -19,9 +10,9 @@ const double ElasticScattering::epsmin = log10(2 * eV) + 3;    // log10 minimum 
 const double ElasticScattering::epsmax = log10(2 * eV) + 8.12; // log10 maximum photon background energy in nucleus rest frame for elastic scattering
 const size_t ElasticScattering::neps = 513; // number of photon background energies in nucleus rest frame
 
-ElasticScattering::ElasticScattering(ref_ptr<PhotonField> f) {
+ElasticScattering::ElasticScattering(ref_ptr<PhotonField> f, ref_ptr<Sampler> sampler) {
 	setPhotonField(f);
-	setThinning(0);
+	setSampler(sampler);
 }
 
 void ElasticScattering::setPhotonField(ref_ptr<PhotonField> photonField) {
@@ -32,8 +23,11 @@ void ElasticScattering::setPhotonField(ref_ptr<PhotonField> photonField) {
 	initCDF(getDataPath("ElasticScattering/cdf_" + fname.substr(0,3) + ".txt"));
 }
 
-void ElasticScattering::setThinning(double thinning) {
-	thinning = thinning;
+void ElasticScattering::setSampler(ref_ptr<Sampler> s) {
+	if (s == NULL)
+		sampler = new SamplerNull();
+	else
+		sampler = s;
 }
 
 void ElasticScattering::initRate(std::string filename) {
@@ -119,19 +113,18 @@ void ElasticScattering::process(Candidate *candidate) const {
 		double binWidth = (epsmax - epsmin) / (neps - 1); // logarithmic bin width
 		double eps = pow(10, epsmin + (j + random.rand()) * binWidth);
 
+		// draw random position for secondary photons
+		Vector3d pos = random.randomInterpolatedPosition(candidate->previous.getPosition(), candidate->current.getPosition());
+
 		// boost to lab frame
 		double cosTheta = 2 * random.rand() - 1;
 		double E = eps * candidate->current.getLorentzFactor() * (1. - cosTheta);
 		double f = E / E0;
-
-		// draw random position for secondary photons
-		Vector3d pos = random.randomInterpolatedPosition(candidate->previous.getPosition(), candidate->current.getPosition());
+		double w = sampler->computeWeight(22, E, f);
 
 		// add secondary photons
-		if (random.rand() < pow(f, thinning)) {
-			double w = 1 / pow(f, thinning);
+		if (w > 0)
 			candidate->addSecondary(22, E, pos, w);
-		}
 
 		// repeat with remaining step
 		step -= randDist;

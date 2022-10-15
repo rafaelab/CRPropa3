@@ -1,15 +1,5 @@
 #include "crpropa/module/PhotoDisintegration.h"
-#include "crpropa/Units.h"
-#include "crpropa/ParticleID.h"
-#include "crpropa/ParticleMass.h"
-#include "crpropa/Random.h"
-#include "kiss/logger.h"
 
-#include <cmath>
-#include <limits>
-#include <sstream>
-#include <fstream>
-#include <stdexcept>
 
 namespace crpropa {
 
@@ -17,11 +7,11 @@ const double PhotoDisintegration::lgmin = 6;  // minimum log10(Lorentz-factor)
 const double PhotoDisintegration::lgmax = 14; // maximum log10(Lorentz-factor)
 const size_t PhotoDisintegration::nlg = 201;  // number of Lorentz-factor steps
 
-PhotoDisintegration::PhotoDisintegration(ref_ptr<PhotonField> f, bool photons, double l) {
+PhotoDisintegration::PhotoDisintegration(ref_ptr<PhotonField> f, bool photons, ref_ptr<Sampler> sampler, double limit) {
 	setPhotonField(f);
 	setHavePhotons(photons);
-	setLimit(l);
-	setThinning(0);
+	setLimit(limit);
+	setSampler(sampler);
 }
 
 void PhotoDisintegration::setPhotonField(ref_ptr<PhotonField> photonField) {
@@ -41,8 +31,11 @@ void PhotoDisintegration::setLimit(double l) {
 	limit = l;
 }
 
-void PhotoDisintegration::setThinning(double t) {
-	thinning = t;
+void PhotoDisintegration::setSampler(ref_ptr<Sampler> s) {
+	if (s == NULL)
+		sampler = new SamplerNull();
+	else
+		sampler = s;
 }
 
 void PhotoDisintegration::initRate(std::string filename) {
@@ -267,16 +260,14 @@ void PhotoDisintegration::performInteraction(Candidate *candidate, int channel) 
 		if (random.rand() > pdPhoton[key][i].emissionProbability[l])
 			continue;
 
-		// boost to lab frame
+		// boost to lab frame and add
 		double cosTheta = 2 * random.rand() - 1;
 		double E = pdPhoton[key][i].energy * lf * (1 - cosTheta);
-
-		// add secondary photon
 		double f = E / E0;
-		if (random.rand() < pow(f, thinning)) {
-			double w = 1 / pow(f, thinning);
+		double w = sampler->computeWeight(22, E , f);
+
+		if (w > 0)
 			candidate->addSecondary(22, E, pos, w);
-		}
 	}
 }
 

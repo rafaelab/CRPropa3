@@ -197,7 +197,7 @@ void EMInverseComptonScattering::performInteraction(Candidate *candidate) const 
 	if (havePhotons) {
 		Vector3d pos = random.randomInterpolatedPosition(candidate->previous.getPosition(), candidate->current.getPosition());
 
-		double w = sampler->computeWeight(22, Esecondary / (1 + z), f);
+		double w = sampler->computeWeight(22, Esecondary / (1 + z), 1 - f);
 		if (w > 0)
 			candidate->addSecondary(22, Esecondary / (1 + z), pos, w);
 	}
