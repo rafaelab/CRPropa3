@@ -1,9 +1,23 @@
 #ifndef CRPROPA_NUCLEARDECAY_H
 #define CRPROPA_NUCLEARDECAY_H
 
-#include "crpropa/Module.h"
-
+#include <cmath>
+#include <fstream>
+#include <limits>
+#include <stdexcept>
 #include <vector>
+
+#include "crpropa/Module.h"
+#include "crpropa/ParticleID.h"
+#include "crpropa/ParticleMass.h"
+#include "crpropa/Random.h"
+#include "crpropa/Sampler.h"
+#include "crpropa/Units.h"
+
+#include "kiss/logger.h"
+
+
+
 
 namespace crpropa {
 /**
@@ -27,9 +41,7 @@ private:
 	bool haveElectrons;
 	bool havePhotons;
 	bool haveNeutrinos;
-	double thinningElectrons;
-	double thinningNeutrinos;
-	double thinningPhotons;
+	ref_ptr<Sampler> sampler;
 
 	struct DecayMode {
 		int channel; // (#beta- #beta+ #alpha #proton #neutron)
@@ -46,14 +58,12 @@ public:
 	 @param neutrinos		if true, add secondary neutrinos as candidates
 	 @param limit			step size limit as fraction of mean free path
 	 */
-	NuclearDecay(bool electrons = false, bool photons = false, bool neutrinos = false, double limit = 0.1);
+	NuclearDecay(bool electrons = false, bool photons = false, bool neutrinos = false, ref_ptr<Sampler> sampler = NULL, double limit = 0.1);
 	void setLimit(double limit);
 	void setHaveElectrons(bool b);
 	void setHavePhotons(bool b);
 	void setHaveNeutrinos(bool b);
-	void setThinningElectrons(double thinning);
-	void setThinningPhotons(double thinning);
-	void setThinningNeutrinos(double thinning);
+	void setSampler(ref_ptr<Sampler> s);
 	void process(Candidate *candidate) const;
 	void performInteraction(Candidate *candidate, int channel) const;
 	void gammaEmission(Candidate *candidate, int channel) const;

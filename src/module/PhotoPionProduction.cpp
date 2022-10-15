@@ -1,31 +1,17 @@
 #include "crpropa/module/PhotoPionProduction.h"
-#include "crpropa/Units.h"
-#include "crpropa/ParticleID.h"
-#include "crpropa/Random.h"
 
-#include "kiss/convert.h"
-#include "kiss/logger.h"
-#include "sophia.h"
-
-#include <limits>
-#include <cmath>
-#include <sstream>
-#include <fstream>
-#include <stdexcept>
 
 namespace crpropa {
 
-PhotoPionProduction::PhotoPionProduction(ref_ptr<PhotonField> field, bool photons, bool neutrinos, bool electrons, bool antiNucleons, double l, bool redshift) {
+PhotoPionProduction::PhotoPionProduction(ref_ptr<PhotonField> field, bool photons, bool neutrinos, bool electrons, bool antiNucleons, ref_ptr<Sampler> sampler,  double limit, bool redshift) {
+	haveRedshiftDependence = redshift;
+	setPhotonField(field);
 	setHavePhotons(photons);
 	setHaveNeutrinos(neutrinos);
 	setHaveElectrons(electrons);
 	setHaveAntiNucleons(antiNucleons);
-	setHaveRedshiftDependence(redshift);
-	setLimit(l);
-	setThinningElectrons(0.);
-	setThinningPhotons(0.);
-	setThinningNeutrinos(0.);
-	setPhotonField(field);
+	setSampler(sampler);
+	setLimit(limit);
 }
 
 void PhotoPionProduction::setPhotonField(ref_ptr<PhotonField> field) {
@@ -74,16 +60,11 @@ void PhotoPionProduction::setLimit(double l) {
 	limit = l;
 }
 
-void PhotoPionProduction::setThinningPhotons(double thinning) {
-	thinningPhotons = thinning;
-}
-
-void PhotoPionProduction::setThinningElectrons(double thinning) {
-	thinningElectrons = thinning;
-}
-
-void PhotoPionProduction::setThinningNeutrinos(double thinning) {
-	thinningNeutrinos = thinning;
+void PhotoPionProduction::setSampler(ref_ptr<Sampler> s) {
+	if (s == NULL)
+		sampler = new SamplerNull();
+	else
+		sampler = s;
 }
 
 void PhotoPionProduction::initRate(std::string filename) {
@@ -173,7 +154,7 @@ void PhotoPionProduction::process(Candidate *candidate) const {
 	do {
 		// check if nucleus
 		int id = candidate->current.getId();
-		if (!isNucleus(id))
+		if (! isNucleus(id))
 			return;
 
 		// find interaction with minimum random distance
@@ -261,6 +242,7 @@ void PhotoPionProduction::performInteraction(Candidate *candidate, bool onProton
 	if (nParticles == 0)
 		return;
 
+	double w = 1.;
 	for (int i = 0; i < nParticles; i++) { // loop over out-going particles
 		double Eout = outputEnergy[3][i] * GeV; // only the energy is used; could be changed for more detail
 		double f = Eout / E;
@@ -276,70 +258,61 @@ void PhotoPionProduction::performInteraction(Candidate *candidate, bool onProton
 		case -13: // anti-proton
 		case -14: // anti-neutron
 			if (haveAntiNucleons)
-				try
-				{
+				try {
 					candidate->addSecondary(-sign * nucleusId(1, 14 + pType), Eout, pos);
-				}
-				catch (std::runtime_error &e)
-				{
+				} catch (std::runtime_error &e) {
 					KISS_LOG_ERROR<< "Something went wrong in the PhotoPionProduction (anti-nucleon production)\n" << "Something went wrong in the PhotoPionProduction\n"<< "Please report this error on https://github.com/CRPropa/CRPropa3/issues including your simulation setup and the following random seed:\n" << Random::instance().getSeed_base64();
 					throw;
 				}
 			break;
 		case 1: // photon
 			if (havePhotons) {
-				if (random.rand() < pow(f, thinningPhotons)) {
-					double w = 1 / pow(f, thinningPhotons);
-					candidate->addSecondary(22, Eout, pos);
-				}
+				double w = sampler->computeWeight(22, Eout, f);
+				if (w > 0)
+					candidate->addSecondary(22, Eout, pos, w);
 			}
 			break;
 		case 2: // positron
 			if (haveElectrons) {
-				if (random.rand() < pow(f, thinningElectrons)) {
-					double w = 1 / pow(f, thinningElectrons);
+				double w = sampler->computeWeight(-11 * sign, Eout, f);
+				if (w > 0)
 					candidate->addSecondary(sign * -11, Eout, pos, w);
-				} 
 			}
 			break;
 		case 3: // electron
 			if (haveElectrons) {
-				if (random.rand() < pow(f, thinningElectrons)) {
-					double w = 1 / pow(f, thinningElectrons);
+				double w = sampler->computeWeight(11 * sign, Eout, f);
+				if (w > 0)
 					candidate->addSecondary(sign * 11, Eout, pos, w);
-				} 
 			}
 			break;
 		case 15: // nu_e
 			if (haveNeutrinos) {
-				if (random.rand() < pow(f, thinningNeutrinos)) {
-					double w = 1 / pow(f, thinningNeutrinos);
+				double w = sampler->computeWeight(12 * sign, Eout);
+				if (w > 0)
 					candidate->addSecondary(sign * 12, Eout, pos, w);
-				} 
 			}
 			break;
 		case 16: // anti-nu_e
 			if (haveNeutrinos) {
-				if (random.rand() < pow(f, thinningNeutrinos)) {
-					double w = 1 / pow(f, thinningNeutrinos);
+				double w = sampler->computeWeight(-12 * sign, Eout);
+				if (w > 0)
 					candidate->addSecondary(sign * -12, Eout, pos, w);
-				} 
 			}
 			break;
 		case 17: // nu_mu
 			if (haveNeutrinos) {
-				if (random.rand() < pow(f, thinningNeutrinos)) {
-					double w = 1 / pow(f, thinningNeutrinos);
+				double w = sampler->computeWeight(14 * sign, Eout);
+				if (w > 0)
 					candidate->addSecondary(sign * 14, Eout, pos, w);
-				}
+
 			}
 			break;
 		case 18: // anti-nu_mu
 			if (haveNeutrinos) {
-				if (random.rand() < pow(f, thinningNeutrinos)) {
-					double w = 1 / pow(f, thinningNeutrinos);
+				double w = sampler->computeWeight(-14 * sign, Eout);
+				if (w > 0)
 					candidate->addSecondary(sign * -14, Eout, pos, w);
-				}
 			}
 			break;
 		default:

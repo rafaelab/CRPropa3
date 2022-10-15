@@ -1,10 +1,26 @@
 #ifndef CRPROPA_PHOTOPIONPRODUCTION_H
 #define CRPROPA_PHOTOPIONPRODUCTION_H
 
-#include "crpropa/Module.h"
-#include "crpropa/PhotonBackground.h"
 
+#include <cmath>
+#include <limits>
+#include <fstream>
+#include <sstream>
+#include <stdexcept>
 #include <vector>
+
+#include "crpropa/Module.h"
+#include "crpropa/ParticleID.h"
+#include "crpropa/PhotonBackground.h"
+#include "crpropa/Random.h"
+#include "crpropa/Sampler.h"
+#include "crpropa/Units.h"
+
+#include "kiss/convert.h"
+#include "kiss/logger.h"
+#include "sophia.h"
+
+
 
 namespace crpropa {
 /**
@@ -26,6 +42,7 @@ class PhotoPionProduction: public Module {
 
 protected:
 	ref_ptr<PhotonField> photonField;
+	ref_ptr<Sampler> sampler;
 	std::vector<double> tabLorentz; ///< Lorentz factor of nucleus
 	std::vector<double> tabRedshifts;  ///< redshifts (optional for haveRedshiftDependence)
 	std::vector<double> tabProtonRate; ///< interaction rate in [1/m] for protons
@@ -36,9 +53,6 @@ protected:
 	bool haveElectrons;
 	bool haveAntiNucleons;
 	bool haveRedshiftDependence;
-	double thinningPhotons;
-	double thinningElectrons;
-	double thinningNeutrinos;
 
 	// called by: sampleEps
 	// - input: s [GeV^2]
@@ -103,18 +117,18 @@ public:
 		bool neutrinos = false,
 		bool electrons = false,
 		bool antiNucleons = false,
+		ref_ptr<Sampler> sampler = NULL,
 		double limit = 0.1,
-		bool haveRedshiftDependence = false);
+		bool haveRedshiftDependence = false
+		);
 	void setPhotonField(ref_ptr<PhotonField> photonField);
+	void setSampler(ref_ptr<Sampler> s);
 	void setHavePhotons(bool b);
 	void setHaveNeutrinos(bool b);
 	void setHaveElectrons(bool b);
 	void setHaveAntiNucleons(bool b);
 	void setHaveRedshiftDependence(bool b);
 	void setLimit(double limit);
-	void setThinningPhotons(double t);
-	void setThinningElectrons(double t);
-	void setThinningNeutrinos(double t);
 	void initRate(std::string filename);
 	double nucleonMFP(double gamma, double z, bool onProton) const;
 	double nucleiModification(int A, int X) const;

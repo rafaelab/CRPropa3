@@ -1,26 +1,14 @@
 #include "crpropa/module/NuclearDecay.h"
-#include "crpropa/Units.h"
-#include "crpropa/ParticleID.h"
-#include "crpropa/ParticleMass.h"
-#include "crpropa/Random.h"
 
-#include <fstream>
-#include <limits>
-#include <cmath>
-#include <stdexcept>
-
-#include "kiss/logger.h"
 
 namespace crpropa {
 
-NuclearDecay::NuclearDecay(bool electrons, bool photons, bool neutrinos, double l) {
+NuclearDecay::NuclearDecay(bool electrons, bool photons, bool neutrinos, ref_ptr<Sampler> sampler, double limit) {
 	setHavePhotons(photons);
 	setHaveElectrons(electrons);
 	setHaveNeutrinos(neutrinos);
-	setLimit(l);
-	setThinningElectrons(0);
-	setThinningPhotons(0);
-	setThinningNeutrinos(0);
+	setLimit(limit);
+	setSampler(sampler);
 	setDescription("NuclearDecay");
 
 	// load decay table
@@ -70,16 +58,11 @@ void NuclearDecay::setLimit(double l) {
 	limit = l;
 }
 
-void NuclearDecay::setThinningElectrons(double t) {
-	thinningElectrons = t;
-}
-
-void NuclearDecay::setThinningPhotons(double t) {
-	thinningPhotons = t;
-}
-
-void NuclearDecay::setThinningNeutrinos(double t) {
-	thinningNeutrinos = t;
+void NuclearDecay::setSampler(ref_ptr<Sampler> s) {
+	if (s == NULL)
+		sampler = new SamplerNull();
+	else
+		sampler = s;
 }
 
 void NuclearDecay::process(Candidate *candidate) const {
@@ -188,14 +171,11 @@ void NuclearDecay::gammaEmission(Candidate *candidate, int channel) const {
 		// create secondary photon; boost to lab frame
 		double cosTheta = 2 * random.rand() - 1;
 		double E = energy[i] * candidate->current.getLorentzFactor() * (1. - cosTheta);
-
 		double f = E / E0; // energy fraction taken by secondary
+		double w = sampler->computeWeight(22, E, f);
 
-		// add secondary photon
-		if (random.rand() < pow(f, thinningPhotons)) {
-			double w = 1 / pow(f, thinningPhotons);
+		if (w > 0)
 			candidate->addSecondary(22, E, pos, w);
-		}
 	}
 }
 
@@ -222,7 +202,7 @@ void NuclearDecay::betaDecay(Candidate *candidate, bool isBetaPlus) const {
 	try {
 		candidate->current.setId(nucleusId(A, Z + dZ));
 	} catch (std::runtime_error &e) {
-		KISS_LOG_ERROR<< "Something went wrong in the NuclearDecay\n" << "Please report this error on https://github.com/CRPropa/CRPropa3/issues including your simulation setup and the following random seed:\n" << Random::instance().getSeed_base64();
+		KISS_LOG_ERROR << "Something went wrong in the NuclearDecay\n" << "Please report this error on https://github.com/CRPropa/CRPropa3/issues including your simulation setup and the following random seed:\n" << Random::instance().getSeed_base64();
 		throw;
 	}
 
@@ -273,18 +253,16 @@ void NuclearDecay::betaDecay(Candidate *candidate, bool isBetaPlus) const {
 	
 	if (haveElectrons) {
 		double f = Ee / E0;
-		if (random.rand() < pow(f, thinningElectrons)) {
-			double w = 1 / pow(f, thinningElectrons);
+		double w = sampler->computeWeight(electronId, Ee, f);
+		if (w > 0)
 			candidate->addSecondary(electronId, Ee, pos, w);
-		}
 	}
 
 	if (haveNeutrinos) {
 		double f = Enu / E0;
-		if (random.rand() < pow(f, thinningNeutrinos)) {
-			double w = 1 / pow(f, thinningNeutrinos);
+		double w = sampler->computeWeight(neutrinoId, Enu, f);
+		if (w > 0)
 			candidate->addSecondary(neutrinoId, Enu, pos, w);
-		}
 	}
 }
 
