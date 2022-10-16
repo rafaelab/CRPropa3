@@ -154,7 +154,7 @@ void ElectronPairProduction::process(Candidate *c) const {
 		// the factor w1 corrects the total energy due to the the uniform sampling
 		double w0 = 1;
 		if (maximumSamples > 0 && dE > 0)
-			w0 *= 1. / (1. - dE / dE0); 
+			w0 *= dE0 / dE;
 
 		// draw random position
 		Vector3d pos = random.randomInterpolatedPosition(c->previous.getPosition(), c->current.getPosition());
@@ -162,7 +162,8 @@ void ElectronPairProduction::process(Candidate *c) const {
 		// loop over sampled electrons and attribute weights accordingly
 		for (int i = 0; i < energies.size(); i++) {
 			double Enew = energies[i] / 2.;
-			double f = Enew / (E0 - dE0);
+			// double f = Enew / (E0 - dE0);
+			double f = Enew / E0;
 	
 			double wp = w0 * sampler->computeWeight(-11, Enew, f, i);
 			double we = w0 * sampler->computeWeight( 11, Enew, f, i);
