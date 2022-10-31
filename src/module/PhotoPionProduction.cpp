@@ -61,7 +61,10 @@ void PhotoPionProduction::setLimit(double l) {
 }
 
 void PhotoPionProduction::setSampler(ref_ptr<SamplerEvents> s) {
-	sampler = s;
+	if (s == NULL)
+		sampler = new SamplerEventsNull();
+	else
+		sampler = s;
 }
 
 void PhotoPionProduction::initRate(std::string filename) {

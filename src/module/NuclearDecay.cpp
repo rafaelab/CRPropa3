@@ -59,7 +59,10 @@ void NuclearDecay::setLimit(double l) {
 }
 
 void NuclearDecay::setSampler(ref_ptr<SamplerEvents> s) {
-	sampler = s;
+	if (s == NULL)
+		sampler = new SamplerEventsNull();
+	else
+		sampler = s;
 }
 
 void NuclearDecay::process(Candidate *candidate) const {
@@ -169,7 +172,7 @@ void NuclearDecay::gammaEmission(Candidate *candidate, int channel) const {
 		double cosTheta = 2 * random.rand() - 1;
 		double E = energy[i] * candidate->current.getLorentzFactor() * (1. - cosTheta);
 		double f = E / E0; // energy fraction taken by secondary
-		double w = sampler->computeWeight(22, E, f);
+		double w = sampler->computeWeight(22, E, f, i);
 
 		if (w > 0)
 			candidate->addSecondary(22, E, pos, w);
@@ -250,14 +253,14 @@ void NuclearDecay::betaDecay(Candidate *candidate, bool isBetaPlus) const {
 	
 	if (haveElectrons) {
 		double f = Ee / E0;
-		double w = sampler->computeWeight(electronId, Ee, f);
+		double w = sampler->computeWeight(electronId, Ee, f, 0);
 		if (w > 0)
 			candidate->addSecondary(electronId, Ee, pos, w);
 	}
 
 	if (haveNeutrinos) {
 		double f = Enu / E0;
-		double w = sampler->computeWeight(neutrinoId, Enu, f);
+		double w = sampler->computeWeight(neutrinoId, Enu, f, 0);
 		if (w > 0)
 			candidate->addSecondary(neutrinoId, Enu, pos, w);
 	}

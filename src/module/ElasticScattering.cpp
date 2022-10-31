@@ -24,7 +24,10 @@ void ElasticScattering::setPhotonField(ref_ptr<PhotonField> photonField) {
 }
 
 void ElasticScattering::setSampler(ref_ptr<SamplerEvents> s) {
-	sampler = s;
+	if (s == NULL)
+		sampler = new SamplerEventsNull();
+	else
+		sampler = s;
 }
 
 void ElasticScattering::initRate(std::string filename) {
