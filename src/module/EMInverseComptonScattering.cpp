@@ -11,7 +11,7 @@ namespace crpropa {
 
 static const double mec2 = mass_electron * c_squared;
 
-EMInverseComptonScattering::EMInverseComptonScattering(ref_ptr<PhotonField> photonField, bool havePhotons, ref_ptr<Sampler> sampling, double limit) {
+EMInverseComptonScattering::EMInverseComptonScattering(ref_ptr<PhotonField> photonField, bool havePhotons, ref_ptr<SamplerEvents> sampling, double limit) {
 	setPhotonField(photonField);
 	setHavePhotons(havePhotons);
 	setLimit(limit);
@@ -34,11 +34,8 @@ void EMInverseComptonScattering::setLimit(double l) {
 	limit = l;
 }
 
-void EMInverseComptonScattering::setSampler(ref_ptr<Sampler> s) {
-	if (s == NULL)
-		sampler = new SamplerNull();
-	else
-		sampler = s;
+void EMInverseComptonScattering::setSampler(ref_ptr<SamplerEvents> s) {
+	sampler = s;
 }
 
 void EMInverseComptonScattering::initRate(std::string filename) {
