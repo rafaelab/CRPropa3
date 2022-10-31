@@ -27,7 +27,7 @@ namespace crpropa {
 class ElasticScattering: public Module {
 private:
 	ref_ptr<PhotonField> photonField;
-	ref_ptr<Sampler> sampler;
+	ref_ptr<SamplerEvents> sampler;
 
 	std::vector<double> tabRate; // elastic scattering rate
 	std::vector<std::vector<double> > tabCDF; // CDF as function of background photon energy
@@ -43,11 +43,11 @@ public:
 	/** Constructor
 	 @param photonField		target photon field
 	 */
-	ElasticScattering(ref_ptr<PhotonField> photonField, ref_ptr<Sampler> sampler = NULL);
+	ElasticScattering(ref_ptr<PhotonField> photonField, ref_ptr<SamplerEvents> sampler = ref_ptr<SamplerEventsNull>());
 	void initRate(std::string filename);
 	void initCDF(std::string filename);
 	void setPhotonField(ref_ptr<PhotonField> photonField);
-	void setSampler(ref_ptr<Sampler> sampler);
+	void setSampler(ref_ptr<SamplerEvents> sampler);
 	void process(Candidate *candidate) const;
 };
 
