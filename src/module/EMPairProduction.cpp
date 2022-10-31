@@ -11,7 +11,7 @@ namespace crpropa {
 
 static const double mec2 = mass_electron * c_squared;
 
-EMPairProduction::EMPairProduction(ref_ptr<PhotonField> field, bool electrons, ref_ptr<Sampler>sampling, double l) {
+EMPairProduction::EMPairProduction(ref_ptr<PhotonField> field, bool electrons, ref_ptr<SamplerEvents>sampling, double l) {
 	setPhotonField(field);
 	setLimit(l);
 	setHaveElectrons(electrons);
@@ -34,11 +34,8 @@ void EMPairProduction::setLimit(double l) {
 	limit = l;
 }
 
-void EMPairProduction::setSampler(ref_ptr<Sampler> s) {
-	if (s == NULL)
-		sampler = new SamplerNull();
-	else
-		sampler = s;
+void EMPairProduction::setSampler(ref_ptr<SamplerEvents> s) {
+	sampler = s;
 }
 
 void EMPairProduction::initRate(std::string filename) {

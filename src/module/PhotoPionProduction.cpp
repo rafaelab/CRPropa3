@@ -3,7 +3,7 @@
 
 namespace crpropa {
 
-PhotoPionProduction::PhotoPionProduction(ref_ptr<PhotonField> field, bool photons, bool neutrinos, bool electrons, bool antiNucleons, ref_ptr<Sampler> sampler,  double limit, bool redshift) {
+PhotoPionProduction::PhotoPionProduction(ref_ptr<PhotonField> field, bool photons, bool neutrinos, bool electrons, bool antiNucleons, ref_ptr<SamplerEvents> sampler,  double limit, bool redshift) {
 	haveRedshiftDependence = redshift;
 	setPhotonField(field);
 	setHavePhotons(photons);
@@ -60,11 +60,8 @@ void PhotoPionProduction::setLimit(double l) {
 	limit = l;
 }
 
-void PhotoPionProduction::setSampler(ref_ptr<Sampler> s) {
-	if (s == NULL)
-		sampler = new SamplerNull();
-	else
-		sampler = s;
+void PhotoPionProduction::setSampler(ref_ptr<SamplerEvents> s) {
+	sampler = s;
 }
 
 void PhotoPionProduction::initRate(std::string filename) {

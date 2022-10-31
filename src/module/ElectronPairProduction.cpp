@@ -3,11 +3,12 @@
 
 namespace crpropa {
 
-ElectronPairProduction::ElectronPairProduction(ref_ptr<PhotonField> photonField, bool electrons, ref_ptr<Sampler> sampler, int maxSamples, double limit) {
+ElectronPairProduction::ElectronPairProduction(ref_ptr<PhotonField> photonField, bool electrons, ref_ptr<SamplerEvents> samplerEvents, ref_ptr<SamplerDistribution> samplerDistribution, int maxSamples, double limit) {
 	setPhotonField(photonField);
 	setHaveElectrons(electrons);
 	setLimit(limit);
-	setSampler(sampler);
+	setSamplerEvents(samplerEvents);
+	setSamplerDistribution(samplerDistribution);
 	setMaximumSamples(maxSamples);
 }
 
@@ -31,11 +32,15 @@ void ElectronPairProduction::setLimit(double l) {
 	limit = l;
 }
 
-void ElectronPairProduction::setSampler(ref_ptr<Sampler> s) {
+void ElectronPairProduction::setSamplerEvents(ref_ptr<SamplerEvents> s) {
 	if (s == NULL)
-		sampler = new SamplerNull();
+		samplerEvents = new SamplerEventsNull();
 	else
-		sampler = s;
+		samplerEvents = s;
+}
+
+void ElectronPairProduction::setSamplerDistribution(ref_ptr<SamplerDistribution> s) {
+	samplerDistribution = s;
 }
 
 void ElectronPairProduction::initRate(std::string filename) {
@@ -124,7 +129,6 @@ void ElectronPairProduction::process(Candidate *c) const {
 		Random &random = Random::instance();
 
 		// draw pairs as long as their energy is smaller than the pair production energy loss
-		int counter = 0;
 		double dE0 = dE;
 		std::vector<double> energies;
 
@@ -141,39 +145,38 @@ void ElectronPairProduction::process(Candidate *c) const {
 			// create pair and repeat with remaining energy
 			dE -= Epair;
 
-			if (maximumSamples > 0) {
-				if (counter >= maximumSamples)
-					break;
+			if (samplerDistribution == NULL) {
+				double Es = Epair / 2;
+				double wp = samplerEvents->computeWeight(-11, Es, Es / E0, i);
+				double we = samplerEvents->computeWeight( 11, Es, Es / E0, i);
+				Vector3d pos = random.randomInterpolatedPosition(c->previous.getPosition(), c->current.getPosition());
+				if (wp > 0)
+					c->addSecondary(-11, Es, pos, wp);
+				if (we > 0)
+					c->addSecondary( 11, Es, pos, we);
+			} 
+			else {
+				samplerDistribution->push(Epair / 2.);
 			}
-
-			energies.push_back(Epair);
-			counter++;
 		}
 
-		// the while loop before gave the total energy, which is just a fraction of the required
-		// the factor w1 corrects the total energy due to the the uniform sampling
-		double w0 = 1;
-		if (maximumSamples > 0 && dE > 0)
-			w0 *= dE0 / dE;
 
-		// draw random position
-		Vector3d pos = random.randomInterpolatedPosition(c->previous.getPosition(), c->current.getPosition());
-
-		// loop over sampled electrons and attribute weights accordingly
-		for (int i = 0; i < energies.size(); i++) {
-			double Enew = energies[i] / 2.;
-			// double f = Enew / (E0 - dE0);
-			double f = Enew / E0;
-	
-			double wp = w0 * sampler->computeWeight(-11, Enew, f, i);
-			double we = w0 * sampler->computeWeight( 11, Enew, f, i);
-
-			if (wp > 0)
-				c->addSecondary(-11, Enew, pos, wp);
-			if (we > 0)
-				c->addSecondary(11, Enew, pos, we);
+		if (samplerDistribution != NULL) {
+			samplerDistribution->transformToCDF();
+			std::vector<double> sampledElectrons = samplerDistribution->getSample(maximumSamples);
+			double w = sampledElectrons.size() / samplerDistribution->getSize();
+			for (size_t i = 0; i < sampledElectrons.size(); i++) {
+				double Es = energies[i];
+				double wp = w * samplerEvents->computeWeight(-11, Es, Es / E0, i);
+				double we = w * samplerEvents->computeWeight( 11, Es, Es / E0, i);
+				Vector3d pos = random.randomInterpolatedPosition(c->previous.getPosition(), c->current.getPosition());
+				if (wp > 0)
+					c->addSecondary(-11, Es, pos, wp);
+				if (we > 0)
+					c->addSecondary( 11, Es, pos, we);
+			}
+			samplerDistribution->clear();
 		}
-
 	} // haveElectrons
 
 	c->current.setLorentzFactor(lf * (1 - loss));

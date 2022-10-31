@@ -10,7 +10,7 @@ namespace crpropa {
 
 static const double mec2 = mass_electron * c_squared;
 
-EMTripletPairProduction::EMTripletPairProduction(ref_ptr<PhotonField> photonField, bool haveElectrons, ref_ptr<Sampler> sampler, double limit) {
+EMTripletPairProduction::EMTripletPairProduction(ref_ptr<PhotonField> photonField, bool haveElectrons, ref_ptr<SamplerEvents> sampler, double limit) {
 	setPhotonField(photonField);
 	setHaveElectrons(haveElectrons);
 	setLimit(limit);
@@ -33,11 +33,8 @@ void EMTripletPairProduction::setLimit(double l) {
 	limit = l;
 }
 
-void EMTripletPairProduction::setSampler(ref_ptr<Sampler> s) {
-	if (s == NULL)
-		sampler = new SamplerNull();
-	else
-		sampler = s;
+void EMTripletPairProduction::setSampler(ref_ptr<SamplerEvents> s) {
+	sampler = s;
 }
 
 void EMTripletPairProduction::initRate(std::string filename) {

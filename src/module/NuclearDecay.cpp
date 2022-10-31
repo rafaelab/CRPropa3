@@ -3,12 +3,12 @@
 
 namespace crpropa {
 
-NuclearDecay::NuclearDecay(bool electrons, bool photons, bool neutrinos, ref_ptr<Sampler> sampler, double limit) {
+NuclearDecay::NuclearDecay(bool electrons, bool photons, bool neutrinos, ref_ptr<SamplerEvents> samplers, double limit) {
 	setHavePhotons(photons);
 	setHaveElectrons(electrons);
 	setHaveNeutrinos(neutrinos);
 	setLimit(limit);
-	setSampler(sampler);
+	setSampler(samplers);
 	setDescription("NuclearDecay");
 
 	// load decay table
@@ -58,11 +58,8 @@ void NuclearDecay::setLimit(double l) {
 	limit = l;
 }
 
-void NuclearDecay::setSampler(ref_ptr<Sampler> s) {
-	if (s == NULL)
-		sampler = new SamplerNull();
-	else
-		sampler = s;
+void NuclearDecay::setSampler(ref_ptr<SamplerEvents> s) {
+	sampler = s;
 }
 
 void NuclearDecay::process(Candidate *candidate) const {

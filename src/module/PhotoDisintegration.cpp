@@ -7,7 +7,7 @@ const double PhotoDisintegration::lgmin = 6;  // minimum log10(Lorentz-factor)
 const double PhotoDisintegration::lgmax = 14; // maximum log10(Lorentz-factor)
 const size_t PhotoDisintegration::nlg = 201;  // number of Lorentz-factor steps
 
-PhotoDisintegration::PhotoDisintegration(ref_ptr<PhotonField> f, bool photons, ref_ptr<Sampler> sampler, double limit) {
+PhotoDisintegration::PhotoDisintegration(ref_ptr<PhotonField> f, bool photons, ref_ptr<SamplerEvents> sampler, double limit) {
 	setPhotonField(f);
 	setHavePhotons(photons);
 	setLimit(limit);
@@ -31,11 +31,8 @@ void PhotoDisintegration::setLimit(double l) {
 	limit = l;
 }
 
-void PhotoDisintegration::setSampler(ref_ptr<Sampler> s) {
-	if (s == NULL)
-		sampler = new SamplerNull();
-	else
-		sampler = s;
+void PhotoDisintegration::setSampler(ref_ptr<SamplerEvents> s) {
+	sampler = s;
 }
 
 void PhotoDisintegration::initRate(std::string filename) {

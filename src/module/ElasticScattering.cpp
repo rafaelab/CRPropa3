@@ -10,7 +10,7 @@ const double ElasticScattering::epsmin = log10(2 * eV) + 3;    // log10 minimum 
 const double ElasticScattering::epsmax = log10(2 * eV) + 8.12; // log10 maximum photon background energy in nucleus rest frame for elastic scattering
 const size_t ElasticScattering::neps = 513; // number of photon background energies in nucleus rest frame
 
-ElasticScattering::ElasticScattering(ref_ptr<PhotonField> f, ref_ptr<Sampler> sampler) {
+ElasticScattering::ElasticScattering(ref_ptr<PhotonField> f, ref_ptr<SamplerEvents> sampler) {
 	setPhotonField(f);
 	setSampler(sampler);
 }
@@ -23,11 +23,8 @@ void ElasticScattering::setPhotonField(ref_ptr<PhotonField> photonField) {
 	initCDF(getDataPath("ElasticScattering/cdf_" + fname.substr(0,3) + ".txt"));
 }
 
-void ElasticScattering::setSampler(ref_ptr<Sampler> s) {
-	if (s == NULL)
-		sampler = new SamplerNull();
-	else
-		sampler = s;
+void ElasticScattering::setSampler(ref_ptr<SamplerEvents> s) {
+	sampler = s;
 }
 
 void ElasticScattering::initRate(std::string filename) {

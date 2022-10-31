@@ -8,7 +8,7 @@
 
 namespace crpropa {
 
-EMDoublePairProduction::EMDoublePairProduction(ref_ptr<PhotonField> photonField, bool haveElectrons, ref_ptr<Sampler> sampling, double limit) {
+EMDoublePairProduction::EMDoublePairProduction(ref_ptr<PhotonField> photonField, bool haveElectrons, ref_ptr<SamplerEvents> sampling, double limit) {
 	setPhotonField(photonField);
 	setHaveElectrons(haveElectrons);
 	setLimit(limit);
@@ -30,11 +30,8 @@ void EMDoublePairProduction::setLimit(double l) {
 	limit = l;
 }
 
-void EMDoublePairProduction::setSampler(ref_ptr<Sampler> s) {
-	if (s == NULL)
-		sampler = new SamplerNull();
-	else
-		sampler = s;
+void EMDoublePairProduction::setSampler(ref_ptr<SamplerEvents> s) {
+	sampler = s;
 }
 
 void EMDoublePairProduction::initRate(std::string filename) {
