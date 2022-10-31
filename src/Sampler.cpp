@@ -6,28 +6,28 @@ namespace crpropa {
 
 /****************************************************************************/
 
-SamplerUniform::SamplerUniform(int pId, double s) {
+SamplerEventsUniform::SamplerEventsUniform(int pId, double s) {
 	setSampling(s);
 	setParticleId(pId);
 }
 
-void SamplerUniform::setSampling(double s) {
+void SamplerEventsUniform::setSampling(double s) {
 	sampling = s;
 }
 
-void SamplerUniform::setParticleId(int pId) {
+void SamplerEventsUniform::setParticleId(int pId) {
 	particleId = pId;
 }
 
-double SamplerUniform::getSampling() const {
+double SamplerEventsUniform::getSampling() const {
 	return sampling;
 }
 
-int SamplerUniform::getParticleId() const {
+int SamplerEventsUniform::getParticleId() const {
 	return particleId;
 }
 
-double SamplerUniform::computeWeight(int id, double E, double f, int counter) const {
+double SamplerEventsUniform::computeWeight(int id, double E, double f, int counter) const {
 	if (id != particleId)
 		return 0;
 
@@ -47,37 +47,37 @@ double SamplerUniform::computeWeight(int id, double E, double f, int counter) co
 
 /****************************************************************************/
 
-SamplerEnergyFractionPowerLaw::SamplerEnergyFractionPowerLaw(double idx, int pId, double s) {
+SamplerEventsEnergyFractionPowerLaw::SamplerEventsEnergyFractionPowerLaw(double idx, int pId, double s) {
 	setSampling(s);
 	setParticleId(pId);
 	setIndex(idx);
 }
 
-void SamplerEnergyFractionPowerLaw::setSampling(double s) {
+void SamplerEventsEnergyFractionPowerLaw::setSampling(double s) {
 	sampling = s;
 }
 
-void SamplerEnergyFractionPowerLaw::setParticleId(int pId) {
+void SamplerEventsEnergyFractionPowerLaw::setParticleId(int pId) {
 	particleId = pId;
 }
 
-void SamplerEnergyFractionPowerLaw::setIndex(double idx) {
+void SamplerEventsEnergyFractionPowerLaw::setIndex(double idx) {
 	index = idx;
 }
 
-double SamplerEnergyFractionPowerLaw::getSampling() const {
+double SamplerEventsEnergyFractionPowerLaw::getSampling() const {
 	return sampling;
 }
 
-int SamplerEnergyFractionPowerLaw::getParticleId() const {
+int SamplerEventsEnergyFractionPowerLaw::getParticleId() const {
 	return particleId;
 }
 
-double SamplerEnergyFractionPowerLaw::getIndex() const {
+double SamplerEventsEnergyFractionPowerLaw::getIndex() const {
 	return index;
 }
 
-double  SamplerEnergyFractionPowerLaw::computeWeight(int id, double E, double f, int counter) const {
+double  SamplerEventsEnergyFractionPowerLaw::computeWeight(int id, double E, double f, int counter) const {
 	if (id != particleId)
 		return 0;
 
@@ -101,29 +101,29 @@ double  SamplerEnergyFractionPowerLaw::computeWeight(int id, double E, double f,
 
 
 /****************************************************************************/
-SamplerNull::SamplerNull() {
+SamplerEventsNull::SamplerEventsNull() {
 }
 
-double SamplerNull::computeWeight(int id, double E, double f, int counter) const {
+double SamplerEventsNull::computeWeight(int id, double E, double f, int counter) const {
 	return 1.;
 }
 
 /****************************************************************************/
 
-SamplerList::SamplerList() {
+SamplerEventsList::SamplerEventsList() {
 }
 
-SamplerList::SamplerList(std::vector<ref_ptr<Sampler> > s) {
+SamplerEventsList::SamplerEventsList(std::vector<ref_ptr<SamplerEvents>> s) {
 	for (size_t i = 0; i < s.size(); i++) {
 		add(s[i]);
 	}
 }
 
-void SamplerList::add(Sampler *sampler) {
-	samplers.push_back(sampler);
+void SamplerEventsList::add(SamplerEvents *SamplerEvents) {
+	samplers.push_back(SamplerEvents);
 }
 
-double SamplerList::computeWeight(int id, double E, double f, int counter) const {
+double SamplerEventsList::computeWeight(int id, double E, double f, int counter) const {
 	double w = 0;
 	int k = 0;
 	for (size_t i = 0; i < samplers.size(); i++) {
@@ -138,6 +138,180 @@ double SamplerList::computeWeight(int id, double E, double f, int counter) const
 	
 	return w;
 }
+
+
+
+/****************************************************************************/
+
+SamplerDistributionUniform::SamplerDistributionUniform(double vmin, double vmax, int nBins, std::string scale) {
+	ref_ptr<Histogram1D> h = new Histogram1D(vmin, vmax, nBins, scale);	
+	setSize(0);
+	setDistribution(h);
+}
+
+
+void SamplerDistributionUniform::setDistribution(ref_ptr<Histogram1D> dist) {
+	distribution = dist;
+}
+
+void SamplerDistributionUniform::setSize(int n) {
+	datasetSize = n;
+}
+
+
+ref_ptr<Histogram1D> SamplerDistributionUniform::getDistribution() const {
+	return distribution;
+}
+
+int SamplerDistributionUniform::getSize() const {
+	return datasetSize;
+}
+
+std::vector<double> SamplerDistributionUniform::getSample(int nSamples) const {
+	std::vector<double> sample;
+	for (size_t i = 0; i < std::min(nSamples, distribution->getNumberOfBins()); i++) {
+		sample.push_back(distribution->getSample());
+	}
+
+	return sample;
+}
+
+void SamplerDistributionUniform::transformToCDF() {
+	distribution->transformToCDF();
+}
+
+void SamplerDistributionUniform::append(const std::vector<double> &v) {
+	for (size_t i = 0; i < v.size(); i++) {
+		distribution->push(v[i]);
+	}
+	datasetSize = v.size();
+}
+
+void SamplerDistributionUniform::push(const double &v) {
+	distribution->push(v);
+	datasetSize++;
+}
+
+void SamplerDistributionUniform::clear() {
+	distribution->clear();
+	datasetSize = 0;
+}
+
+// /****************************************************************************/
+
+// SamplerDistributionList::SamplerDistributionList() {
+// }
+
+// SamplerDistributionList::SamplerDistributionList(std::vector<ref_ptr<SamplerDistribution>> s) {
+// 	for (size_t i = 0; i < s.size(); i++) {
+// 		add(s[i]);
+// 	}
+// }
+
+// void SamplerDistributionList::add(SamplerDistribution *SamplerDistribution) {
+// 	samplers.push_back(SamplerEvents);
+// }
+
+// void SamplerDistributionList::transformToCDF() {
+// 	for (size_t i = 0; i < samplers.size(); i++) {
+// 		samplers[i]->transformToCDF();
+// 	}
+// }
+
+// void SamplerDistributionList::clear() {
+// 	for (size_t i = 0; i < samplers.size(); i++) {
+// 		samplers[i]->clear();
+// 	}
+// }
+
+// std::vector<double> SamplerDistributionList::getSample(int nSamples) const {
+// 	// std::vector<std::vector<double>> sample;
+
+// 	// for (size_t j = 0; j < samplers.size(); j++) {
+// 	// 	std::vector<double> tmp;
+// 	// 	for (size_t i = 0; i < std::min(nSamples, distribution->getNumberOfBins()); i++) {
+// 	// 		tmp.push_
+// 	// 	}
+// 	// 	sample.push_back(distribution->getSample());
+// 	// }
+
+// 	// return sample;
+// }
+
+
+// /****************************************************************************/
+// SamplerDistributionNull::SamplerDistributionNull() {
+// }
+
+// std::vector<double> SamplerDistributionNull::getSample(int nSamples) const {
+// 	std::vector<double> v;
+// 	for (size_t i = 0; i < nSamples; i++) {
+// 		v.push_back(0.);
+// 	}
+
+// 	return v;
+// }
+
+
+// SamplerEventsBinnedDistribution::SamplerEventsBinnedDistribution(int pId, int nSamples, double vmin, double vmax, int nBins, std::string scale, double normalisation) {
+// 	ref_ptr<Histogram1D<double, double>> h = new Histogram1D<double, double>(vmin, vmax, nBins, scale, normalisation);
+// 	setDistribution(h);
+// 	setParticleId(pId);
+// 	setNumberOfSamples(nSamples);
+// 	setGlobalCounter(0);
+// }
+
+// void SamplerEventsBinnedDistribution::setParticleId(int pId) {
+// 	particleId = pId;
+// }
+
+// void SamplerEventsBinnedDistribution::setGlobalCounter(int i) {
+// 	globalCounter = i;
+// }
+
+// void SamplerEventsBinnedDistribution::setStatus(bool b) {
+// 	isHistogramFilled = b;
+// }
+
+// void SamplerEventsBinnedDistribution::setNumberOfSamples(int n) {
+// 	nSamples = n;
+// }
+
+// void SamplerEventsBinnedDistribution::setDistribution(ref_ptr<Histogram1D<double, double>> h) {
+// 	distribution = h;
+// }
+
+// bool SamplerEventsBinnedDistribution::getStatus() const {
+// 	return isHistogramFilled;
+// }
+
+// ref_ptr<Histogram1D<double, double>> SamplerEventsBinnedDistribution::getDistribution() const {
+// 	return distribution;
+// }
+
+// double SamplerEventsBinnedDistribution::computeWeight(int id, double E, double f, int counter) const {
+// 	if (id != particleId)
+// 		return 0.;
+
+// 	if (globalCounter > nSamples)
+// 		return 0.;
+// 	globalCounter++;
+
+// 	if (getStatus()) {
+// 		// Random &random = Random::instance();
+// 		// size_t bin = random.randBin(binContents);
+// 		return 1;
+
+// 	} else {
+// 		return 1;
+// 	}
+// }
+
+// void SamplerEventsBinnedDistribution::clear() {
+// 	setGlobalCounter(0);
+// 	distribution->clear();
+// }
+
 
 
 /****************************************************************************/
