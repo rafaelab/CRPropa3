@@ -43,7 +43,7 @@ public:
 	/** Constructor
 	 @param photonField		target photon field
 	 */
-	ElasticScattering(ref_ptr<PhotonField> photonField, ref_ptr<SamplerEvents> sampler = ref_ptr<SamplerEventsNull>());
+	ElasticScattering(ref_ptr<PhotonField> photonField, ref_ptr<SamplerEvents> sampler = NULL);
 	void initRate(std::string filename);
 	void initCDF(std::string filename);
 	void setPhotonField(ref_ptr<PhotonField> photonField);

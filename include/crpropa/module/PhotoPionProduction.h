@@ -117,7 +117,7 @@ public:
 		bool neutrinos = false,
 		bool electrons = false,
 		bool antiNucleons = false,
-		ref_ptr<SamplerEvents> sampler = ref_ptr<SamplerEventsNull>(),
+		ref_ptr<SamplerEvents> sampler = NULL,
 		double limit = 0.1,
 		bool haveRedshiftDependence = false
 		);
