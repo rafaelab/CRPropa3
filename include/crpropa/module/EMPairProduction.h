@@ -32,7 +32,7 @@ namespace crpropa {
 class EMPairProduction: public Module {
 private:
 	ref_ptr<PhotonField> photonField;
-	ref_ptr<Sampler> sampler;
+	ref_ptr<SamplerEvents> sampler;
 	bool haveElectrons;
 	double limit;
 
@@ -52,12 +52,12 @@ public:
 	 @param sampler		    sampling object (see Sampling.h)
 	 @param limit			step size limit as fraction of mean free path
 	 */
-	EMPairProduction(ref_ptr<PhotonField> photonField, bool haveElectrons = false, ref_ptr<Sampler> sampler = NULL, double limit = 0.1);
+	EMPairProduction(ref_ptr<PhotonField> photonField, bool haveElectrons = false, ref_ptr<SamplerEvents> sampler = ref_ptr<SamplerEventsNull>(), double limit = 0.1);
 
 	void setPhotonField(ref_ptr<PhotonField> photonField);
 	void setHaveElectrons(bool haveElectrons);
 	void setLimit(double limit);
-	void setSampler(ref_ptr<Sampler> sampler);
+	void setSampler(ref_ptr<SamplerEvents> sampler);
 
 	void initRate(std::string filename);
 	void initCumulativeRate(std::string filename);
