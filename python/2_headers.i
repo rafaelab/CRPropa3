@@ -57,6 +57,7 @@ using namespace crpropa;   // for usage of namespace in header files, necessary
 %ignore operator crpropa::EmissionMap*;
 %ignore operator crpropa::Grid< crpropa::Vector3< float > >*;
 %ignore operator crpropa::Grid< crpropa::Vector3< double > >*;
+%ignore operator crpropa::Histogram1D<double, double>*;
 %ignore operator crpropa::Grid< float >*;
 %ignore operator crpropa::Grid< double >*;
 %ignore crpropa::TextOutput::load;
@@ -379,8 +380,12 @@ using namespace crpropa;   // for usage of namespace in header files, necessary
 };
 %thread; /* reenable threading */
 
+%template(Histogram1DRefPtr) crpropa::ref_ptr<crpropa::Histogram1D>;
+// %feature("director") crpropa::Histogram1D<double, double>;
+%include "crpropa/Histogram.h"
 
-%template(CandidateVector) std::vector< crpropa::ref_ptr<crpropa::Candidate> >;
+
+%template(CandidateVector) std::vector< crpropa::ref_ptr<crpropa::Candidate>>;
 %template(CandidateRefPtr) crpropa::ref_ptr<crpropa::Candidate>;
 %include "crpropa/Candidate.h"
 
@@ -404,9 +409,12 @@ using namespace crpropa;   // for usage of namespace in header files, necessary
 %feature("director") crpropa::PhotonField;
 %include "crpropa/PhotonBackground.h"
 
-%implicitconv crpropa::ref_ptr<crpropa::Sampler>;
-%template(SamplerRefPtr) crpropa::ref_ptr<crpropa::Sampler>;
-%feature("director") crpropa::Sampler;
+%implicitconv crpropa::ref_ptr<crpropa::SamplerEvents>;
+%feature("director") crpropa::SamplerEvents;
+%template(SamplerEventsRefPtr) crpropa::ref_ptr<crpropa::SamplerEvents>;
+%implicitconv crpropa::ref_ptr<crpropa::SamplerDistribution>;
+%template(SamplerDistributionRefPtr) crpropa::ref_ptr<crpropa::SamplerDistribution>;
+%feature("director") crpropa::SamplerDistribution;
 %include "crpropa/Sampler.h"
 
 %implicitconv crpropa::ref_ptr<crpropa::AdvectionField>;
