@@ -34,7 +34,7 @@ namespace crpropa {
 class PhotoDisintegration: public Module {
 private:
 	ref_ptr<PhotonField> photonField;
-	ref_ptr<Sampler> sampler;
+	ref_ptr<SamplerEvents> sampler;
 	double limit; // fraction of mean free path for limiting the next step
 	bool havePhotons;
 
@@ -62,12 +62,12 @@ public:
 	 @param havePhotons		if true, add secondary photons as candidates
 	 @param limit			step size limit as fraction of mean free path
 	 */
-	PhotoDisintegration(ref_ptr<PhotonField> photonField, bool havePhotons = false, ref_ptr<Sampler> sampler = NULL, double limit = 0.1);
+	PhotoDisintegration(ref_ptr<PhotonField> photonField, bool havePhotons = false, ref_ptr<SamplerEvents> sampler = ref_ptr<SamplerEventsNull>(), double limit = 0.1);
 
 	void setPhotonField(ref_ptr<PhotonField> photonField);
 	void setHavePhotons(bool havePhotons);
 	void setLimit(double limit);
-	void setSampler(ref_ptr<Sampler> sampler);
+	void setSampler(ref_ptr<SamplerEvents> sampler);
 
 	void initRate(std::string filename);
 	void initBranching(std::string filename);

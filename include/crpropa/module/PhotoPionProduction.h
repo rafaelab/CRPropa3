@@ -42,7 +42,7 @@ class PhotoPionProduction: public Module {
 
 protected:
 	ref_ptr<PhotonField> photonField;
-	ref_ptr<Sampler> sampler;
+	ref_ptr<SamplerEvents> sampler;
 	std::vector<double> tabLorentz; ///< Lorentz factor of nucleus
 	std::vector<double> tabRedshifts;  ///< redshifts (optional for haveRedshiftDependence)
 	std::vector<double> tabProtonRate; ///< interaction rate in [1/m] for protons
@@ -117,12 +117,12 @@ public:
 		bool neutrinos = false,
 		bool electrons = false,
 		bool antiNucleons = false,
-		ref_ptr<Sampler> sampler = NULL,
+		ref_ptr<SamplerEvents> sampler = ref_ptr<SamplerEventsNull>(),
 		double limit = 0.1,
 		bool haveRedshiftDependence = false
 		);
 	void setPhotonField(ref_ptr<PhotonField> photonField);
-	void setSampler(ref_ptr<Sampler> s);
+	void setSampler(ref_ptr<SamplerEvents> s);
 	void setHavePhotons(bool b);
 	void setHaveNeutrinos(bool b);
 	void setHaveElectrons(bool b);
