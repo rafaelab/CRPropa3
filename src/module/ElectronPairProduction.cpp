@@ -164,18 +164,20 @@ void ElectronPairProduction::process(Candidate *c) const {
 		if (samplerDistribution != NULL) {
 			samplerDistribution->transformToCDF();
 			std::vector<double> sampledElectrons = samplerDistribution->getSample(maximumSamples);
-			double w = sampledElectrons.size() / samplerDistribution->getSize();
-			for (size_t i = 0; i < sampledElectrons.size(); i++) {
-				double Es = energies[i];
-				double wp = w * samplerEvents->computeWeight(-11, Es, Es / E0, i);
-				double we = w * samplerEvents->computeWeight( 11, Es, Es / E0, i);
-				Vector3d pos = random.randomInterpolatedPosition(c->previous.getPosition(), c->current.getPosition());
-				if (wp > 0)
-					c->addSecondary(-11, Es, pos, wp);
-				if (we > 0)
-					c->addSecondary( 11, Es, pos, we);
+			if (samplerDistribution->getSize() > 0) {
+				double w = sampledElectrons.size() / samplerDistribution->getSize();
+				for (size_t i = 0; i < sampledElectrons.size(); i++) {
+					double Es = energies[i];
+					double wp = w * samplerEvents->computeWeight(-11, Es, Es / E0, i);
+					double we = w * samplerEvents->computeWeight( 11, Es, Es / E0, i);
+					Vector3d pos = random.randomInterpolatedPosition(c->previous.getPosition(), c->current.getPosition());
+					if (wp > 0)
+						c->addSecondary(-11, Es, pos, wp);
+					if (we > 0)
+						c->addSecondary( 11, Es, pos, we);
+				}
+				samplerDistribution->clear();
 			}
-			samplerDistribution->clear();
 		}
 	} // haveElectrons
 
