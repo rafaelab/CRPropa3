@@ -124,6 +124,9 @@ void SamplerEventsList::add(SamplerEvents *SamplerEvents) {
 }
 
 double SamplerEventsList::computeWeight(int id, double E, double f, int counter) const {
+	if (samplers.size() == 0)
+		return 1.;
+
 	double w = 0;
 	int k = 0;
 	for (size_t i = 0; i < samplers.size(); i++) {
@@ -135,7 +138,7 @@ double SamplerEventsList::computeWeight(int id, double E, double f, int counter)
 			k++;
 		}
 	}
-	
+
 	return w;
 }
 
