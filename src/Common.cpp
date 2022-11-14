@@ -132,5 +132,6 @@ size_t closestIndex(double x, const std::vector<double> &X) {
 		return i1;
 }
 
+
 } // namespace crpropa
 
