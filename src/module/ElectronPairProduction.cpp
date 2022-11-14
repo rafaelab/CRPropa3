@@ -130,7 +130,6 @@ void ElectronPairProduction::process(Candidate *c) const {
 
 		// draw pairs as long as their energy is smaller than the pair production energy loss
 		double dE0 = dE;
-		std::vector<double> energies;
 
 		while (dE > 0) {
 			size_t j = random.randBin(tabSpectrum[i]);
@@ -165,9 +164,9 @@ void ElectronPairProduction::process(Candidate *c) const {
 			samplerDistribution->transformToCDF();
 			std::vector<double> sampledElectrons = samplerDistribution->getSample(maximumSamples);
 			if (samplerDistribution->getSize() > 0) {
-				double w = sampledElectrons.size() / samplerDistribution->getSize();
+				double w = samplerDistribution->getSize() / sampledElectrons.size();
 				for (size_t i = 0; i < sampledElectrons.size(); i++) {
-					double Es = energies[i];
+					double Es = sampledElectrons[i];
 					double wp = w * samplerEvents->computeWeight(-11, Es, Es / E0, i);
 					double we = w * samplerEvents->computeWeight( 11, Es, Es / E0, i);
 					Vector3d pos = random.randomInterpolatedPosition(c->previous.getPosition(), c->current.getPosition());
