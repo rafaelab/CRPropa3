@@ -99,11 +99,11 @@ class Histogram1D : public Referenced {
 		double getSample() const {
 			Random &random = Random::instance();
 			size_t bin = random.randBin(contents);
-			// if (scale == "log") {
-			// 	return pow(10, log10(edges[bin]) + random.rand() * log10(widths[bin]));
-			// } else {
+			if (scale == "log") {
+				return pow(10, log10(edges[bin]) + random.rand() * log10(widths[bin]));
+			} else {
 				return edges[bin] + random.rand() * widths[bin];
-			// }
+			}
 		}
 
 		void push(double v, double w = 1) {
@@ -122,7 +122,7 @@ class Histogram1D : public Referenced {
 		}
 
 		void clear() {
-			for (size_t i = 1; i < getNumberOfBins(); i++) {
+			for (size_t i = 0; i < getNumberOfBins(); i++) {
 				contents[i] = 0;
 			}
 		}
