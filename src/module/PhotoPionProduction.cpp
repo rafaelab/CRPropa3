@@ -288,21 +288,21 @@ void PhotoPionProduction::performInteraction(Candidate *candidate, bool onProton
 			break;
 		case 15: // nu_e
 			if (haveNeutrinos) {
-				double w = sampler->computeWeight(12 * sign, Eout);
+				double w = sampler->computeWeight(12 * sign, Eout, f);
 				if (w > 0)
 					candidate->addSecondary(sign * 12, Eout, pos, w);
 			}
 			break;
 		case 16: // anti-nu_e
 			if (haveNeutrinos) {
-				double w = sampler->computeWeight(-12 * sign, Eout);
+				double w = sampler->computeWeight(-12 * sign, Eout, f);
 				if (w > 0)
 					candidate->addSecondary(sign * -12, Eout, pos, w);
 			}
 			break;
 		case 17: // nu_mu
 			if (haveNeutrinos) {
-				double w = sampler->computeWeight(14 * sign, Eout);
+				double w = sampler->computeWeight(14 * sign, Eout, f);
 				if (w > 0)
 					candidate->addSecondary(sign * 14, Eout, pos, w);
 
@@ -310,7 +310,7 @@ void PhotoPionProduction::performInteraction(Candidate *candidate, bool onProton
 			break;
 		case 18: // anti-nu_mu
 			if (haveNeutrinos) {
-				double w = sampler->computeWeight(-14 * sign, Eout);
+				double w = sampler->computeWeight(-14 * sign, Eout, f);
 				if (w > 0)
 					candidate->addSecondary(sign * -14, Eout, pos, w);
 			}
