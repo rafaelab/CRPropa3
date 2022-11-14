@@ -1,8 +1,12 @@
 #ifndef CRPROPA_COMMON_H
 #define CRPROPA_COMMON_H
 
+
 #include <string>
 #include <vector>
+
+#include <crpropa/Random.h>
+
 /**
  @file
  @brief Common helper functions
@@ -81,6 +85,7 @@ double gaussInt(Integrand&& integrand, double A, double B) {
 	}
 	return XR * SS;
 }
+
 
 } // namespace crpropa
 
