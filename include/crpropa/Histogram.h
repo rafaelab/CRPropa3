@@ -115,7 +115,14 @@ class Histogram1D : public Referenced {
 			contents[idx] += w; 
 		}
 
+		void transformToPDF() {
+			for (size_t i = 1; i < getNumberOfBins(); i++) {
+				contents[i] /= (edges[i] - edges[i - 1]);
+			}
+		}
+
 		void transformToCDF() {
+			transformToPDF();
 			for (size_t i = 1; i < getNumberOfBins(); i++) {
 				contents[i] += contents[i - 1];
 			}
