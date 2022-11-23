@@ -164,10 +164,9 @@ void ElectronPairProduction::process(Candidate *c) const {
 			samplerDistribution->transformToCDF();
 			std::vector<double> sampledElectrons = samplerDistribution->getSample(maximumSamples);
 			if (samplerDistribution->getSize() > 0) {
-				double w0 = samplerDistribution->getSize() / sampledElectrons.size();
+				double w = samplerDistribution->getSize() / sampledElectrons.size();
 				for (size_t i = 0; i < sampledElectrons.size(); i++) {
 					double Es = sampledElectrons[i];
-					double w = w0 * E0 / Es;
 					double wp = w * samplerEvents->computeWeight(-11, Es, Es / E0, i);
 					double we = w * samplerEvents->computeWeight( 11, Es, Es / E0, i);
 					Vector3d pos = random.randomInterpolatedPosition(c->previous.getPosition(), c->current.getPosition());
