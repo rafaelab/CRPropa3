@@ -159,14 +159,13 @@ void ElectronPairProduction::process(Candidate *c) const {
 			}
 		}
 
-
 		if (samplerDistribution != NULL) {
+			samplerDistribution->transformToPDF();
 			samplerDistribution->transformToCDF();
 			std::vector<double> sampledElectrons = samplerDistribution->getSample(maximumSamples);
+			double dEs = std::accumulate(sampledElectrons.begin(), sampledElectrons.end(), decltype(sampledElectrons)::value_type(0)) * 2;
 			if (samplerDistribution->getSize() > 0) {
-				double w = dE0 / dE;
-				// double w = samplerDistribution->getDistribution()->integrate() / dE0;
-				// std::cout << samplerDistribution->getDistribution()->integrate() / eV << " " << dE0 / eV << std::endl;
+				double w = dE0 / dEs;
 				for (size_t i = 0; i < sampledElectrons.size(); i++) {
 					double Es = sampledElectrons[i];
 					double wp = w * samplerEvents->computeWeight(-11, Es, Es / E0, i);
