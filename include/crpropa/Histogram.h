@@ -115,15 +115,30 @@ class Histogram1D : public Referenced {
 			contents[idx] += w; 
 		}
 
+		void normalise(double norm) {
+			for (size_t i = 0; i < getNumberOfBins(); i++) {
+				contents[i] /= norm;
+			}
+		}
+
+		double sum() {
+			double sum = 0;
+			for (size_t i = 0; i < getNumberOfBins(); i++) {
+				sum += contents[i];
+			}
+
+			return sum;
+		}
+
 		double integrate() {
 			double integral = 0;
 			if (scale == "log") {
 				for (size_t i = 0; i < getNumberOfBins(); i++) {
-					integral += centres[i] * contents[i] * (edges[i + 1] - edges[i]) * log(10);
+					integral +=  (contents[i] / (edges[i + 1] - edges[i]) * log(10) * centres[i]);
 				}
 			} else {
-				for (size_t i = 1; i < getNumberOfBins(); i++) {
-					// integral += contents[i] * (edges[i] - edges[i - 1]);
+				for (size_t i = 0; i < getNumberOfBins(); i++) {
+					// integral += contents[i] / (edges[i] - edges[i - 1]);
 					integral += contents[i];
 				}
 			}
@@ -132,13 +147,14 @@ class Histogram1D : public Referenced {
 		}
 
 		void transformToPDF() {
+			double integral = integrate();
 			for (size_t i = 1; i < getNumberOfBins(); i++) {
-				contents[i] /= (edges[i] - edges[i - 1]);
+				// contents[i] /= (edges[i] - edges[i - 1]);
+				contents[i] /= integral;
 			}
 		}
 
 		void transformToCDF() {
-			transformToPDF();
 			for (size_t i = 1; i < getNumberOfBins(); i++) {
 				contents[i] += contents[i - 1];
 			}
