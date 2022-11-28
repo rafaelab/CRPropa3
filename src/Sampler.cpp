@@ -6,6 +6,49 @@ namespace crpropa {
 
 /****************************************************************************/
 
+SamplerEventsEnergy::SamplerEventsEnergy(int pId, double s) {
+	setSampling(s);
+	setParticleId(pId);
+}
+
+void SamplerEventsEnergy::setSampling(double s) {
+	sampling = s;
+}
+
+void SamplerEventsEnergy::setParticleId(int pId) {
+	particleId = pId;
+}
+
+double SamplerEventsEnergy::getSampling() const {
+	return sampling;
+}
+
+int SamplerEventsEnergy::getParticleId() const {
+	return particleId;
+}
+
+double  SamplerEventsEnergy::computeWeight(int id, double E, double f, int counter) const {
+	if (id != particleId)
+		return 0;
+
+	if (sampling >= 1) {
+		return 1;
+	} else if (sampling < 0) {
+		return 0;
+	} else {
+		Random &random = Random::instance();
+		double r = weightFunction(id, E, f, counter);
+		if (random.rand() < r) // accept and return weight
+			return 1. / r;
+		else // reject
+			return 0;
+	}
+
+}
+
+
+/****************************************************************************/
+
 SamplerEventsUniform::SamplerEventsUniform(int pId, double s) {
 	setSampling(s);
 	setParticleId(pId);
@@ -47,60 +90,84 @@ double SamplerEventsUniform::computeWeight(int id, double E, double f, int count
 
 /****************************************************************************/
 
-SamplerEventsEnergyFractionPowerLaw::SamplerEventsEnergyFractionPowerLaw(double idx, int pId, double s) {
-	setSampling(s);
-	setParticleId(pId);
+SamplerEventsEnergyFractionPowerLaw::SamplerEventsEnergyFractionPowerLaw(double idx, int pId, double s) : SamplerEventsEnergy(pId, s) {
 	setIndex(idx);
-}
-
-void SamplerEventsEnergyFractionPowerLaw::setSampling(double s) {
-	sampling = s;
-}
-
-void SamplerEventsEnergyFractionPowerLaw::setParticleId(int pId) {
-	particleId = pId;
 }
 
 void SamplerEventsEnergyFractionPowerLaw::setIndex(double idx) {
 	index = idx;
 }
 
-double SamplerEventsEnergyFractionPowerLaw::getSampling() const {
-	return sampling;
-}
-
-int SamplerEventsEnergyFractionPowerLaw::getParticleId() const {
-	return particleId;
-}
-
 double SamplerEventsEnergyFractionPowerLaw::getIndex() const {
 	return index;
 }
 
-double  SamplerEventsEnergyFractionPowerLaw::computeWeight(int id, double E, double f, int counter) const {
-	if (id != particleId)
-		return 0;
-
-	if (sampling >= 1) {
-		return 1;
-	} else if (sampling < 0) {
-		return 0;
-	} else {
-		Random &random = Random::instance();
-		double r = 0;
-		if (index < 0)
-			r = pow(1 - f, (1 - sampling) * abs(index));
-		else
-			r = pow(f, (1 - sampling) * index);
-		if (random.rand() < r) // accept and return weight
-			return 1. / r;
-		else // reject
-			return 0;
-	}
+double SamplerEventsEnergyFractionPowerLaw::weightFunction(int id, double E, double f, int counter) const {
+	return pow(f, (1 - sampling) * index);
 }
 
 
-/****************************************************************************/
+
+// /****************************************************************************/
+
+// SamplerEventsEnergyNormal::SamplerEventsEnergyNormal(int pId, double s, double mu, double sigma) : SamplerEventsEnergy(pId, s) {
+// 	setMean(mu);
+// 	setStandardDeviation(sigma);
+// }
+
+// void SamplerEventsEnergyNormal::setMean(double mu) {
+// 	mean = mu;
+// }
+
+// void SamplerEventsEnergyNormal::setStandardDeviation(double sigma) {
+// 	standardDeviation = sigma;
+// }
+
+// double SamplerEventsEnergyNormal::getMean() const {
+// 	return mean;
+// }
+
+// double SamplerEventsEnergyNormal::getStandardDeviation() const {
+// 	return standardDeviation;
+// }
+
+// double SamplerEventsEnergyNormal::weightFunction(int id, double E, double f, int counter) const {
+// 	return pow(exp(- pow_integer<2>(E - mean) / 2. / pow_integer<2>(standardDeviation)), 1 - sampling);
+// }
+
+
+
+// /****************************************************************************/
+
+// SamplerEventsEnergyLogNormal::SamplerEventsEnergyLogNormal(int pId, double s, double mu, double sigma) : SamplerEventsEnergy(pId, s) {
+// 	setMean(mu);
+// 	setStandardDeviation(sigma);
+// }
+
+// void SamplerEventsEnergyLogNormal::setMean(double mu) {
+// 	mean = mu;
+// }
+
+// void SamplerEventsEnergyLogNormal::setStandardDeviation(double sigma) {
+// 	standardDeviation = sigma;
+// }
+
+// double SamplerEventsEnergyLogNormal::getMean() const {
+// 	return mean;
+// }
+
+// double SamplerEventsEnergyLogNormal::getStandardDeviation() const {
+// 	return standardDeviation;
+// }
+
+// double SamplerEventsEnergyLogNormal::weightFunction(int id, double E, double f, int counter) const {
+// 	return pow(exp(- pow_integer<2>(log(E) - mean) / 2. / pow_integer<2>(standardDeviation)) / (E / mean), 1 - sampling);
+// }
+
+
+
+/*
+***************************************************************************/
 SamplerEventsNull::SamplerEventsNull() {
 }
 
@@ -178,6 +245,11 @@ std::vector<double> SamplerDistributionUniform::getSample(int nSamples) const {
 
 	return sample;
 }
+
+void SamplerDistributionUniform::transformToPDF() {
+	distribution->transformToPDF();
+}
+
 
 void SamplerDistributionUniform::transformToCDF() {
 	distribution->transformToCDF();
