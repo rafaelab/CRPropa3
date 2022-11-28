@@ -13,6 +13,7 @@
 #include <cstddef>
 #include <fstream>
 #include <limits>
+#include <numeric>
 #include <stdexcept>
 #include <typeinfo>
 
