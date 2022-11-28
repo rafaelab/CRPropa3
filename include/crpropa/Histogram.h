@@ -115,6 +115,22 @@ class Histogram1D : public Referenced {
 			contents[idx] += w; 
 		}
 
+		double integrate() {
+			double integral = 0;
+			if (scale == "log") {
+				for (size_t i = 0; i < getNumberOfBins(); i++) {
+					integral += centres[i] * contents[i] * (edges[i + 1] - edges[i]) * log(10);
+				}
+			} else {
+				for (size_t i = 1; i < getNumberOfBins(); i++) {
+					// integral += contents[i] * (edges[i] - edges[i - 1]);
+					integral += contents[i];
+				}
+			}
+
+			return integral;
+		}
+
 		void transformToPDF() {
 			for (size_t i = 1; i < getNumberOfBins(); i++) {
 				contents[i] /= (edges[i] - edges[i - 1]);
