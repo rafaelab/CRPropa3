@@ -164,7 +164,9 @@ void ElectronPairProduction::process(Candidate *c) const {
 			samplerDistribution->transformToCDF();
 			std::vector<double> sampledElectrons = samplerDistribution->getSample(maximumSamples);
 			if (samplerDistribution->getSize() > 0) {
-				double w = samplerDistribution->getSize() / sampledElectrons.size();
+				double w = dE0 / dE;
+				// double w = samplerDistribution->getDistribution()->integrate() / dE0;
+				// std::cout << samplerDistribution->getDistribution()->integrate() / eV << " " << dE0 / eV << std::endl;
 				for (size_t i = 0; i < sampledElectrons.size(); i++) {
 					double Es = sampledElectrons[i];
 					double wp = w * samplerEvents->computeWeight(-11, Es, Es / E0, i);
