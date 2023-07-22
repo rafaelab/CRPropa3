@@ -143,6 +143,17 @@ public:
 	 @param tagOrigin 	tag of the secondary
 	 */
 	void addSecondary(int id, double energy, Vector3d position, double w = 1., std::string tagOrigin = "SEC");
+	/**
+	 Add a new candidate to the list of secondaries.
+	 @param id			particle ID of the secondary
+	 @param energy		energy of the secondary
+	 @param position	start position of the secondary
+	 @param direction   the direction of the secondary
+	 @param w			weight of the secondary
+	 @param tagOrigin 	tag of the secondary
+	 */
+	void addSecondary(int id, double energy, Vector3d position, Vector3d direction, double w, std::string tagOrigin = "SEC");
+
 	void clearSecondaries();
 
 	std::string getDescription() const;

@@ -170,6 +170,26 @@ void Candidate::addSecondary(int id, double energy, Vector3d position, double w,
 	secondaries.push_back(secondary);
 }
 
+void Candidate::addSecondary(int id, double energy, Vector3d position, Vector3d direction, double w, std::string tagOrigin) {
+	ref_ptr<Candidate> secondary = new Candidate;
+	secondary->setRedshift(redshift);
+	secondary->setTrajectoryLength(trajectoryLength - (current.getPosition() - position).getR() );
+	secondary->setWeight(weight * w);
+	secondary->source = source;
+	secondary->previous = previous;
+	secondary->created = previous;
+	secondary->current = current;
+	secondary->current.setId(id);
+	secondary->current.setEnergy(energy);
+	secondary->current.setPosition(position);
+	secondary->created.setPosition(position);
+	secondary->parent = this;
+	secondary->current.setDirection(direction);
+	secondary->setTagOrigin (tagOrigin);
+	secondaries.push_back(secondary);
+}
+
+
 void Candidate::clearSecondaries() {
 	secondaries.clear();
 }
