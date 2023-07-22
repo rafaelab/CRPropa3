@@ -11,11 +11,12 @@ namespace crpropa {
 
 static const double mec2 = mass_electron * c_squared;
 
-EMPairProduction::EMPairProduction(ref_ptr<PhotonField> photonField, bool haveElectrons, double thinning, double limit) {
+EMPairProduction::EMPairProduction(ref_ptr<PhotonField> photonField, bool haveElectrons, double thinning, double limit, bool correctPairAngle) {
 	setPhotonField(photonField);
 	setThinning(thinning);
 	setLimit(limit);
 	setHaveElectrons(haveElectrons);
+	setCorrectPairAngle(correctPairAngle);
 }
 
 void EMPairProduction::setPhotonField(ref_ptr<PhotonField> photonField) {
@@ -36,6 +37,10 @@ void EMPairProduction::setLimit(double limit) {
 
 void EMPairProduction::setThinning(double thinning) {
 	this->thinning = thinning;
+}
+
+void EMPairProduction::setCorrectPairAngle(bool b) {
+	this->correctPairAngle = b;
 }
 
 void EMPairProduction::initRate(std::string filename) {
@@ -205,14 +210,56 @@ void EMPairProduction::performInteraction(Candidate *candidate) const {
 
 	// sample random position along current step
 	Vector3d pos = random.randomInterpolatedPosition(candidate->previous.getPosition(), candidate->current.getPosition());
-	// apply sampling
-	if (random.rand() < pow(f, thinning)) {
-		double w = 1. / pow(f, thinning);
-		candidate->addSecondary(11, Ep / (1 + z), pos, w, interactionTag);
-	}
-	if (random.rand() < pow(1 - f, thinning)){
-		double w = 1. / pow(1 - f, thinning);
-		candidate->addSecondary(-11, Ee / (1 + z), pos, w, interactionTag);	
+
+	// two cases, depending on whether the angle between the electron and the positron must be considered
+	if (correctPairAngle) {
+		// direction of HE photon
+		Vector3d p = candidate->current.getDirection();
+
+		// get random angle for background photon from s and then the energy
+		double mu = 0;
+		double eps = 0;
+		do {
+			mu = random.randUniform(-1, 1); // cos(theta)
+			eps = s / (2 * E * (1 - mu));
+		} while (eps < photonField->getMinimumPhotonEnergy(z) || eps > photonField->getMaximumPhotonEnergy(z));
+
+		// momentum of background photon based on CoM energy
+		Vector3d pBg = random.randVectorAroundMean(-1. * p, acos(mu));
+		Vector3d v = pBg.cross(p);
+		v /= v.getR();
+
+		// opening angle of pairs
+		double angle_e = mec2 / Ee;
+		double angle_p = mec2 / Ep;
+
+		// // momenta of electron and positron 
+		Vector3d pe = p.getRotated(v, angle_e);
+		Vector3d pp = p.getRotated(v, angle_p);
+		
+		// ensure normalisation
+		pe = pe / pe.getR();
+		pp = pp / pp.getR();
+
+		// apply sampling and add secondaries
+		if (random.rand() < pow(f, thinning)) {
+			double w = 1. / pow(f, thinning);
+			candidate->addSecondary(11, Ep / (1 + z), pos, pe, w, interactionTag);
+		}
+		if (random.rand() < pow(1 - f, thinning)){
+			double w = 1. / pow(1 - f, thinning);
+			candidate->addSecondary(-11, Ee / (1 + z), pos, pp, w, interactionTag);	
+		}
+	} else {
+		// apply sampling and add secondaries
+		if (random.rand() < pow(f, thinning)) {
+			double w = 1. / pow(f, thinning);
+			candidate->addSecondary(11, Ep / (1 + z), pos, w, interactionTag);
+		}
+		if (random.rand() < pow(1 - f, thinning)){
+			double w = 1. / pow(1 - f, thinning);
+			candidate->addSecondary(-11, Ee / (1 + z), pos, w, interactionTag);	
+		}
 	}
 }
 
