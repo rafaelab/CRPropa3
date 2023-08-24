@@ -15,14 +15,16 @@
 
 namespace crpropa {
 
-PhotoPionProduction::PhotoPionProduction(ref_ptr<PhotonField> field, bool photons, bool neutrinos, bool electrons, bool antiNucleons, double l, bool redshift) {
+PhotoPionProduction::PhotoPionProduction(ref_ptr<PhotonField> field, bool photons, bool neutrinos, bool electrons, bool antiNucleons, bool preventDecays, double l, bool redshift) {
 	havePhotons = photons;
 	haveNeutrinos = neutrinos;
 	haveElectrons = electrons;
 	haveAntiNucleons = antiNucleons;
+	forbidDecays = preventDecays;
 	haveRedshiftDependence = redshift;
 	limit = l;
 	setPhotonField(field);
+	initParticleIdDictionary();
 }
 
 void PhotoPionProduction::setPhotonField(ref_ptr<PhotonField> field) {
@@ -60,6 +62,10 @@ void PhotoPionProduction::setHaveNeutrinos(bool b) {
 
 void PhotoPionProduction::setHaveAntiNucleons(bool b) {
 	haveAntiNucleons = b;
+}
+
+void PhotoPionProduction::setPreventDecays(bool b) {
+	forbidDecays = b;
 }
 
 void PhotoPionProduction::setHaveRedshiftDependence(bool b) {
@@ -122,6 +128,59 @@ void PhotoPionProduction::initRate(std::string filename) {
 
 	infile.close();
 }
+
+void PhotoPionProduction::initParticleIdDictionary() {
+	particleIdDict[1]  = 22;
+	particleIdDict[2]  = -11;
+	particleIdDict[3]  = 11;
+	particleIdDict[4]  = -13;
+	particleIdDict[5]  = 13;
+	particleIdDict[6]  = 111;
+	particleIdDict[7]  = 211;
+	particleIdDict[8]  = -211;
+	particleIdDict[9]  = 321;
+	particleIdDict[10] = -321;
+	particleIdDict[11] = 130;
+	particleIdDict[12] = 310;
+	particleIdDict[13] = nucleusId(1, 1);
+	particleIdDict[14] = nucleusId(1, 0);
+	particleIdDict[15] = 12;
+	particleIdDict[16] = -12;
+	particleIdDict[17] = 14;
+	particleIdDict[18] = -14;
+	particleIdDict[19] = -nucleusId(1, 1);
+	particleIdDict[20] = -nucleusId(1, 0);
+	particleIdDict[21] = 311;
+	particleIdDict[22] = -311;
+	particleIdDict[23] = 221;
+	particleIdDict[24] = 331;
+	particleIdDict[25] = 213;
+	particleIdDict[26] = -213;
+	particleIdDict[27] = 113;
+	particleIdDict[28] = 323;
+	particleIdDict[29] = -323;
+	particleIdDict[30] = 313;
+	particleIdDict[31] = -313;
+	particleIdDict[32] = 223;
+	particleIdDict[33] = 333;
+	particleIdDict[34] = 3222;
+	particleIdDict[35] = 3212;
+	particleIdDict[36] = 3112;
+	particleIdDict[37] = 3322;
+	particleIdDict[38] = 3312;
+	particleIdDict[39] = 3122;
+	particleIdDict[40] = 2224;
+	particleIdDict[41] = 2214;
+	particleIdDict[42] = 2114;
+	particleIdDict[43] = 1114;
+	particleIdDict[44] = 3224;
+	particleIdDict[45] = 3214;
+	particleIdDict[46] = 3114;
+	particleIdDict[47] = 3324;
+	particleIdDict[48] = 3314;
+	particleIdDict[49] = 3334;
+}
+
 
 double PhotoPionProduction::nucleonMFP(double gamma, double z, bool onProton) const {
 	const std::vector<double> &tabRate = (onProton)? tabProtonRate : tabNeutronRate;
@@ -230,10 +289,11 @@ void PhotoPionProduction::performInteraction(Candidate *candidate, bool onProton
 	double outputEnergy[5][2000];  // [GeV/c, GeV/c, GeV/c, GeV, GeV/c^2]
 	int outPartID[2000];
 	int nParticles;
+	int preventDecays = static_cast<int>(forbidDecays);
 
 #pragma omp critical
 	{
-		sophiaevent_(nature, Ein, eps, outputEnergy, outPartID, nParticles);
+			sophiaevent_(nature, Ein, eps, outputEnergy, outPartID, nParticles, preventDecays);
 	}
 
 	Random &random = Random::instance();
@@ -244,84 +304,91 @@ void PhotoPionProduction::performInteraction(Candidate *candidate, bool onProton
 		return;
 	for (int i = 0; i < nParticles; i++) { // loop over out-going particles
 		double Eout = outputEnergy[3][i] * GeV; // only the energy is used; could be changed for more detail
-		int pType = outPartID[i];
-		switch (pType) {
-		case 13: // proton
-		case 14: // neutron
+		int pType = particleIdDict.find(outPartID[i])->second;
+		
+		if (pType == nucleusId(1, 1) || pType == nucleusId(1, 0)) { // proton or neutron
 			// proton and neutron data is taken to determine primary particle in a later step
-			pnType.push_back(pType);
+			// pnType.push_back(pType);
+			pnType.push_back(outPartID[i]);
 			pnEnergy.push_back(Eout);
-			break;
-		case -13: // anti-proton
-		case -14: // anti-neutron
-			if (haveAntiNucleons)
-				try
-				{
+		} 
+		
+		if (haveAntiNucleons) {
+			if (pType == -nucleusId(1, 1) || pType == -nucleusId(1, 0)) {
+				try {
 					candidate->addSecondary(-sign * nucleusId(1, 14 + pType), Eout, pos, 1., interactionTag);
-				}
-				catch (std::runtime_error &e)
-				{
+				} catch (std::runtime_error &e) {
 					KISS_LOG_ERROR<< "Something went wrong in the PhotoPionProduction (anti-nucleon production)\n" << "Something went wrong in the PhotoPionProduction\n"<< "Please report this error on https://github.com/CRPropa/CRPropa3/issues including your simulation setup and the following random seed:\n" << Random::instance().getSeed_base64();
 					throw;
 				}
-			break;
-		case 1: // photon
-			if (havePhotons)
-				candidate->addSecondary(22, Eout, pos, 1., interactionTag);
-			break;
-		case 2: // positron
-			if (haveElectrons)
-				candidate->addSecondary(sign * -11, Eout, pos, 1., interactionTag);
-			break;
-		case 3: // electron
-			if (haveElectrons)
-				candidate->addSecondary(sign * 11, Eout, pos, 1., interactionTag);
-			break;
-		case 15: // nu_e
-			if (haveNeutrinos)
-				candidate->addSecondary(sign * 12, Eout, pos, 1., interactionTag);
-			break;
-		case 16: // anti-nu_e
-			if (haveNeutrinos)
-				candidate->addSecondary(sign * -12, Eout, pos, 1., interactionTag);
-			break;
-		case 17: // nu_mu
-			if (haveNeutrinos)
-				candidate->addSecondary(sign * 14, Eout, pos, 1., interactionTag);
-			break;
-		case 18: // anti-nu_mu
-			if (haveNeutrinos)
-				candidate->addSecondary(sign * -14, Eout, pos, 1., interactionTag);
-			break;
-		default:
-			throw std::runtime_error("PhotoPionProduction: unexpected particle " + kiss::str(pType));
+			}
 		}
+
+		if (havePhotons) {
+			if (pType == 22) {
+				candidate->addSecondary(pType, Eout, pos, 1., interactionTag);
+			}
+		}
+
+		if (haveElectrons) {
+			if (abs(pType) == 11) {
+				candidate->addSecondary(pType, Eout, pos, 1., interactionTag);
+			} 
+		}
+
+		if (haveNeutrinos) {
+			if (abs(pType) == 12 || abs(pType) == 14 || abs(pType) == 16) {
+				candidate->addSecondary(pType, Eout, pos, 1., interactionTag);
+			}
+		}
+	
+		if (forbidDecays) {
+			switch (abs(pType)) {
+				case 211: // pi+-
+				case 111: // pi0
+				case 321: // K+-
+				case 311: // K0
+				case 213: // rho+0
+				case 113: // rho0
+				case 130: // K_L0
+				case 310: // K_S0	
+				case 221: // eta
+				case 331: // eta'
+				case 223: // omega
+				case 333: // phi
+				case 2224: // Delta++
+				case 2214: // Delta+
+				case 2114: // Delta0
+				case 1114: // Delta-
+				case 3122: // lambda0
+					candidate->addSecondary(pType, Eout, pos, 1., interactionTag);
+					break;
+				default:
+					break;
+			}
+		}
+
 	}
+
 	double maxEnergy = *std::max_element(pnEnergy.begin(), pnEnergy.end());  // criterion for being declared primary
 	for (int i = 0; i < pnEnergy.size(); ++i) {
 		if (pnEnergy[i] == maxEnergy) {  // nucleon is primary particle
 			if (A == 1) {
 				// single interacting nucleon
 				candidate->current.setEnergy(pnEnergy[i]);
-				try
-				{
+				try {
 					candidate->current.setId(sign * nucleusId(1, 14 - pnType[i]));
-				}
-				catch (std::runtime_error &e)
-				{
+				} catch (std::runtime_error &e) {
 					KISS_LOG_ERROR<< "Something went wrong in the PhotoPionProduction (primary particle, A==1)\n" << "Please report this error on https://github.com/CRPropa/CRPropa3/issues including your simulation setup and the following random seed:\n" << Random::instance().getSeed_base64();
 					throw;
 				}
 			} else {
 				// interacting nucleon is part of nucleus: it is emitted from the nucleus
 				candidate->current.setEnergy(E - EpA);
-				try
-				{
+				try {
 					candidate->current.setId(sign * nucleusId(A - 1, Z - int(onProton)));
 					candidate->addSecondary(sign * nucleusId(1, 14 - pnType[i]), pnEnergy[i], pos, 1., interactionTag);
-				}
-				catch (std::runtime_error &e)
-				{
+				} catch (std::runtime_error &e) {
 					KISS_LOG_ERROR<< "Something went wrong in the PhotoPionProduction (primary particle, A!=1)\n" << "Please report this error on https://github.com/CRPropa/CRPropa3/issues including your simulation setup and the following random seed:\n" << Random::instance().getSeed_base64();
 					throw;
 				}
@@ -365,48 +432,19 @@ SophiaEventOutput PhotoPionProduction::sophiaEvent(bool onProton, double Ein, do
 	double outputEnergy[5][2000];  // [Px GeV/c, Py GeV/c, Pz GeV/c, E GeV, m0 GeV/c^2]
 	int outPartID[2000];
 	int nParticles;
+	int preventDecays = static_cast<int>(forbidDecays);
 
-	sophiaevent_(nature, Ein, eps, outputEnergy, outPartID, nParticles);
+	sophiaevent_(nature, Ein, eps, outputEnergy, outPartID, nParticles, preventDecays);
+	
 
 	// convert SOPHIA IDs to PDG naming convention & create particles
 	SophiaEventOutput output;
 	output.nParticles = nParticles;
 	for (int i = 0; i < nParticles; ++i) {
 		int id = 0;
-		int partType = outPartID[i];
-		switch (partType) {
-			case 13:  // proton
-			case 14:  // neutron
-				id = nucleusId(1, 14 - partType);
-				break;
-			case -13:  // anti-proton
-			case -14:  // anti-neutron
-				id = -nucleusId(1, 14 + partType);
-				break;
-			case 1:  // photon
-				id = 22;
-				break;
-			case 2:  // positron
-				id = -11;
-				break;
-			case 3:  // electron
-				id = 11;
-				break;
-			case 15:  // nu_e
-				id = 12;
-				break;
-			case 16:  // anti-nu_e
-				id = -12;
-				break;
-			case 17:  // nu_mu
-				id = 14;
-				break;
-			case 18:  // anti-nu_mu
-				id = -14;
-				break;
-			default:
-				throw std::runtime_error("PhotoPionProduction: unexpected particle " + kiss::str(partType));
-		}
+		int partType = particleIdDict.find(outPartID[i])->second;			
+		// throw std::runtime_error("PhotoPionProduction: unexpected particle " + kiss::str(partType));
+		
 		output.energy.push_back(outputEnergy[3][i] * GeV); // only the energy is used; could be changed for more detail
 		output.id.push_back(id);
 	}
@@ -653,6 +691,10 @@ bool PhotoPionProduction::getHaveElectrons() const {
 
 bool PhotoPionProduction::getHaveAntiNucleons() const {
 	return haveAntiNucleons;
+}
+
+bool PhotoPionProduction::getPreventDecays() const {
+	return forbidDecays;
 }
 
 bool PhotoPionProduction::getHaveRedshiftDependence() const {

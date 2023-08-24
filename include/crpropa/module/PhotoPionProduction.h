@@ -4,6 +4,7 @@
 #include "crpropa/Module.h"
 #include "crpropa/PhotonBackground.h"
 
+#include <unordered_map>
 #include <vector>
 
 namespace crpropa {
@@ -35,7 +36,9 @@ protected:
 	bool haveNeutrinos;
 	bool haveElectrons;
 	bool haveAntiNucleons;
+	bool forbidDecays;
 	bool haveRedshiftDependence;
+	std::unordered_map<int, int> particleIdDict;
 	std::string interactionTag = "PPP";
 
 	// called by: sampleEps
@@ -103,6 +106,7 @@ public:
 	 * @param neutrinos 	if true, secondary neutrinos are added to the simulation
 	 * @param electrons 	if true, secondary electrons are added to the simulation
 	 * @param antiNucleons 	if true, secondary anti nucleons are added to the simulation
+	 * @param decays        if true, the produced mesons will not be allowed to decay
 	 * @param limit 		fraction of the mean free path, to which the propagation step will be limited
 	 * @param haveRedshiftDependence 	use redshift dependent tabulated loss rates; if false, the redshift scaling of the photon field will be used
 	 */
@@ -112,6 +116,7 @@ public:
 		bool neutrinos = false,
 		bool electrons = false,
 		bool antiNucleons = false,
+		bool preventDecays = false,
 		double limit = 0.1,
 		bool haveRedshiftDependence = false);
 
@@ -130,6 +135,9 @@ public:
 	// decide if secondary anti nucleons are added to the simulation
 	void setHaveAntiNucleons(bool b);
 
+	// prevent particles generated in SOPHIA from decaying
+	void setPreventDecays(bool b);
+
 	// decide if redshift dependent tabulated loss rates are used
 	void setHaveRedshiftDependence(bool b);
 
@@ -144,6 +152,10 @@ public:
 	void setInteractionTag(std::string tag);
 
 	void initRate(std::string filename);
+
+	/** initialise conversion between SOPHIA/Sibyll particle id and CRPropa's (PDG)
+	*/
+	void initParticleIdDictionary();
 
 	/** get the mean free path (MFP) for a single nucleon. 
 	 *  To get the MFP for the full nucleus the nucleonMFP has to be divided by by the nucleiModification factor
@@ -215,6 +227,7 @@ public:
 	bool getHaveNeutrinos() const;
 	bool getHaveElectrons() const;
 	bool getHaveAntiNucleons() const;
+	bool getPreventDecays() const;
 	bool getHaveRedshiftDependence() const;
 	double getLimit() const;
 	bool getSampleLog() const;
