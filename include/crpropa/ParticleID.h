@@ -5,6 +5,12 @@
 #include <vector>
 #include <string>
 
+#include "HepPID/ParticleIDMethods.hh"
+#include "HepPID/ParticleName.hh"
+#include "kiss/convert.h"
+
+
+
 namespace crpropa {
 /**
  * \addtogroup PhysicsDefinitions
@@ -28,6 +34,21 @@ int chargeNumber(int id);
 int massNumber(int id);
 
 bool isNucleus(int id);
+
+
+/** Additional functionalities.
+ *  This redundant implementation (as opposed to exposing the functions from the HepPID namespace) prevents compiler issues.
+*/
+bool isMeson(int id);
+bool isBaryon(int id);
+bool isHadron(int id);
+bool isLepton(int id);
+bool hasUp(int id);
+bool hasDown(int id);
+bool hasCharm(int id);
+bool hasStrange(int id);
+bool hasTop(int id);
+bool hasBottom(int id);
 
 /* Additional modules */
 std::string convertIdToName(int id); 

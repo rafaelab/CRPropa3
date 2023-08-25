@@ -1,10 +1,5 @@
 #include "crpropa/ParticleID.h"
 
-#include "HepPID/ParticleIDMethods.hh"
-#include "HepPID/ParticleName.hh"
-#include "kiss/convert.h"
-
-#include <string>
 
 namespace crpropa {
 
@@ -38,6 +33,46 @@ bool isNucleus(int id) {
 	if (id == 2112)
 		return true; // consider neutron as nucleus
 	return HepPID::isNucleus(id);
+}
+
+bool isMeson(int id) {
+	return HepPID::isMeson(id);
+}
+
+bool isBaryon(int id) {
+	return HepPID::isBaryon(id);
+}
+
+bool isHadron(int id) {
+	return HepPID::isHadron(id);
+}
+
+bool isLepton(int id) {
+	return HepPID::isLepton(id);
+}
+
+bool hasUp(int id) {
+	return HepPID::hasUp(id);
+}
+
+bool hasDown(int id) {
+	return HepPID::hasDown(id);
+}
+
+bool hasCharm(int id) {
+	return HepPID::hasCharm(id);
+}
+
+bool hasStrange(int id) {
+	return HepPID::hasStrange(id);
+}
+
+bool hasTop(int id) {
+	return HepPID::hasTop(id);
+}
+
+bool hasBottom(int id) {
+	return HepPID::hasBottom(id);
 }
 
 std::string convertIdToName(int id) {
