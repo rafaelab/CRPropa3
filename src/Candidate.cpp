@@ -185,6 +185,7 @@ void Candidate::addSecondary(int id, double energy, Vector3d position, Vector3d 
 	secondary->created.setPosition(position);
 	secondary->parent = this;
 	secondary->current.setDirection(direction);
+	secondary->created.setDirection(direction);
 	secondary->setTagOrigin (tagOrigin);
 	secondaries.push_back(secondary);
 }
@@ -196,7 +197,7 @@ void Candidate::clearSecondaries() {
 
 std::string Candidate::getDescription() const {
 	std::stringstream ss;
-	ss << "CosmicRay at z = " << getRedshift() << "\n";
+	ss << "Candidate particle at z = " << getRedshift() << "\n";
 	ss << "  source:  " << source.getDescription() << "\n";
 	ss << "  current: " << current.getDescription();
 	return ss.str();
