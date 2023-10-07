@@ -11,12 +11,12 @@ namespace crpropa {
 
 static const double mec2 = mass_electron * c_squared;
 
-EMPairProduction::EMPairProduction(ref_ptr<PhotonField> photonField, bool haveElectrons, double thinning, double limit, bool correctPairAngle) {
+EMPairProduction::EMPairProduction(ref_ptr<PhotonField> photonField, bool haveElectrons, double thinning, double limit, bool forwardApproximation) {
 	setPhotonField(photonField);
 	setThinning(thinning);
 	setLimit(limit);
 	setHaveElectrons(haveElectrons);
-	setCorrectPairAngle(correctPairAngle);
+	setForwardApproximation(forwardApproximation);
 }
 
 void EMPairProduction::setPhotonField(ref_ptr<PhotonField> photonField) {
@@ -39,8 +39,8 @@ void EMPairProduction::setThinning(double thinning) {
 	this->thinning = thinning;
 }
 
-void EMPairProduction::setCorrectPairAngle(bool b) {
-	this->correctPairAngle = b;
+void EMPairProduction::setForwardApproximation(bool b) {
+	this->forwardApproximation = b;
 }
 
 void EMPairProduction::initRate(std::string filename) {
@@ -212,44 +212,66 @@ void EMPairProduction::performInteraction(Candidate *candidate) const {
 	Vector3d pos = random.randomInterpolatedPosition(candidate->previous.getPosition(), candidate->current.getPosition());
 
 	// two cases, depending on whether the angle between the electron and the positron must be considered
-	if (correctPairAngle) {
+	if (not forwardApproximation) {
 		// direction of HE photon
 		Vector3d p = candidate->current.getDirection();
 
-		// get random angle for background photon from s and then the energy
-		double mu = 0;
-		double eps = 0;
+		double phi = 0.;
+		double angle_p = 0. / 0.;
+		double angle_e = 0. / 0.;
+		Vector3d pVec_p;
+		Vector3d pVec_e;
+		unsigned int counter = 0;
 		do {
-			mu = random.randUniform(-1, 1); // cos(theta)
-			eps = s / (2 * E * (1 - mu));
-		} while (eps < photonField->getMinimumPhotonEnergy(z) || eps > photonField->getMaximumPhotonEnergy(z));
+			phi = random.randUniform(0, M_PI);
+			double eps = s / (2 * E * (1 - cos(phi)));
+			double pTot = sqrt(eps * eps + E * E + 2 * eps * E * cos(phi)) / c_light;
 
-		// momentum of background photon based on CoM energy
-		Vector3d pBg = random.randVectorAroundMean(-1. * p, acos(mu));
-		Vector3d v = pBg.cross(p);
-		v /= v.getR();
 
-		// opening angle of pairs
-		double angle_e = mec2 / Ee;
-		double angle_p = mec2 / Ep;
+			double pAbs_e = sqrt(Ee * Ee - pow_integer<2>(mass_electron * c_squared)) / c_light;
+			double E_e = sqrt(pow_integer<2>(mass_electron * c_squared) + pow_integer<2>(pAbs_e * c_light));
 
-		// // momenta of electron and positron 
-		Vector3d pe = p.getRotated(v, angle_e);
-		Vector3d pp = p.getRotated(v, angle_p);
+			// double pAbs_e = sqrt(pow_integer<2>((sqrt(pTot * pTot + s / c_squared) - E_p / c_light)) - pow_integer<2>(mass_electron * c_light));
+			double pAbs_p = sqrt(pow_integer<2>((sqrt(pTot * pTot + s / c_squared) - E_e / c_light)) - pow_integer<2>(mass_electron * c_light));
+
+			// opening angle of pairs
+			angle_p = acos((pTot * pTot + pAbs_p * pAbs_p - pAbs_e * pAbs_e) / (2 * pTot * pAbs_p));
+			angle_e = acos((pTot * pTot - pAbs_p * pAbs_p + pAbs_e * pAbs_e) / (2 * pTot * pAbs_e));
+			double delta = asin(eps / c_light / pTot * sin(phi));
+
+			Vector3d uPerp = p.getPerpendicularTo(random.randVector());
+			uPerp /= uPerp.getR();
+			Vector3d uTot = p.getRotated(uPerp, delta);
+			uTot /= uTot.getR();
+			Vector3d uTheta = -1. * uTot.getPerpendicularTo(random.randVector());
+			uTheta /= uTheta.getR();
+
+			// momenta of electron and positron; ensure normalisation
+			pVec_p = uTot.getRotated(uTheta, angle_p);
+			pVec_e = uTot.getRotated(uTheta, - angle_e);
+			pVec_p /= pVec_p.getR();
+			pVec_e /= pVec_e.getR();
+
+			if (counter >= 10) {
+				pVec_e = p;
+				pVec_p = p;
+				break;
+			}
+
+			counter++;
+		} while (std::isnan(angle_p) || std::isnan(angle_e) || (angle_p == 0. && angle_e == 0.));
+
 		
-		// ensure normalisation
-		pe = pe / pe.getR();
-		pp = pp / pp.getR();
-
 		// apply sampling and add secondaries
 		if (random.rand() < pow(f, thinning)) {
 			double w = 1. / pow(f, thinning);
-			candidate->addSecondary(11, Ep / (1 + z), pos, pe, w, interactionTag);
+			candidate->addSecondary(11, Ep / (1 + z), pos, pVec_e, w, interactionTag);
 		}
 		if (random.rand() < pow(1 - f, thinning)){
 			double w = 1. / pow(1 - f, thinning);
-			candidate->addSecondary(-11, Ee / (1 + z), pos, pp, w, interactionTag);	
+			candidate->addSecondary(-11, Ee / (1 + z), pos, pVec_p, w, interactionTag);	
 		}
+
 	} else {
 		// apply sampling and add secondaries
 		if (random.rand() < pow(f, thinning)) {

@@ -4,6 +4,7 @@
 #include <fstream>
 #include <cmath>
 
+#include "crpropa/Common.h"
 #include "crpropa/Module.h"
 #include "crpropa/PhotonBackground.h"
 
@@ -31,7 +32,7 @@ private:
 	ref_ptr<PhotonField> photonField; 	// target photon field
 	bool haveElectrons;					// add secondary electrons to simulation
 	double limit;						// limit the step to a fraction of the mean free path
-	bool correctPairAngle;				// whether to correct the angle of the pairs (defaults to false)
+	bool forwardApproximation;				// whether to correct the angle of the pairs (defaults to false)
 	double thinning;					// factor of the thinning (0: no thinning, 1: maximum thinning)
 	std::string interactionTag = "EMPP";
 
@@ -46,13 +47,13 @@ private:
 
 public:
 	/** Constructor
-	 @param photonField		target photon field
-	 @param haveElectrons	if true, add secondary electrons as candidates
-	 @param thinning		weighted sampling of secondaries (0: all particles are tracked; 1: maximum thinning)
-	 @param limit			step size limit as fraction of mean free path
-	 @param correctPairAngle whether to correct the angle of the pairs (defaults to false)
+	 @param photonField		  		target photon field
+	 @param haveElectrons	  		if true, add secondary electrons as candidates
+	 @param thinning		  		weighted sampling of secondaries (0: all particles are tracked; 1: maximum thinning)
+	 @param limit			  		step size limit as fraction of mean free path
+	 @param forwardApproximation  	whether to assume that pairs are produced in the same direction as parent (defaults to true)
 	 */
-	EMPairProduction(ref_ptr<PhotonField> photonField, bool haveElectrons = false, double thinning = 0, double limit = 0.1, bool correctPairAngle = false);
+	EMPairProduction(ref_ptr<PhotonField> photonField, bool haveElectrons = false, double thinning = 0, double limit = 0.1, bool forwardApproximation = true);
 
 	// set the target photon field
 	void setPhotonField(ref_ptr<PhotonField> photonField);
@@ -73,7 +74,7 @@ public:
 	/** Determines whether the angle between the electron/positron will be considered or if it will be colinear with parent.
 	 * @param thinning factor of thinning (0: no thinning, 1: maximum thinning)
 	 */
-	void setCorrectPairAngle(bool b);
+	void setForwardApproximation(bool b);
 
 	
 
