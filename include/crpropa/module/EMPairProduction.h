@@ -1,8 +1,8 @@
 #ifndef CRPROPA_EMPAIRPRODUCTION_H
 #define CRPROPA_EMPAIRPRODUCTION_H
 
-#include <fstream>
 #include <cmath>
+#include <fstream>
 
 #include "crpropa/Common.h"
 #include "crpropa/Module.h"
@@ -32,8 +32,9 @@ private:
 	ref_ptr<PhotonField> photonField; 	// target photon field
 	bool haveElectrons;					// add secondary electrons to simulation
 	double limit;						// limit the step to a fraction of the mean free path
-	bool forwardApproximation;				// whether to correct the angle of the pairs (defaults to false)
 	double thinning;					// factor of the thinning (0: no thinning, 1: maximum thinning)
+	bool forwardApproximation;			// whether to correct the angle of the pairs (defaults to false)
+	int nMaxIterationsForward = 100;	// maximum number of attempts to sample the angle between e+/e-
 	std::string interactionTag = "EMPP";
 
 	// tabulated interaction rate 1/lambda(E)
@@ -76,7 +77,11 @@ public:
 	 */
 	void setForwardApproximation(bool b);
 
-	
+	/** Determines how many iterations are allowed to find the angle between the electron/positron (if forwardApproximation).
+	 * If this is limit is exceeded, forward approximation will be assumed.
+	 * @param nMaxIterationsForward 
+	 */
+	void setMaximumIterationsForwardApproximation(int n);
 
 	/** set a custom interaction tag to trace back this interaction
 	 * @param tag string that will be added to the candidate and output
