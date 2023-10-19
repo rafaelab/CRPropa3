@@ -43,10 +43,6 @@ void EMPairProduction::setForwardApproximation(bool b) {
 	this->forwardApproximation = b;
 }
 
-void EMPairProduction::setMaximumIterationsForwardApproximation(int n) {
-	this->nMaxIterationsForward = n;
-}
-
 void EMPairProduction::initRate(std::string filename) {
 	std::ifstream infile(filename.c_str());
 
@@ -225,21 +221,26 @@ void EMPairProduction::performInteraction(Candidate *candidate) const {
 		long double angle_e = 0. / 0.;
 		Vector3d pVec_p;
 		Vector3d pVec_e;
-		unsigned int counter = 0;
-		do {
-			phi = random.randUniform(0, M_PI);
-			double eps = s / (2 * E * (1 - cos(phi)));
 
-			double pTot = sqrt(eps * eps + E * E + 2 * eps * E * cos(phi)) / c_light;
-			double pAbs_e = sqrt(Ee * Ee - pow_integer<2>(mass_electron * c_squared)) / c_light;
-			double E_e = sqrt(pow_integer<2>(mass_electron * c_squared) + pow_integer<2>(pAbs_e * c_light));
-			double pAbs_p = sqrt(pow_integer<2>((sqrt(pTot * pTot + s / c_squared) - E_e / c_light)) - pow_integer<2>(mass_electron * c_light));
-			double cosTheta_p = (pTot * pTot + pAbs_p * pAbs_p - pAbs_e * pAbs_e) / (2 * pTot * pAbs_p);
-			double cosTheta_e = (pTot * pTot - pAbs_p * pAbs_p + pAbs_e * pAbs_e) / (2 * pTot * pAbs_e);
+		phi = random.randUniform(0, M_PI);
+		double eps = s / (2 * E * (1 - cos(phi)));
 
-			// opening angle of pairs
-			angle_p = acos(cosTheta_p);
-			angle_e = acos(cosTheta_e);
+		double pTot = sqrt(eps * eps + E * E + 2 * eps * E * cos(phi)) / c_light;
+		double pAbs_e = sqrt(Ee * Ee - pow_integer<2>(mass_electron * c_squared)) / c_light;
+		double E_e = sqrt(pow_integer<2>(mass_electron * c_squared) + pow_integer<2>(pAbs_e * c_light));
+		double pAbs_p = sqrt(pow_integer<2>((sqrt(pTot * pTot + s / c_squared) - E_e / c_light)) - pow_integer<2>(mass_electron * c_light));
+		double cosTheta_p = (pTot * pTot + pAbs_p * pAbs_p - pAbs_e * pAbs_e) / (2 * pTot * pAbs_p);
+		double cosTheta_e = (pTot * pTot - pAbs_p * pAbs_p + pAbs_e * pAbs_e) / (2 * pTot * pAbs_e);
+
+		// opening angle of pairs
+		angle_p = acos(cosTheta_p);
+		angle_e = acos(cosTheta_e);
+
+		if (std::isnan(angle_p) || std::isnan(angle_e)) {
+			pVec_e = p;
+			pVec_p = p;
+			
+		} else {
 			double delta = asin(eps / c_light / pTot * sin(phi));
 
 			// get random vectors to determine direction of leptons compatible with kinematics
@@ -255,16 +256,8 @@ void EMPairProduction::performInteraction(Candidate *candidate) const {
 			pVec_e = uTot.getRotated(uTheta, - angle_e);
 			pVec_p /= pVec_p.getR();
 			pVec_e /= pVec_e.getR();
+		}
 
-			if (counter >= nMaxIterationsForward) {
-				pVec_e = p;
-				pVec_p = p;
-				break;
-			}
-
-			counter++;
-		} while (std::isnan(angle_p) || std::isnan(angle_e));
-		
 		// apply sampling and add secondaries
 		if (random.rand() < pow(f, thinning)) {
 			double w = 1. / pow(f, thinning);

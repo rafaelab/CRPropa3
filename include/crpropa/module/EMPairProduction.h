@@ -34,7 +34,6 @@ private:
 	double limit;						// limit the step to a fraction of the mean free path
 	double thinning;					// factor of the thinning (0: no thinning, 1: maximum thinning)
 	bool forwardApproximation;			// whether to correct the angle of the pairs (defaults to false)
-	int nMaxIterationsForward = 100;	// maximum number of attempts to sample the angle between e+/e-
 	std::string interactionTag = "EMPP";
 
 	// tabulated interaction rate 1/lambda(E)
@@ -76,12 +75,6 @@ public:
 	 * @param thinning factor of thinning (0: no thinning, 1: maximum thinning)
 	 */
 	void setForwardApproximation(bool b);
-
-	/** Determines how many iterations are allowed to find the angle between the electron/positron (if forwardApproximation).
-	 * If this is limit is exceeded, forward approximation will be assumed.
-	 * @param nMaxIterationsForward 
-	 */
-	void setMaximumIterationsForwardApproximation(int n);
 
 	/** set a custom interaction tag to trace back this interaction
 	 * @param tag string that will be added to the candidate and output
