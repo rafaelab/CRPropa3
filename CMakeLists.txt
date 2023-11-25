@@ -467,8 +467,6 @@ else()
   find_package(Python COMPONENTS Interpreter Development)
 endif()
 
-
-
 if(ENABLE_PYTHON AND PYTHON_FOUND)
   find_package(SWIG 3.0 REQUIRED)
 
@@ -488,13 +486,7 @@ if(ENABLE_PYTHON AND PYTHON_FOUND)
   else()
     add_compile_definitions(PYTHON_3_12 Off)
   endif()
-
-  message("-- Python version: ${PYTHON_VERSION}")
-  message("-- Python include: ${PYTHON_INCLUDE_PATH}")
-  message("-- Python library: ${PYTHON_LIBRARY}")
-  message("-- Python site packages: ${PYTHON_SITE_PACKAGES}")
-  message("-- Python executable: ${PYTHON_EXECUTABLE}")
-
+  
   if(SWIG_VERSION VERSION_GREATER 4.0)
     # Use swig 4 builtin doxygen instead of external program
     list(APPEND CRPROPA_SWIG_DEFINES -doxygen)
