@@ -36,6 +36,7 @@ if(CMAKE_COMPILER_IS_GNUCXX AND NOT APPLE)
   message(STATUS "Use --as-needed linker flags!")
 endif(CMAKE_COMPILER_IS_GNUCXX AND NOT APPLE)
 
+
 SET(SIMD_EXTENSIONS "none" CACHE STRING "Choose which of the SIMD instruction set extensions your target CPU supports. Possible values are \"native\" (use everything that's supported by the CPU you're building on), \"none\", \"avx\", and \"avx+fma\".")
 
 if(SIMD_EXTENSIONS STREQUAL "none")
@@ -451,14 +452,44 @@ endif(BUILD_DOC)
 # Python
 # ----------------------------------------------------------------------------
 option(ENABLE_PYTHON "Create python library via SWIG" ON)
-find_package(PythonInterp)
-find_package(PythonLibs)
 
-if(ENABLE_PYTHON AND PYTHONLIBS_FOUND)
+if(CMAKE_VERSION VERSION_LESS "3.12")
+  # deprecated since CMake 3.12
+  #   https://cmake.org/cmake/help/latest/module/FindPythonLibs.html
+  find_package(PythonInterp)
+  find_package(PythonLibs)
+  set(PYTHON_FOUND ${PYTHONLIBS_FOUND})
+else()
+  find_package(Python COMPONENTS Interpreter Development)
+endif()
 
+
+
+if(ENABLE_PYTHON AND PYTHON_FOUND)
   find_package(SWIG 3.0 REQUIRED)
-  include(python/Python.cmake)
+
+  if(CMAKE_VERSION VERSION_LESS "3.12")
+    # Use built-in Python finder; otherwise use CMake's
+    include(python/Python.cmake)
+    set(PYTHON_VERSION ${PYTHON_VERSION_STRING})
+  else()
+    set(PYTHON_INCLUDE_PATH ${PYTHON_INCLUDE_DIRS})
+    set(PYTHON_VERSION ${Python_VERSION})
+  endif()
   include_directories(${PYTHON_INCLUDE_PATH})
+
+  # Python 3.12 breaks compatibility
+  if(PYTHON_VERSION VERSION_GREATER_EQUAL "3.12")
+     add_compile_definitions(PYTHON_3_12 On)
+  else()
+    add_compile_definitions(PYTHON_3_12 Off)
+  endif()
+
+  message("-- Python version: ${PYTHON_VERSION}")
+  message("-- Python include: ${PYTHON_INCLUDE_PATH}")
+  message("-- Python library: ${PYTHON_LIBRARY}")
+  message("-- Python site packages: ${PYTHON_SITE_PACKAGES}")
+  message("-- Python executable: ${PYTHON_EXECUTABLE}")
 
   if(SWIG_VERSION VERSION_GREATER 4.0)
     # Use swig 4 builtin doxygen instead of external program
@@ -485,11 +516,11 @@ if(ENABLE_PYTHON AND PYTHONLIBS_FOUND)
     set(PY3 "")
   endif(ENABLE_SWIG_BUILTIN)
 
-  if(PYTHON_VERSION_STRING VERSION_GREATER 3.0)
+  if(PYTHON_VERSION VERSION_GREATER 3.0)
     list(APPEND CRPROPA_SWIG_DEFINES -DSWIG_PYTHON3)
-  endif(PYTHON_VERSION_STRING VERSION_GREATER 3.0)
+  endif(PYTHON_VERSION VERSION_GREATER 3.0)
 
-  # tries to import numpy
+
   execute_process(COMMAND ${PYTHON_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/python/checkNumpy.py" OUTPUT_VARIABLE numpyIncludePath)
   if(numpyIncludePath)
     MESSAGE(STATUS "Found numpy headers in " ${numpyIncludePath})
@@ -499,6 +530,9 @@ if(ENABLE_PYTHON AND PYTHONLIBS_FOUND)
   else(numpyIncludePath)
     MESSAGE(STATUS "Numpy not found.")
   endif(numpyIncludePath)
+  
+
+  message("-- NumPy include: ${numpyIncludePath}")
 
   set(SWIG_INCLUDES)
   foreach(p in ${SWIG_INCLUDE_DIRECTORIES})
@@ -520,14 +554,14 @@ if(ENABLE_PYTHON AND PYTHONLIBS_FOUND)
   # disable warnings on automatically generated interface code
   set_target_properties(crpropa-swig PROPERTIES COMPILE_FLAGS "-w")
   set_target_properties(crpropa-swig PROPERTIES OUTPUT_NAME "_crpropa")
-  target_link_libraries(crpropa-swig crpropa ${PYTHON_LIBRARIES})
+  target_link_libraries(crpropa-swig crpropa ${PYTHON_LIBRARIES} ${PYTHON_LIBRARY})
   add_dependencies(crpropa-swig crpropa-swig-wrapper)
 
   install(DIRECTORY "${CMAKE_SOURCE_DIR}/python/crpropa" DESTINATION "${PYTHON_SITE_PACKAGES}")
   install(FILES "${CMAKE_CURRENT_BINARY_DIR}/crpropa.py" DESTINATION "${PYTHON_SITE_PACKAGES}/crpropa")
   install(TARGETS crpropa-swig LIBRARY DESTINATION "${PYTHON_SITE_PACKAGES}/crpropa")
   install(FILES ${CRPROPA_SWIG_INPUTS} DESTINATION share/crpropa/swig_interface)
-endif(ENABLE_PYTHON AND PYTHONLIBS_FOUND)
+endif(ENABLE_PYTHON AND PYTHON_FOUND)
 
 
 # ----------------------------------------------------------------------------
