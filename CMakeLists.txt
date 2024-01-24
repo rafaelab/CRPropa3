@@ -540,6 +540,7 @@ install(DIRECTORY ${CMAKE_BINARY_DIR}/include/ DESTINATION include FILES_MATCHIN
 install(DIRECTORY ${CMAKE_BINARY_DIR}/data/ DESTINATION share/crpropa/ PATTERN ".git" EXCLUDE)
 
 install(DIRECTORY libs/kiss/include/ DESTINATION include)
+install(DIRECTORY libs/HepPID/include/ DESTINATION include)
 
 # ------------------------------------------------------------------
 # Documentation
