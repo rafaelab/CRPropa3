@@ -66,9 +66,11 @@ TEST(ParticleState, id) {
 	EXPECT_EQ(particle.getId(), 1000060120);
 }
 
+#ifndef CRPROPA_TESTS_SKIP_EXCEPTIONS
 TEST(ParticleState, idException) {
 	EXPECT_THROW(nucleusId(5, 6), std::runtime_error);
 }
+#endif
 
 TEST(ParticleState, Charge) {
 	ParticleState particle;
@@ -129,33 +131,38 @@ TEST(ParticleState, lorentzFactor) {
 			1e12 * eV / mass_proton / c_squared);
 }
 
-TEST(ParticleID, nucleusId)
-{
-	EXPECT_EQ(nucleusId(3,2),1000020030 );
+TEST(ParticleID, nucleusId) {
+	EXPECT_EQ(nucleusId(3,2), 1000020030);
 }
 
-TEST(ParticleID, chargeNumber)
-{
+TEST(ParticleID, chargeNumber) {
 	EXPECT_EQ(chargeNumber(1000020030), 2);
 }
 
-TEST(ParticleID, massNumber)
-{
+TEST(ParticleID, massNumber) {
 	EXPECT_EQ(massNumber(2112), 1);
 	EXPECT_EQ(massNumber(1000020030), 3);
 }
 
-TEST(ParticleID, isNucleus)
-{
+TEST(ParticleID, isNucleus) {
 	EXPECT_TRUE(isNucleus(1000020030));
 	EXPECT_FALSE(isNucleus(11));
 }
 
-TEST(HepPID, consistencyWithReferenceImplementation){
+TEST(ParticleMass, particleMass) {
+	//particleMass(int id) interfaces nuclearMass for nuclei
+	EXPECT_DOUBLE_EQ(nuclearMass(nucleusId(1,1)), particleMass(nucleusId(1,1)));
+	//particleMass(int id) for electron/positron, photon and neutrino
+	EXPECT_DOUBLE_EQ(mass_electron,particleMass(11));
+	EXPECT_DOUBLE_EQ(mass_electron,particleMass(-11));
+	EXPECT_DOUBLE_EQ(0.0,particleMass(22));
+	EXPECT_DOUBLE_EQ(0.0,particleMass(14));
+}
+
+TEST(HepPID, consistencyWithReferenceImplementation) {
 	// Tests the performance improved version against the default one
 	unsigned long testPID = rand() % 1000000000 + 1000000000;
-	for(size_t i=1; i < 8; i++)
-	{
+	for(size_t i=1; i < 8; i++) {
 		HepPID::location loc = (HepPID::location) i;
 		unsigned short newResult = HepPID::digit(loc, testPID);
 		//original implementation
@@ -164,8 +171,7 @@ TEST(HepPID, consistencyWithReferenceImplementation){
 	}
 }
 
-TEST(HepPID, charge)
-{
+TEST(HepPID, charge) {
 	EXPECT_DOUBLE_EQ(HepPID::charge(11), -1.);
 }
 
@@ -223,8 +229,14 @@ TEST(Candidate, addSecondary) {
 
 	c.addSecondary(nucleusId(1,1), 200);
 	c.addSecondary(nucleusId(1,1), 200, 5.);
-	Candidate s1 = *c.secondaries[0];
-	Candidate s2 = *c.secondaries[1];
+	c.addSecondary(11, 200);
+	c.addSecondary(14, 200);
+	c.addSecondary(22, 200);
+	Candidate s1 = *c.secondaries[0]; //proton
+	Candidate s2 = *c.secondaries[1]; //proton
+	Candidate s3 = *c.secondaries[2]; //electron
+	Candidate s4 = *c.secondaries[3]; //neutrino
+	Candidate s5 = *c.secondaries[4]; //photon
 
 	EXPECT_EQ(nucleusId(1,1), s1.current.getId());
 	EXPECT_EQ(200, s1.current.getEnergy());
@@ -235,6 +247,9 @@ TEST(Candidate, addSecondary) {
 	EXPECT_TRUE(Vector3d(1,2,3) == s1.created.getPosition());
 	EXPECT_TRUE(Vector3d(0,0,1) == s1.created.getDirection());
 	EXPECT_TRUE(s1.getTagOrigin() == "SEC");
+	EXPECT_EQ(mass_electron,s3.current.getMass());
+	EXPECT_EQ(0.0,s4.current.getMass());
+	EXPECT_EQ(0.0,s5.current.getMass());
 
 	EXPECT_EQ(15., s2.getWeight());
 }
@@ -317,16 +332,14 @@ TEST(common, interpolateEquidistant) {
 	EXPECT_EQ(9, interpolateEquidistant(3.1, 1, 3, yD));
 }
 
-TEST(common, pow_integer)
-{
+TEST(common, pow_integer) {
 	EXPECT_EQ(pow_integer<0>(1.23), 1);
 	EXPECT_FLOAT_EQ(pow_integer<1>(1.234), 1.234);
 	EXPECT_FLOAT_EQ(pow_integer<2>(1.234), pow(1.234, 2));
 	EXPECT_FLOAT_EQ(pow_integer<3>(1.234), pow(1.234, 3));
 }
 
-TEST(common, gaussInt)
-{
+TEST(common, gaussInt) {
 	EXPECT_NEAR(gaussInt(([](double x){ return x*x; }), 0, 10), 1000/3., 1e-4);
 	EXPECT_NEAR(gaussInt(([](double x){ return sin(x)*sin(x); }), 0, M_PI), M_PI/2., 1e-4);
 }
@@ -382,11 +395,9 @@ TEST(Random, bigSeedStorage) {
 
 }
 
-TEST(base64, de_en_coding)
-{
+TEST(base64, de_en_coding) {
 	Random a;
-	for (int N=1; N < 100; N++)
-	{
+	for (int N=1; N < 100; N++) {
 		std::vector<uint32_t> data;
 		data.reserve(N);
 		for (int i =0; i<N; i++)
@@ -396,8 +407,7 @@ TEST(base64, de_en_coding)
 
 		std::string decoded_data = Base64::decode(encoded_data);
 		size_t S = decoded_data.size() * sizeof(decoded_data[0]) / sizeof(uint32_t);
-		for (int i=0; i < S; i++)
-		{
+		for (int i=0; i < S; i++) {
 			EXPECT_EQ(((uint32_t*)decoded_data.c_str())[i], data[i]);
 		}
 	}
@@ -424,8 +434,6 @@ TEST(Random, base64Seed) {
 	}
 }
 
-
-
 TEST(Grid, PeriodicClamp) {
 	// Test correct determination of lower and upper neighbor
 	int lo, hi;
@@ -438,7 +446,6 @@ TEST(Grid, PeriodicClamp) {
 	EXPECT_EQ(0, lo);
 	EXPECT_EQ(1, hi);
 }
-
 
 TEST(Grid, PeriodicBoundary) {
 	// Test correct determination of periodic continuated index
@@ -454,7 +461,6 @@ TEST(Grid, PeriodicBoundary) {
 	index = periodicBoundary(9, 8);
 	EXPECT_EQ(1, index);
 }
-
 
 TEST(Grid, ReflectiveClamp) {
 	// Test correct determination of lower and upper neighbor
@@ -978,7 +984,6 @@ TEST(EmissionMap, merge) {
 	EXPECT_TRUE(cpm->getPdf()[bin] > 0);
 }
 
-
 TEST(Variant, copyToBuffer) {
 	double a = 23.42;
 	Variant v(a);
@@ -1051,7 +1056,6 @@ TEST(Variant, stringConversion) {
 
 
 }
-
 
 TEST(Geometry, Plane) {
 	Plane p(Vector3d(0,0,1), Vector3d(0,0,1));
