@@ -412,4 +412,40 @@ std::string ObserverSurface::getDescription() const {
 }
 
 
+
+// ObserverTrajectoryLength -------------------------------------------------------
+ObserverTrajectoryLength::ObserverTrajectoryLength(double length) {
+	setTrajectoryLength(length);
+}
+
+void ObserverTrajectoryLength::setTrajectoryLength(double length) {
+	trajLength = length;
+}
+
+double ObserverTrajectoryLength::getTrajectoryLength() const {
+	return trajLength;
+}
+
+DetectionState ObserverTrajectoryLength::checkDetection(Candidate* c) const {	
+	double l = c->getTrajectoryLength();
+
+	if (trajLength > l) {
+		// limit the next step to reach the target length
+		c->limitNextStep(trajLength - l);
+	} else if (trajLength == l) {
+		return DETECTED;
+	} 
+		
+	return NOTHING;
+}
+
+std::string ObserverTrajectoryLength::getDescription() const {
+	std::stringstream ss;
+	ss << "ObserverTrajectoryLength: ";
+	ss << "length = " << trajLength / kpc << " kpc";
+	return ss.str();
+}
+
+
+
 } // namespace crpropa

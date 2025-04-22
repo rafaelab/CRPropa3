@@ -368,6 +368,25 @@ public:
 	std::string getDescription() const;
 };
 
+
+/**
+ @class ObserverTrajectoryLength
+ @brief Observer for the trajectory length of a candidate
+ */
+class ObserverTrajectoryLength: public ObserverFeature {
+	private:
+		double trajLength;
+	public:
+		ObserverTrajectoryLength(double l);
+		void setTrajectoryLength(double length);
+		double getTrajectoryLength() const;
+		DetectionState checkDetection(Candidate *candidate) const;
+		std::string getDescription() const;
+	};
+
+
+
+
 /** @} */
 
 }
