@@ -1,43 +1,48 @@
 #include "crpropa/module/EMDoublePairProduction.h"
-#include "crpropa/Units.h"
-#include "crpropa/Random.h"
 
-#include <fstream>
-#include <limits>
-#include <stdexcept>
+
 
 namespace crpropa {
 
-EMDoublePairProduction::EMDoublePairProduction(ref_ptr<PhotonField> photonField, bool haveElectrons, double thinning, double limit) {
+EMDoublePairProduction::EMDoublePairProduction(ref_ptr<PhotonField> photonField, bool haveElectrons, ref_ptr<SamplerEvents> sampling, double limit) {
+	setInteractionTag("EMDP");
 	setPhotonField(photonField);
 	setHaveElectrons(haveElectrons);
 	setLimit(limit);
-	setThinning(thinning);
+	setSampler(sampling);
 }
 
-void EMDoublePairProduction::setPhotonField(ref_ptr<PhotonField> photonField) {
-	this->photonField = photonField;
+void EMDoublePairProduction::setPhotonField(ref_ptr<PhotonField> field) {
+	photonField = field;
 	std::string fname = photonField->getFieldName();
 	setDescription("EMDoublePairProduction: " + fname);
 	initRate(getDataPath("EMDoublePairProduction/rate_" + fname + ".txt"));
 }
 
-void EMDoublePairProduction::setHaveElectrons(bool haveElectrons) {
-	this->haveElectrons = haveElectrons;
+void EMDoublePairProduction::setInteractionTag(std::string tag) {
+	interactionTag = tag;
 }
 
-void EMDoublePairProduction::setLimit(double limit) {
-	this->limit = limit;
+void EMDoublePairProduction::setHaveElectrons(bool electrons) {
+	haveElectrons = electrons;
 }
 
-void EMDoublePairProduction::setThinning(double thinning) {
-	this->thinning = thinning;
+void EMDoublePairProduction::setLimit(double lim) {
+	limit = lim;
+}
+
+void EMDoublePairProduction::setSampler(ref_ptr<SamplerEvents> s) {
+	sampler = s;
+}
+
+std::string EMDoublePairProduction::getInteractionTag() const {
+	return interactionTag;
 }
 
 void EMDoublePairProduction::initRate(std::string filename) {
 	std::ifstream infile(filename.c_str());
 
-	if (!infile.good())
+	if (! infile.good())
 		throw std::runtime_error("EMDoublePairProduction: could not open file " + filename);
 
 	// clear previously loaded interaction rates
@@ -53,13 +58,12 @@ void EMDoublePairProduction::initRate(std::string filename) {
 				tabRate.push_back(b / Mpc);
 			}
 		}
-		infile.ignore(std::numeric_limits < std::streamsize > ::max(), '\n');
+		infile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 	}
 	infile.close();
 }
 
-
-void EMDoublePairProduction::performInteraction(Candidate *candidate) const {
+void EMDoublePairProduction::performInteraction(Candidate* candidate) const {
 	// the photon is lost after the interaction
 	candidate->setActive(false);
 
@@ -73,22 +77,21 @@ void EMDoublePairProduction::performInteraction(Candidate *candidate) const {
 	double E = candidate->current.getEnergy() * (1 + z);
 	double Ee = (E - 2 * mass_electron * c_squared) / 2;
 
-	Random &random = Random::instance();
+	Random& random = Random::instance();
 	Vector3d pos = random.randomInterpolatedPosition(candidate->previous.getPosition(), candidate->current.getPosition());
 
 	double f = Ee / E;
 
-		if (random.rand() < pow(1 - f, thinning)) {
-			double w = 1. / pow(1 - f, thinning);
-			candidate->addSecondary( 11, Ee / (1 + z), pos, w, interactionTag);
-		} 
-		if (random.rand() < pow(f, thinning)) {
-			double w = 1. / pow(f, thinning);
-			candidate->addSecondary(-11, Ee / (1 + z), pos, w, interactionTag);
-		}
+	// add secondaries
+	double we = sampler->computeWeight( 11, Ee / (1 + z), 1 - f);
+	double wp = sampler->computeWeight(-11, Ee / (1 + z), f);
+	if (we > 0)
+		candidate->addSecondary( 11, Ee / (1 + z), pos, we, interactionTag);
+	if (wp > 0)
+		candidate->addSecondary(-11, Ee / (1 + z), pos, wp, interactionTag);
 }
 
-void EMDoublePairProduction::process(Candidate *candidate) const {
+void EMDoublePairProduction::process(Candidate* candidate) const {
 	// check if photon
 	if (candidate->current.getId() != 22)
 		return;
@@ -106,7 +109,7 @@ void EMDoublePairProduction::process(Candidate *candidate) const {
 	rate *= pow_integer<2>(1 + z) * photonField->getRedshiftScaling(z);
 
 	// check for interaction
-	Random &random = Random::instance();
+	Random& random = Random::instance();
 	double randDistance = -log(random.rand()) / rate;
 	double step = candidate->getCurrentStep();
 	if (step < randDistance) {
@@ -117,14 +120,6 @@ void EMDoublePairProduction::process(Candidate *candidate) const {
 		return;
 	}
 
-}
-
-void EMDoublePairProduction::setInteractionTag(std::string tag) {
-	interactionTag = tag;
-}
-
-std::string EMDoublePairProduction::getInteractionTag() const {
-	return interactionTag;
 }
 
 
