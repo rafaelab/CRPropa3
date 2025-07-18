@@ -10,37 +10,46 @@ namespace crpropa {
 
 static const double mec2 = mass_electron * c_squared;
 
-EMTripletPairProduction::EMTripletPairProduction(ref_ptr<PhotonField> photonField, bool haveElectrons, double thinning, double limit) {
+EMTripletPairProduction::EMTripletPairProduction(ref_ptr<PhotonField> photonField, bool haveElectrons, ref_ptr<SamplerEvents> sampling, double limit) {
+	setInteractionTag("EMTP");
 	setPhotonField(photonField);
 	setHaveElectrons(haveElectrons);
 	setLimit(limit);
-	setThinning(thinning);
+	setSampler(sampling);
 }
 
-void EMTripletPairProduction::setPhotonField(ref_ptr<PhotonField> photonField) {
-	this->photonField = photonField;
+void EMTripletPairProduction::setPhotonField(ref_ptr<PhotonField> field) {
+	photonField = field;
 	std::string fname = photonField->getFieldName();
 	setDescription("EMTripletPairProduction: " + fname);
 	initRate(getDataPath("EMTripletPairProduction/rate_" + fname + ".txt"));
 	initCumulativeRate(getDataPath("EMTripletPairProduction/cdf_" + fname + ".txt"));
 }
 
-void EMTripletPairProduction::setHaveElectrons(bool haveElectrons) {
-	this->haveElectrons = haveElectrons;
+void EMTripletPairProduction::setInteractionTag(std::string tag) {
+	interactionTag = tag;
 }
 
-void EMTripletPairProduction::setLimit(double limit) {
-	this->limit = limit;
+void EMTripletPairProduction::setHaveElectrons(bool electrons) {
+	haveElectrons = electrons;
 }
 
-void EMTripletPairProduction::setThinning(double thinning) {
-	this->thinning = thinning;
+void EMTripletPairProduction::setLimit(double lim) {
+	limit = lim;
+}
+
+void EMTripletPairProduction::setSampler(ref_ptr<SamplerEvents> s) {
+	sampler = s;
+}
+
+std::string EMTripletPairProduction::getInteractionTag() const {
+	return interactionTag;
 }
 
 void EMTripletPairProduction::initRate(std::string filename) {
 	std::ifstream infile(filename.c_str());
 
-	if (!infile.good())
+	if (! infile.good())
 		throw std::runtime_error("EMTripletPairProduction: could not open file " + filename);
 
 	// clear previously loaded interaction rates
@@ -64,7 +73,7 @@ void EMTripletPairProduction::initRate(std::string filename) {
 void EMTripletPairProduction::initCumulativeRate(std::string filename) {
 	std::ifstream infile(filename.c_str());
 
-	if (!infile.good())
+	if (! infile.good())
 		throw std::runtime_error(
 				"EMTripletPairProduction: could not open file " + filename);
 
@@ -101,7 +110,7 @@ void EMTripletPairProduction::initCumulativeRate(std::string filename) {
 	infile.close();
 }
 
-void EMTripletPairProduction::performInteraction(Candidate *candidate) const {
+void EMTripletPairProduction::performInteraction(Candidate* candidate) const {
 	int id = candidate->current.getId();
 	if  (abs(id) != 11)
 		return;
@@ -114,7 +123,7 @@ void EMTripletPairProduction::performInteraction(Candidate *candidate) const {
 		return;
 
 	// sample the value of eps
-	Random &random = Random::instance();
+	Random& random = Random::instance();
 	size_t i = closestIndex(E, tabE);
 	size_t j = random.randBin(tabCDF[i]);
 	double s_kin = pow(10, log10(tabs[j]) + (random.rand() - 0.5) * 0.1);
@@ -129,21 +138,23 @@ void EMTripletPairProduction::performInteraction(Candidate *candidate) const {
 
 	if (haveElectrons) {
 		Vector3d pos = random.randomInterpolatedPosition(candidate->previous.getPosition(), candidate->current.getPosition());
-		if (random.rand() < pow(1 - f, thinning)) {
-			double w = 1. / pow(1 - f, thinning);
-			candidate->addSecondary(11, Epp / (1 + z), pos, w, interactionTag);
-		}
-		if (random.rand() < pow(f, thinning)) {
-			double w = 1. / pow(f, thinning);
-			candidate->addSecondary(-11, Epp / (1 + z), pos, w, interactionTag);
-		}
+
+		// add secondaries
+		double we = sampler->computeWeight( 11, Epp / (1 + z), f);
+		double wp = sampler->computeWeight(-11, Epp / (1 + z), 1 - f);
+		if (wp > 0)
+			candidate->addSecondary(-11, Epp / (1 + z), pos, wp);
+		if (we > 0)
+			candidate->addSecondary( 11, Epp / (1 + z), pos, we);
+
 	}
+
 	// Update the primary particle energy.
 	// This is done after adding the secondaries to correctly set the secondaries parent
 	candidate->current.setEnergy((E - 2 * Epp) / (1. + z));
 }
 
-void EMTripletPairProduction::process(Candidate *candidate) const {
+void EMTripletPairProduction::process(Candidate* candidate) const {
 	// check if electron / positron
 	int id = candidate->current.getId();
 	if (abs(id) != 11)
@@ -163,7 +174,7 @@ void EMTripletPairProduction::process(Candidate *candidate) const {
 
 	// run this loop at least once to limit the step size
 	double step = candidate->getCurrentStep();
-	Random &random = Random::instance();
+	Random& random = Random::instance();
 	do {
 		double randDistance = -log(random.rand()) / rate;
 		// check for interaction; if it doesn't occur, limit next step
@@ -176,12 +187,5 @@ void EMTripletPairProduction::process(Candidate *candidate) const {
 	} while (step > 0.);
 }
 
-void EMTripletPairProduction::setInteractionTag(std::string tag) {
-	interactionTag = tag;
-}
-
-std::string EMTripletPairProduction::getInteractionTag() const {
-	return interactionTag;
-}
 
 } // namespace crpropa
