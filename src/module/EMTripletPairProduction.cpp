@@ -143,9 +143,9 @@ void EMTripletPairProduction::performInteraction(Candidate* candidate) const {
 		double we = sampler->computeWeight( 11, Epp / (1 + z), f);
 		double wp = sampler->computeWeight(-11, Epp / (1 + z), 1 - f);
 		if (wp > 0)
-			candidate->addSecondary(-11, Epp / (1 + z), pos, wp);
+			candidate->addSecondary(-11, Epp / (1 + z), pos, wp, interactionTag);
 		if (we > 0)
-			candidate->addSecondary( 11, Epp / (1 + z), pos, we);
+			candidate->addSecondary( 11, Epp / (1 + z), pos, we, interactionTag);
 
 	}
 
