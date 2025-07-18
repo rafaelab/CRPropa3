@@ -7,8 +7,9 @@
 namespace crpropa {
 
 Candidate::Candidate(int id, double E, Vector3d pos, Vector3d dir, double z, double weight, std::string tagOrigin) :
-  redshift(z), trajectoryLength(0), weight(weight), currentStep(0), nextStep(0), active(true), parent(0), tagOrigin(tagOrigin) {
-	ParticleState state(id, E, pos, dir);
+	redshift(z), trajectoryLength(0), weight(weight), currentStep(0), nextStep(0), active(true), parent(0), tagOrigin(tagOrigin) {
+	
+		ParticleState state(id, E, pos, dir);
 	source = state;
 	created = state;
 	previous = state;
@@ -26,7 +27,7 @@ Candidate::Candidate(int id, double E, Vector3d pos, Vector3d dir, double z, dou
 
 }
 
-Candidate::Candidate(const ParticleState &state) :
+Candidate::Candidate(const ParticleState& state) :
 		source(state), created(state), current(state), previous(state), redshift(0), trajectoryLength(0), currentStep(0), nextStep(0), active(true), parent(0), tagOrigin ("PRIM") {
 
 #if defined(OPENMP_3_1)
@@ -98,7 +99,7 @@ void Candidate::limitNextStep(double step) {
 	nextStep = std::min(nextStep, step);
 }
 
-void Candidate::setProperty(const std::string &name, const Variant &value) {
+void Candidate::setProperty(const std::string& name, const Variant &value) {
 	properties[name] = value;
 }
 
@@ -110,7 +111,7 @@ std::string Candidate::getTagOrigin () const {
 	return tagOrigin;
 }
 
-const Variant &Candidate::getProperty(const std::string &name) const {
+const Variant& Candidate::getProperty(const std::string& name) const {
 	PropertyMap::const_iterator i = properties.find(name);
 	if (i == properties.end())
 		throw std::runtime_error("Unknown candidate property: " + name);
@@ -125,14 +126,14 @@ bool Candidate::removeProperty(const std::string& name) {
 	return true;
 }
 
-bool Candidate::hasProperty(const std::string &name) const {
+bool Candidate::hasProperty(const std::string& name) const {
 	PropertyMap::const_iterator i = properties.find(name);
 	if (i == properties.end())
 		return false;
 	return true;
 }
 
-void Candidate::addSecondary(Candidate *c) {
+void Candidate::addSecondary(Candidate* c) {
 	secondaries.push_back(c);
 }
 
@@ -202,6 +203,7 @@ ref_ptr<Candidate> Candidate::clone(bool recursive) const {
 	cloned->trajectoryLength = trajectoryLength;
 	cloned->currentStep = currentStep;
 	cloned->nextStep = nextStep;
+
 	if (recursive) {
 		cloned->secondaries.reserve(secondaries.size());
 		for (size_t i = 0; i < secondaries.size(); i++) {
@@ -210,6 +212,7 @@ ref_ptr<Candidate> Candidate::clone(bool recursive) const {
 			cloned->secondaries.push_back(s);
 		}
 	}
+
 	return cloned;
 }
 
