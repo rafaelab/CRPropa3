@@ -11,37 +11,47 @@ namespace crpropa {
 
 static const double mec2 = mass_electron * c_squared;
 
-EMPairProduction::EMPairProduction(ref_ptr<PhotonField> photonField, bool haveElectrons, double thinning, double limit) {
-	setPhotonField(photonField);
-	setThinning(thinning);
-	setLimit(limit);
-	setHaveElectrons(haveElectrons);
+EMPairProduction::EMPairProduction(ref_ptr<PhotonField> field, bool electrons, ref_ptr<SamplerEvents> sampling, double lim) {
+	setInteractionTag("EMPP");
+	setPhotonField(field);
+	setLimit(lim);
+	setHaveElectrons(electrons);
+	setSampler(sampling);
 }
 
-void EMPairProduction::setPhotonField(ref_ptr<PhotonField> photonField) {
-	this->photonField = photonField;
+void EMPairProduction::setPhotonField(ref_ptr<PhotonField> field) {
+	photonField = field;
 	std::string fname = photonField->getFieldName();
+
 	setDescription("EMPairProduction: " + fname);
 	initRate(getDataPath("EMPairProduction/rate_" + fname + ".txt"));
 	initCumulativeRate(getDataPath("EMPairProduction/cdf_" + fname + ".txt"));
 }
 
-void EMPairProduction::setHaveElectrons(bool haveElectrons) {
-	this->haveElectrons = haveElectrons;
+void EMPairProduction::setInteractionTag(std::string tag) {
+	interactionTag = tag;
 }
 
-void EMPairProduction::setLimit(double limit) {
-	this->limit = limit;
+void EMPairProduction::setHaveElectrons(bool electrons) {
+	haveElectrons = electrons;
 }
 
-void EMPairProduction::setThinning(double thinning) {
-	this->thinning = thinning;
+void EMPairProduction::setLimit(double l) {
+	limit = l;
+}
+
+void EMPairProduction::setSampler(ref_ptr<SamplerEvents> s) {
+	sampler = s;
+}
+
+std::string EMPairProduction::getInteractionTag() const {
+	return interactionTag;
 }
 
 void EMPairProduction::initRate(std::string filename) {
 	std::ifstream infile(filename.c_str());
 
-	if (!infile.good())
+	if (! infile.good())
 		throw std::runtime_error("EMPairProduction: could not open file " + filename);
 
 	// clear previously loaded interaction rates
@@ -127,10 +137,10 @@ class PPSecondariesEnergyDistribution {
 			tab_s = std::vector<double>(Ns + 1);
 
 			for (size_t i = 0; i < Ns + 1; ++i)
-				tab_s[i] = s_min * exp(i*dls); // tabulate s bin borders
+				tab_s[i] = s_min * exp(i * dls); // tabulate s bin borders
 
 			for (size_t i = 0; i < Ns; i++) {
-				double s = s_min * exp(i*dls + 0.5*dls);
+				double s = s_min * exp(i * dls + 0.5 * dls);
 				double beta = sqrt(1 - s_min/s);
 				double x0 = (1 - beta) / 2;
 				double dx = log((1 + beta) / (1 - beta)) / N;
@@ -139,9 +149,9 @@ class PPSecondariesEnergyDistribution {
 				std::vector<double> data_i(1000);
 				data_i[0] = dSigmadE_PPx(x0, beta) * expm1(dx);
 				for (size_t j = 1; j < N; j++) {
-					double x = x0 * exp(j*dx + 0.5*dx);
-					double binWidth = exp((j+1)*dx)-exp(j*dx);
-					data_i[j] = dSigmadE_PPx(x, beta) * binWidth + data_i[j-1];
+					double x = x0 * exp(j * dx + 0.5 * dx);
+					double binWidth = exp((j + 1) * dx) - exp(j * dx);
+					data_i[j] = dSigmadE_PPx(x, beta) * binWidth + data_i[j - 1];
 				}
 				data[i] = data_i;
 			}
@@ -164,15 +174,15 @@ class PPSecondariesEnergyDistribution {
 			double beta = sqrtl(1. - s_min / s);
 			double x0 = (1. - beta) / 2.;
 			double dx = log((1 + beta) / (1 - beta)) / N;
-			double binWidth = x0 * (exp(j*dx) - exp((j-1)*dx));
+			double binWidth = x0 * (exp(j * dx) - exp((j-1) * dx));
 			if (random.rand() < 0.5)
-				return E0 * (x0 * exp((j-1) * dx) + binWidth);
+				return E0 * (x0 * exp((j - 1) * dx) + binWidth);
 			else
-				return E0 * (1 - (x0 * exp((j-1) * dx) + binWidth));
+				return E0 * (1 - (x0 * exp((j - 1) * dx) + binWidth));
 		}
 };
 
-void EMPairProduction::performInteraction(Candidate *candidate) const {
+void EMPairProduction::performInteraction(Candidate* candidate) const {
 	
 	// photon is lost after interacting
 	candidate->setActive(false);
@@ -190,7 +200,7 @@ void EMPairProduction::performInteraction(Candidate *candidate) const {
 		return;
 
 	// sample the value of s
-	Random &random = Random::instance();
+	Random& random = Random::instance();
 	size_t i = closestIndex(E, tabE);  // find closest tabulation point
 	size_t j = random.randBin(tabCDF[i]);
 	double lo = std::max(4 * mec2 * mec2, tabs[j-1]);  // first s-tabulation point below min(s_kin) = (2 me c^2)^2; ensure physical value
@@ -204,23 +214,22 @@ void EMPairProduction::performInteraction(Candidate *candidate) const {
 	double f = Ep / E;
 
 	// for some backgrounds Ee=nan due to precision limitations.
-	if (not std::isfinite(Ee) || not std::isfinite(Ep))
+	if (not std::isfinite(Ee) or not std::isfinite(Ep))
 		return;
 
 	// sample random position along current step
 	Vector3d pos = random.randomInterpolatedPosition(candidate->previous.getPosition(), candidate->current.getPosition());
-	// apply sampling
-	if (random.rand() < pow(f, thinning)) {
-		double w = 1. / pow(f, thinning);
-		candidate->addSecondary(11, Ep / (1 + z), pos, w, interactionTag);
-	}
-	if (random.rand() < pow(1 - f, thinning)){
-		double w = 1. / pow(1 - f, thinning);
-		candidate->addSecondary(-11, Ee / (1 + z), pos, w, interactionTag);	
-	}
+
+	// add secondaries
+	double we = sampler->computeWeight( 11, Ee / (1 + z), f);
+	double wp = sampler->computeWeight(-11, Ep / (1 + z), 1 - f);
+	if (we > 0)
+		candidate->addSecondary( 11, Ee / (1 + z), pos, we, interactionTag);
+	if (wp > 0)
+		candidate->addSecondary(-11, Ep / (1 + z), pos, wp, interactionTag);
 }
 
-void EMPairProduction::process(Candidate *candidate) const {
+void EMPairProduction::process(Candidate* candidate) const {
 	// check if photon
 	if (candidate->current.getId() != 22)
 		return;
@@ -239,7 +248,7 @@ void EMPairProduction::process(Candidate *candidate) const {
 
 	// run this loop at least once to limit the step size 
 	double step = candidate->getCurrentStep();
-	Random &random = Random::instance();
+	Random& random = Random::instance();
 	do {
 		double randDistance = -log(random.rand()) / rate;
 		// check for interaction; if it doesn't ocurr, limit next step
@@ -254,12 +263,5 @@ void EMPairProduction::process(Candidate *candidate) const {
 
 }
 
-void EMPairProduction::setInteractionTag(std::string tag) {
-	interactionTag = tag;
-}
-
-std::string EMPairProduction::getInteractionTag() const {
-	return interactionTag;
-}
 
 } // namespace crpropa
