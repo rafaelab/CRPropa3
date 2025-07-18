@@ -91,7 +91,7 @@ Vector3d ParticleState::getMomentum() const {
 std::string ParticleState::getDescription() const {
 	std::stringstream ss;
 	ss << "Particle " << id << ", ";
-	ss << "E = " << energy / EeV << " EeV, ";
+	ss << "E = " << energy / eV << " eV, ";
 	ss << "x = " << position / Mpc << " Mpc, ";
 	ss << "p = " << direction;
 	return ss.str();
