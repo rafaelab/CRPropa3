@@ -4,9 +4,11 @@
 
 %feature("director:except") {
   if( $error != NULL ) {
-    PyObject *ptype, *pvalue, *ptraceback;
-    PyErr_Fetch( &ptype, &pvalue, &ptraceback );
-    PyErr_Restore( ptype, pvalue, ptraceback );
+    PyObject* ptype; 
+    PyObject* pvalue; 
+    PyObject* ptraceback;
+    PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+    PyErr_Restore(ptype, pvalue, ptraceback);
     PyErr_Print();
     Py_Exit(1);
   }
@@ -53,11 +55,11 @@
 %exception {
   try {
     $action
-  } catch (Swig::DirectorException &e) {
+  } catch (Swig::DirectorException& e) {
     SWIG_exception(SWIG_RuntimeError, e.getMessage());
   } catch (const std::exception& e) {
     SWIG_exception(SWIG_RuntimeError, e.what());
-  } catch (const char *e) {
+  } catch (const char* e) {
     SWIG_exception(SWIG_RuntimeError, e);
   }
 }

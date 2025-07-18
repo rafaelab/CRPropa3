@@ -34,6 +34,8 @@
 %ignore operator crpropa::SourceList*;
 %ignore operator crpropa::SourceInterface*;
 %ignore operator crpropa::SourceFeature*;
+%ignore operator crpropa::Sampler*;
+%ignore operator crpropa::SamplerList*;
 %ignore operator crpropa::Candidate*;
 %ignore operator crpropa::Module*;
 %ignore operator crpropa::ModuleList*;
@@ -46,10 +48,11 @@
 %ignore operator crpropa::Density*;
 %ignore operator crpropa::CylindricalProjectionMap*;
 %ignore operator crpropa::EmissionMap*;
-%ignore operator crpropa::Grid< crpropa::Vector3< float > >*;
-%ignore operator crpropa::Grid< crpropa::Vector3< double > >*;
-%ignore operator crpropa::Grid< float >*;
-%ignore operator crpropa::Grid< double >*;
+%ignore operator crpropa::Grid<crpropa::Vector3<float>>*;
+%ignore operator crpropa::Grid<crpropa::Vector3<double>>*;
+%ignore operator crpropa::Histogram1D<double, double>*;
+%ignore operator crpropa::Grid<float>*;
+%ignore operator crpropa::Grid<double>*;
 %ignore crpropa::TextOutput::load;
 
 %feature("ref")   crpropa::Referenced "$this->addReference();"
@@ -104,7 +107,7 @@
   PyObject* __array__() {
     npy_intp shape[1];
     shape[0] = 3;
-    PyObject *ro;
+    PyObject* ro;
     if (sizeof($self->data[0]) == NPY_SIZEOF_FLOAT) {
       ro = PyArray_SimpleNewFromData(1, shape, NPY_FLOAT, $self->data);
     } else if (sizeof($self->data[0]) == NPY_SIZEOF_DOUBLE) {
@@ -135,7 +138,7 @@
 
   const std::string getDescription() {
     char buffer[256];
-    sprintf( buffer, "Vector(%.6G, %.6G, %.6G)", $self->x, $self->y, $self->z );
+    sprintf(buffer, "Vector(%.6G, %.6G, %.6G)", $self->x, $self->y, $self->z);
     return buffer;
   }
 }
@@ -151,7 +154,7 @@
 %include "crpropa/Common.h"
 %include "crpropa/Cosmology.h"
 %template(RandomSeed) std::vector<uint32_t>;
-%template(RandomSeedThreads) std::vector< std::vector<uint32_t> >;
+%template(RandomSeedThreads) std::vector< std::vector<uint32_t>>;
 %include "crpropa/Random.h"
 %include "crpropa/ParticleState.h"
 %include "crpropa/ParticleID.h"
@@ -161,11 +164,11 @@
 %import "crpropa/Variant.h"
 
 /* override Candidate::getProperty() */
-%ignore crpropa::Candidate::getProperty(const std::string &) const;
+%ignore crpropa::Candidate::getProperty(const std::string& ) const;
 
 %nothread; /* disable threading for extend*/
 %extend crpropa::Candidate {
-  PyObject * getProperty(PyObject* name) {
+  PyObject* getProperty(PyObject* name) {
 
     std::string input;
 
@@ -221,7 +224,7 @@
     return NULL;
   }
 
-  PyObject * setProperty(PyObject * name, PyObject * value) {
+  PyObject* setProperty(PyObject* name, PyObject* value) {
 
     std::string input;
 
@@ -255,7 +258,7 @@
       $self->setProperty(input, PyUnicode_AsUTF8(value));
       Py_RETURN_TRUE;
     } else {
-      PyObject *t = PyObject_Str(PyObject_Type(value));
+      PyObject* t = PyObject_Str(PyObject_Type(value));
       std::string ot = PyUnicode_AsUTF8(t);
       std::cerr << "ERROR: Unknown Type: " << ot << std::endl;
       return NULL;
@@ -264,8 +267,11 @@
 };
 %thread; /* reenable threading */
 
+%template(Histogram1DRefPtr) crpropa::ref_ptr<crpropa::Histogram1D>;
+%include "crpropa/Histogram.h"
 
-%template(CandidateVector) std::vector< crpropa::ref_ptr<crpropa::Candidate> >;
+
+%template(CandidateVector) std::vector<crpropa::ref_ptr<crpropa::Candidate>>;
 %template(CandidateRefPtr) crpropa::ref_ptr<crpropa::Candidate>;
 %include "crpropa/Candidate.h"
 
@@ -274,7 +280,7 @@
 %include "crpropa/Geometry.h"
 
 %template(ModuleRefPtr) crpropa::ref_ptr<crpropa::Module>;
-%template(stdModuleList) std::list< crpropa::ref_ptr<crpropa::Module> >;
+%template(stdModuleList) std::list< crpropa::ref_ptr<crpropa::Module>>;
 %feature("director") crpropa::Module;
 %feature("director") crpropa::AbstractCondition;
 %include "crpropa/Module.h"
@@ -294,6 +300,14 @@
 %feature("director") crpropa::PhotonField;
 %include "crpropa/PhotonBackground.h"
 
+%implicitconv crpropa::ref_ptr<crpropa::SamplerEvents>;
+%feature("director") crpropa::SamplerEvents;
+%template(SamplerEventsRefPtr) crpropa::ref_ptr<crpropa::SamplerEvents>;
+%implicitconv crpropa::ref_ptr<crpropa::SamplerDistribution>;
+%template(SamplerDistributionRefPtr) crpropa::ref_ptr<crpropa::SamplerDistribution>;
+%feature("director") crpropa::SamplerDistribution;
+%include "crpropa/Sampler.h"
+
 %implicitconv crpropa::ref_ptr<crpropa::AdvectionField>;
 %template(AdvectionFieldRefPtr) crpropa::ref_ptr<crpropa::AdvectionField>;
 %feature("director") crpropa::AdvectionField;
@@ -310,25 +324,25 @@
 %template(Array3d) std::array<double, 3>;
 %template(Array3f) std::array<float, 3>;
 
-%implicitconv crpropa::ref_ptr<crpropa::Grid<crpropa::Vector3<float> > >;
-%template(Grid3fRefPtr) crpropa::ref_ptr<crpropa::Grid<crpropa::Vector3<float> > >;
-%template(Grid3f) crpropa::Grid<crpropa::Vector3<float> >;
+%implicitconv crpropa::ref_ptr<crpropa::Grid<crpropa::Vector3<float>>>;
+%template(Grid3fRefPtr) crpropa::ref_ptr<crpropa::Grid<crpropa::Vector3<float>>>;
+%template(Grid3f) crpropa::Grid<crpropa::Vector3<float>>;
 
-%implicitconv crpropa::ref_ptr<crpropa::Grid<crpropa::Vector3<double> > >;
-%template(Grid3dRefPtr) crpropa::ref_ptr<crpropa::Grid<crpropa::Vector3<double> > >;
-%template(Grid3d) crpropa::Grid<crpropa::Vector3<double> >;
+%implicitconv crpropa::ref_ptr<crpropa::Grid<crpropa::Vector3<double>>>;
+%template(Grid3dRefPtr) crpropa::ref_ptr<crpropa::Grid<crpropa::Vector3<double>>>;
+%template(Grid3d) crpropa::Grid<crpropa::Vector3<double>>;
 
-%implicitconv crpropa::ref_ptr<crpropa::Grid<float> >;
-%template(Grid1fRefPtr) crpropa::ref_ptr<crpropa::Grid<float> >;
+%implicitconv crpropa::ref_ptr<crpropa::Grid<float>>;
+%template(Grid1fRefPtr) crpropa::ref_ptr<crpropa::Grid<float>>;
 %template(Grid1f) crpropa::Grid<float>;
 
-%implicitconv crpropa::ref_ptr<crpropa::Grid<double> >;
-%template(Grid1dRefPtr) crpropa::ref_ptr<crpropa::Grid<double> >;
+%implicitconv crpropa::ref_ptr<crpropa::Grid<double>>;
+%template(Grid1dRefPtr) crpropa::ref_ptr<crpropa::Grid<double>>;
 %template(Grid1d) crpropa::Grid<double>;
 
-%implicitconv std::pair<std::vector<int>, std::vector<float> >;
+%implicitconv std::pair<std::vector<int>, std::vector<float>>;
 %template(PairIntFloat) std::pair<int, float>;
-%template(PairVector) std::vector<std::pair<int, float> >;
+%template(PairVector) std::vector<std::pair<int, float>>;
 
 %include "crpropa/EmissionMap.h"
 %implicitconv crpropa::ref_ptr<crpropa::EmissionMap>;
@@ -364,9 +378,9 @@
 %include "crpropa/module/PropagationCK.h"
 %include "crpropa/module/PropagationBP.h"
 
-%ignore crpropa::Output::enableProperty(const std::string &property, const Variant& defaultValue, const std::string &comment = "");
+%ignore crpropa::Output::enableProperty(const std::string& property, const Variant& defaultValue, const std::string& comment = "");
 %extend crpropa::Output{
-  PyObject* enableProperty(const std::string &name, PyObject* defaultValue, const std::string &comment="") {
+  PyObject* enableProperty(const std::string& name, PyObject* defaultValue, const std::string& comment = "") {
 
     if (defaultValue == Py_None) {
       Py_RETURN_TRUE;
@@ -514,8 +528,8 @@
     return (*($self))[i];
   }
 
-  std::vector<crpropa::ref_ptr<crpropa::Candidate>> __getitem__(PyObject *param) {
-    std::vector< crpropa::ref_ptr<crpropa::Candidate> > result;
+  std::vector<crpropa::ref_ptr<crpropa::Candidate>> __getitem__(PyObject* param) {
+    std::vector<crpropa::ref_ptr<crpropa::Candidate>> result;
 
     if (PySlice_Check(param)) {
       Py_ssize_t len = 0, start = 0, stop = 0, step = 0, slicelength = 0, i = 0;
