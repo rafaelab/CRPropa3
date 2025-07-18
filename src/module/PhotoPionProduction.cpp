@@ -5,7 +5,7 @@ namespace crpropa {
 
 
 
-PhotoPionProduction::PhotoPionProduction(ref_ptr<PhotonField> field, bool photons, bool neutrinos, bool electrons, bool antiNucleons, bool preventDecays, double l, bool redshift) {
+PhotoPionProduction::PhotoPionProduction(ref_ptr<PhotonField> field, bool photons, bool neutrinos, bool electrons, bool antiNucleons, ref_ptr<SamplerEvents> sampling, bool preventDecays, double l, bool redshift) {
 	setInteractionTag("PPP");
 	setHavePhotons(photons);
 	setHaveNeutrinos(neutrinos);
@@ -13,6 +13,7 @@ PhotoPionProduction::PhotoPionProduction(ref_ptr<PhotonField> field, bool photon
 	setHaveAntiNucleons(antiNucleons);
 	setHaveRedshiftDependence(redshift);
 	setPhotonField(field);
+	setSampler(sampling);
 	setPreventDecays(preventDecays);
 	setLimit(l);
 	initParticleIdDictionary();
@@ -59,6 +60,10 @@ void PhotoPionProduction::setHaveAntiNucleons(bool b) {
 	haveAntiNucleons = b;
 }
 
+void PhotoPionProduction::setSampler(ref_ptr<SamplerEvents> s) {
+	sampler = s;
+}
+
 void PhotoPionProduction::setPreventDecays(bool b) {
 	forbidDecays = b;
 }
@@ -79,7 +84,7 @@ void PhotoPionProduction::initRate(std::string filename) {
 	tabNeutronRate.clear();
 
 	std::ifstream infile(filename.c_str());
-	if (!infile.good())
+	if (! infile.good())
 		throw std::runtime_error("PhotoPionProduction: could not open file " + filename);
 
 	if (haveRedshiftDependence) {
@@ -91,7 +96,7 @@ void PhotoPionProduction::initRate(std::string filename) {
 			}
 			double z, a, b, c;
 			infile >> z >> a >> b >> c;
-			if (!infile)
+			if (! infile)
 				break;
 			if (z > zOld) {
 				tabRedshifts.push_back(z);
@@ -287,53 +292,53 @@ void PhotoPionProduction::performInteraction(Candidate* candidate, bool onProton
 
 #pragma omp critical
 	{
-			sophiaevent_(nature, Ein, eps, outputEnergy, outPartID, nParticles, preventDecays);
+		sophiaevent_(nature, Ein, eps, outputEnergy, outPartID, nParticles, preventDecays);
 	}
+	
+	if (nParticles == 0)
+		return;
 
 	Random& random = Random::instance();
 	Vector3d pos = random.randomInterpolatedPosition(candidate->previous.getPosition(), candidate->current.getPosition());
 	std::vector<int> pnType;  // filled with either 13 (proton) or 14 (neutron)
 	std::vector<double> pnEnergy;  // corresponding energies of proton or neutron
-	if (nParticles == 0)
-		return;
+
 	for (int i = 0; i < nParticles; i++) { // loop over out-going particles
 		double Eout = outputEnergy[3][i] * GeV; // only the energy is used; could be changed for more detail
 		int pType = particleIdDict.find(outPartID[i])->second;
-		
 		if (pType == nucleusId(1, 1) or pType == nucleusId(1, 0)) { // proton or neutron
 			// proton and neutron data is taken to determine primary particle in a later step
-			// pnType.push_back(pType);
 			pnType.push_back(outPartID[i]);
 			pnEnergy.push_back(Eout);
 		} 
+
+		double f = Eout / E;
+		double w = sampler->computeWeight(pType, Eout, f);
 		
 		if (haveAntiNucleons) {
 			if (pType == -nucleusId(1, 1) or pType == -nucleusId(1, 0)) {
 				try {
-					candidate->addSecondary(-sign * nucleusId(1, 14 + pType), Eout, pos, 1., interactionTag);
-				} catch (std::runtime_error &e) {
-					KISS_LOG_ERROR<< "Something went wrong in the PhotoPionProduction (anti-nucleon production)\n" << "Something went wrong in the PhotoPionProduction\n"<< "Please report this error on https://github.com/CRPropa/CRPropa3/issues including your simulation setup and the following random seed:\n" << Random::instance().getSeed_base64();
+					candidate->addSecondary(-sign * nucleusId(1, 14 + pType), Eout, pos, w, interactionTag);
+				} catch (std::runtime_error& e) {
+					KISS_LOG_ERROR << "Something went wrong in the PhotoPionProduction (anti-nucleon production)\n" << "Something went wrong in the PhotoPionProduction\n"<< "Please report this error on https://github.com/CRPropa/CRPropa3/issues including your simulation setup and the following random seed:\n" << Random::instance().getSeed_base64();
 					throw;
 				}
 			}
 		}
 
-		if (havePhotons) {
-			if (pType == 22) {
-				candidate->addSecondary(pType, Eout, pos, 1., interactionTag);
-			}
+		if (havePhotons and pType == 22) {
+			if (w > 0)
+				candidate->addSecondary(pType, Eout, pos, w, interactionTag);
 		}
 
-		if (haveElectrons) {
-			if (abs(pType) == 11) {
-				candidate->addSecondary(pType, Eout, pos, 1., interactionTag);
-			} 
+		if (haveElectrons and abs(pType) == 11) {
+			if (w > 0)
+				candidate->addSecondary(pType, Eout, pos, w, interactionTag);
 		}
 
-		if (haveNeutrinos) {
-			if (abs(pType) == 12 || abs(pType) == 14 || abs(pType) == 16) {
-				candidate->addSecondary(pType, Eout, pos, 1., interactionTag);
-			}
+		if (haveNeutrinos and (abs(pType) == 12 or abs(pType) == 14 or abs(pType) == 16)) {
+			if (w > 0)
+				candidate->addSecondary(pType, Eout, pos, w, interactionTag);
 		}
 	
 		if (forbidDecays) {
@@ -355,7 +360,7 @@ void PhotoPionProduction::performInteraction(Candidate* candidate, bool onProton
 				case 2114: // Delta0
 				case 1114: // Delta-
 				case 3122: // lambda0
-					candidate->addSecondary(pType, Eout, pos, 1., interactionTag);
+					if (w > 0) candidate->addSecondary(pType, Eout, pos, w, interactionTag);
 					break;
 				default:
 					break;
@@ -372,7 +377,7 @@ void PhotoPionProduction::performInteraction(Candidate* candidate, bool onProton
 				candidate->current.setEnergy(pnEnergy[i]);
 				try {
 					candidate->current.setId(sign * nucleusId(1, 14 - pnType[i]));
-				} catch (std::runtime_error &e) {
+				} catch (std::runtime_error& e) {
 					KISS_LOG_ERROR<< "Something went wrong in the PhotoPionProduction (primary particle, A==1)\n" << "Please report this error on https://github.com/CRPropa/CRPropa3/issues including your simulation setup and the following random seed:\n" << Random::instance().getSeed_base64();
 					throw;
 				}
@@ -382,8 +387,8 @@ void PhotoPionProduction::performInteraction(Candidate* candidate, bool onProton
 				try {
 					candidate->current.setId(sign * nucleusId(A - 1, Z - int(onProton)));
 					candidate->addSecondary(sign * nucleusId(1, 14 - pnType[i]), pnEnergy[i], pos, 1., interactionTag);
-				} catch (std::runtime_error &e) {
-					KISS_LOG_ERROR<< "Something went wrong in the PhotoPionProduction (primary particle, A!=1)\n" << "Please report this error on https://github.com/CRPropa/CRPropa3/issues including your simulation setup and the following random seed:\n" << Random::instance().getSeed_base64();
+				} catch (std::runtime_error& e) {
+					KISS_LOG_ERROR << "Something went wrong in the PhotoPionProduction (primary particle, A!=1)\n" << "Please report this error on https://github.com/CRPropa/CRPropa3/issues including your simulation setup and the following random seed:\n" << Random::instance().getSeed_base64();
 					throw;
 				}
 			}

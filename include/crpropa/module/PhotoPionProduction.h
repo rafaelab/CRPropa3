@@ -43,6 +43,7 @@ class PhotoPionProduction: public Module {
 
 protected:
 	ref_ptr<PhotonField> photonField;
+	ref_ptr<SamplerEvents> sampler;
 	std::vector<double> tabLorentz; ///< Lorentz factor of nucleus
 	std::vector<double> tabRedshifts;  ///< redshifts (optional for haveRedshiftDependence)
 	std::vector<double> tabProtonRate; ///< interaction rate in [1/m] for protons
@@ -122,6 +123,7 @@ public:
 	 * @param neutrinos 	if true, secondary neutrinos are added to the simulation
 	 * @param electrons 	if true, secondary electrons are added to the simulation
 	 * @param antiNucleons 	if true, secondary anti nucleons are added to the simulation
+	 * @param sampling      sampler for the interaction rate (e.g., thinning)
 	 * @param decays        if true, the produced mesons will not be allowed to decay
 	 * @param limit 		fraction of the mean free path, to which the propagation step will be limited
 	 * @param haveRedshiftDependence 	use redshift dependent tabulated loss rates; if false, the redshift scaling of the photon field will be used
@@ -132,6 +134,7 @@ public:
 		bool neutrinos = false,
 		bool electrons = false,
 		bool antiNucleons = false,
+		ref_ptr<SamplerEvents> sampling = ref_ptr<SamplerEvents>(new SamplerEventsNull()),
 		bool preventDecays = false,
 		double limit = 0.1,
 		bool haveRedshiftDependence = false);
@@ -155,6 +158,11 @@ public:
 
 	// decide if redshift dependent tabulated loss rates are used
 	void setHaveRedshiftDependence(bool b);
+
+	/**
+	 * @param sampler Sampler for the interaction rate (e.g., thinning)
+	 */
+	void setSampler(ref_ptr<SamplerEvents> sampler);
 
 	/** Limit the propagation step to a fraction of the mean free path
 	 * @param limit fraction of the mean free path
