@@ -1,24 +1,21 @@
 #include "crpropa/module/ElectronPairProduction.h"
-#include "crpropa/Units.h"
-#include "crpropa/ParticleID.h"
-#include "crpropa/ParticleMass.h"
-#include "crpropa/Random.h"
 
-#include <fstream>
-#include <limits>
-#include <stdexcept>
+
 
 namespace crpropa {
 
-ElectronPairProduction::ElectronPairProduction(ref_ptr<PhotonField> photonField,
-		bool haveElectrons, double limit) {
-	this->haveElectrons = haveElectrons;
-	this->limit = limit;
+ElectronPairProduction::ElectronPairProduction(ref_ptr<PhotonField> photonField, bool electrons, ref_ptr<SamplerEvents> samplingEvts, ref_ptr<SamplerDistribution> samplingDist, int nSamples, double limit) {
+	setInteractionTag("EPP");
 	setPhotonField(photonField);
+	setHaveElectrons(electrons);
+	setLimit(limit);
+	setSamplerEvents(samplingEvts);
+	setSamplerDistribution(samplingDist);
+	setMaximumSamples(nSamples); // default to no sampling
 }
 
-void ElectronPairProduction::setPhotonField(ref_ptr<PhotonField> photonField) {
-	this->photonField = photonField;
+void ElectronPairProduction::setPhotonField(ref_ptr<PhotonField> field) {
+	photonField = field;
 	std::string fname = photonField->getFieldName();
 	setDescription("ElectronPairProduction: " + fname);
 	initRate(getDataPath("ElectronPairProduction/lossrate_" + fname + ".txt"));
@@ -27,22 +24,42 @@ void ElectronPairProduction::setPhotonField(ref_ptr<PhotonField> photonField) {
 	}
 }
 
-void ElectronPairProduction::setHaveElectrons(bool haveElectrons) {
-	this->haveElectrons = haveElectrons;
+void ElectronPairProduction::setHaveElectrons(bool electrons) {
+	haveElectrons = electrons;
 	if (haveElectrons) { // Load secondary spectra in case haveElectrons was changed to true
 		std::string fname = photonField->getFieldName();
 		initSpectrum(getDataPath("ElectronPairProduction/spectrum_" + fname.substr(0,3) + ".txt"));
 	}
 }
 
-void ElectronPairProduction::setLimit(double limit) {
-	this->limit = limit;
+void ElectronPairProduction::setLimit(double lim) {
+	limit = lim;
+}
+
+void ElectronPairProduction::setInteractionTag(std::string tag) {
+	interactionTag = tag;
+}
+
+void ElectronPairProduction::setSamplerEvents(ref_ptr<SamplerEvents> s) {
+	samplerEvents = s;
+}
+
+void ElectronPairProduction::setSamplerDistribution(ref_ptr<SamplerDistribution> s) {
+	samplerDistribution = s;
+}
+
+void ElectronPairProduction::setMaximumSamples(int nSamples) {
+	maximumSamples = nSamples;
+}
+
+std::string ElectronPairProduction::getInteractionTag() const {
+	return interactionTag;
 }
 
 void ElectronPairProduction::initRate(std::string filename) {
 	std::ifstream infile(filename.c_str());
 
-	if (!infile.good())
+	if (! infile.good())
 		throw std::runtime_error("ElectronPairProduction: could not open file " + filename);
 
 	// clear previously loaded interaction rates
@@ -58,14 +75,14 @@ void ElectronPairProduction::initRate(std::string filename) {
 				tabLossRate.push_back(b / Mpc);
 			}
 		}
-		infile.ignore(std::numeric_limits < std::streamsize > ::max(), '\n');
+		infile.ignore(std::numeric_limits <std::streamsize> ::max(), '\n');
 	}
 	infile.close();
 }
 
 void ElectronPairProduction::initSpectrum(std::string filename) {
 	std::ifstream infile(filename.c_str());
-	if (!infile.good())
+	if (! infile.good())
 		throw std::runtime_error("ElectronPairProduction: could not open file " + filename);
 
 	double dNdE;
@@ -100,16 +117,18 @@ double ElectronPairProduction::lossLength(int id, double lf, double z) const {
 
 	double A = nuclearMass(id) / mass_proton; // more accurate than massNumber(Id)
 	rate *= Z * Z / A * pow_integer<3>(1 + z) * photonField->getRedshiftScaling(z);
+
 	return 1. / rate;
 }
 
-void ElectronPairProduction::process(Candidate *c) const {
+void ElectronPairProduction::process(Candidate* c) const {
 	int id = c->current.getId();
-	if (not (isNucleus(id)))
+	if (not isNucleus(id))
 		return; // only nuclei
 
 	double lf = c->current.getLorentzFactor();
 	double z = c->getRedshift();
+	double E0 = c->current.getEnergy();
 	double losslen = lossLength(id, lf, z);  // energy loss length
 	if (losslen >= std::numeric_limits<double>::max())
 		return;
@@ -121,13 +140,19 @@ void ElectronPairProduction::process(Candidate *c) const {
 		double dE = c->current.getEnergy() * loss;  // energy loss
 		int i = round((log10(lf) - 6.05) * 10);  // find closest cdf(Ee|log10(gamma))
 		i = std::min(std::max(i, 0), 69);
-		Random &random = Random::instance();
+		Random& random = Random::instance();
+
+		double dE0 = dE;
 
 		// draw pairs as long as their energy is smaller than the pair production energy loss
 		while (dE > 0) {
+			// randomly draw an energy of the electron
 			size_t j = random.randBin(tabSpectrum[i]);
 			double Ee = pow(10, 6.95 + (j + random.rand()) * 0.1) * eV;
-			double Epair = 2 * Ee; // NOTE: electron and positron in general don't have same lab frame energy, but averaged over many draws the result is consistent
+
+			 //  electron and positron in general don't have same lab frame energy, but averaged over many draws the result is consistent
+			double Epair = 2 * Ee;
+
 			// if the remaining energy is not sufficient check for random accepting
 			if (Epair > dE)
 				if (random.rand() > (dE / Epair))
@@ -135,22 +160,53 @@ void ElectronPairProduction::process(Candidate *c) const {
 
 			// create pair and repeat with remaining energy
 			dE -= Epair;
-			Vector3d pos = random.randomInterpolatedPosition(c->previous.getPosition(), c->current.getPosition());
-			c->addSecondary( 11, Ee, pos, 1., interactionTag);
-			c->addSecondary(-11, Ee, pos, 1., interactionTag);
+
+			if (samplerDistribution == nullptr or maximumSamples <= 0) {
+				double Es = Epair / 2;
+				double wp = samplerEvents->computeWeight(-11, Es, Es / E0, i);
+				double we = samplerEvents->computeWeight( 11, Es, Es / E0, i);
+				Vector3d pos = random.randomInterpolatedPosition(c->previous.getPosition(), c->current.getPosition());
+				if (wp > 0)
+					c->addSecondary(-11, Es, pos, wp, interactionTag);
+				if (we > 0)
+					c->addSecondary( 11, Es, pos, we, interactionTag);
+			} else {
+				samplerDistribution->push(Epair / 2.);
+			}
+		}
+
+		if (samplerDistribution != nullptr and maximumSamples > 0) {
+			samplerDistribution->transformToPDF();
+			samplerDistribution->transformToCDF();
+			std::vector<double> sampledElectrons = samplerDistribution->getSample(maximumSamples);
+			double dEs = std::accumulate(sampledElectrons.begin(), sampledElectrons.end(), decltype(sampledElectrons)::value_type(0)) * 2;
+			if (samplerDistribution->getSize() > 0) {
+				double w = dE0 / dEs / 2.;
+				for (size_t i = 0; i < sampledElectrons.size(); i++) {
+					double Es = sampledElectrons[i];
+					
+					// // this was not thoroughly tested yet, although it should work
+					// double wp = w * samplerEvents->computeWeight(-11, Es, Es / E0, i);
+					// double we = w * samplerEvents->computeWeight( 11, Es, Es / E0, i);
+
+					double wp = 1;
+					double we = 1;
+
+					Vector3d pos = random.randomInterpolatedPosition(c->previous.getPosition(), c->current.getPosition());
+					if (wp > 0)
+						c->addSecondary(-11, Es, pos, wp, interactionTag);
+					if (we > 0)
+						c->addSecondary( 11, Es, pos, we, interactionTag);
+				}
+				samplerDistribution->clear();
+			}
 		}
 	}
 
+
+
 	c->current.setLorentzFactor(lf * (1 - loss));
 	c->limitNextStep(limit * losslen);
-}
-
-void ElectronPairProduction::setInteractionTag(std::string tag) {
-	interactionTag = tag;
-}
-
-std::string ElectronPairProduction::getInteractionTag() const {
-	return interactionTag;
 }
 
 
