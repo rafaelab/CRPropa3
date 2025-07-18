@@ -23,7 +23,7 @@ c*****************************************************************************
 c*******************************************************
 c** subroutine for photopion production of            **
 c** relativistic nucleons in a soft photon field      **
-c** subroutine for SOPHIA inVersion 1.2                 **
+c** subroutine for SOPHIA inVersion 1.2               **
 c****** INPUT ******************************************
 c E0 = energy of incident proton (in lab frame) [in GeV]
 c eps = energy of incident photon [in GeV] (in lab frame)
@@ -9655,10 +9655,14 @@ c****************************************************************************
 c
 c     Modified in Sept 2009 to include a radial dependence of IRB.
 c
+c ****************************************************************************
+c     Modified in Aug 2023 by Rafael Alves Batista
+c     Possibility to prevent the decay of unstable particles
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
       SUBROUTINE sophiaevent(nature, Ein, eps,
-     &    OutPart, OutPartType, NbOutPart)
+     &    OutPart, OutPartType, NbOutPart, preventDecays)
+
 
 c**********************************
 c nature, Ein = input nature and energy of the nucleon
@@ -9675,6 +9679,8 @@ c        bgFlag = 1 for CMB, 2 for Primack et al. (1999) IRB
 c Added Dec. 2005 :
 c        zmax : now there is a "standard" IRB evolution which requires to 
 c           know the redshift and z_max of the irb.
+c Added Aug. 2023  by Rafael Alves Batista
+c        preventDecay: if set to true, will prevent decays.
 c**********************************
 
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
@@ -9707,6 +9713,7 @@ c**********************************
       double precision OutPart(2000,5)
       integer OutPartType(2000)      
       integer NbOutPart
+      integer preventDecays
 
       DATA pi /3.141593D0/
 
@@ -9737,6 +9744,12 @@ c**********************************
          theta = 180.D0
       else
           theta = acos(theta)*180.D0/pi 
+      endif
+
+      if (preventDecays.gt.0) then
+        do i=1,49
+          IDB(i) = 0.D0
+        end do
       endif
 
       call eventgen(L0,E0,eps,theta,Imode)
