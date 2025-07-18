@@ -1,9 +1,9 @@
 #ifndef CRPROPA_CANDIDATE_H
 #define CRPROPA_CANDIDATE_H
 
+#include "crpropa/AssocVector.h"
 #include "crpropa/ParticleState.h"
 #include "crpropa/Referenced.h"
-#include "crpropa/AssocVector.h"
 #include "crpropa/Variant.h"
 
 #include <vector>
@@ -26,27 +26,27 @@ namespace crpropa {
  */
 class Candidate: public Referenced {
 public:
-	ParticleState source; /**< Particle state at the source */
-	ParticleState created; /**< Particle state of parent particle at the time of creation */
-	ParticleState current; /**< Current particle state */
-	ParticleState previous; /**< Particle state at the end of the previous step */
+	ParticleState source; /**< particle state at the source */
+	ParticleState created; /**< particle state of parent particle at the time of creation */
+	ParticleState current; /**< current particle state */
+	ParticleState previous; /**< particle state at the end of the previous step */
 
-	std::vector<ref_ptr<Candidate> > secondaries; /**< Secondary particles from interactions */
+	std::vector<ref_ptr<Candidate>> secondaries; /**< secondary particles from interactions */
 
 	typedef Loki::AssocVector<std::string, Variant> PropertyMap;
-	PropertyMap properties; /**< Map of property names and their values. */
+	PropertyMap properties; /**< map of property names and their values. */
 
 	/** Parent candidate. 0 if no parent (initial particle). Must not be a ref_ptr to prevent circular referencing. */
-	Candidate *parent;
+	Candidate* parent;
 
 private:
-	bool active; /**< Active status */
-	double weight; /**< Weight of the candidate */
-	double redshift; /**< Current simulation time-point in terms of redshift z */
-	double trajectoryLength; /**< Comoving distance [m] the candidate has traveled so far */
-	double currentStep; /**< Size of the currently performed step in [m] comoving units */
-	double nextStep; /**< Proposed size of the next propagation step in [m] comoving units */
-	std::string tagOrigin; /**< Name of interaction/source process which created this candidate*/
+	bool active; /**< active status */
+	double weight; /**< weight of the candidate */
+	double redshift; /**< current simulation time-point in terms of redshift z */
+	double trajectoryLength; /**< comoving distance [m] the candidate has traveled so far */
+	double currentStep; /**< size of the currently performed step in [m] comoving units */
+	double nextStep; /**< proposed size of the next propagation step in [m] comoving units */
+	std::string tagOrigin; /**< name of interaction/source process which created this candidate */
 
 	static uint64_t nextSerialNumber;
 	uint64_t serialNumber;
@@ -66,7 +66,7 @@ public:
 	 Creates a candidate, initializing the Candidate::source, Candidate::created,
 	 Candidate::previous and Candidate::current state with the argument.
 	 */
-	Candidate(const ParticleState &state);
+	Candidate(const ParticleState& state);
 
 	bool isActive() const;
 	void setActive(bool b);
@@ -110,10 +110,10 @@ public:
 	 */
 	void limitNextStep(double step);
 
-	void setProperty(const std::string &name, const Variant &value);
-	const Variant &getProperty(const std::string &name) const;
-	bool removeProperty(const std::string &name);
-	bool hasProperty(const std::string &name) const;
+	void setProperty(const std::string& name, const Variant& value);
+	const Variant& getProperty(const std::string& name) const;
+	bool removeProperty(const std::string& name);
+	bool hasProperty(const std::string& name) const;
 
 	/**
 	 Add a new candidate to the list of secondaries.
@@ -124,16 +124,11 @@ public:
 	 The secondaries Candidate::created and Candidate::current state are set to the _current_ state of its parent, except for the secondaries current energy and particle id.
 	 Trajectory length and redshift are copied from the parent.
 	 */
-	void addSecondary(Candidate *c);
-	inline void addSecondary(ref_ptr<Candidate> c) { addSecondary(c.get()); };
-	/**
-	 Add a new candidate to the list of secondaries.
-	 @param id			particle ID of the secondary
-	 @param energy		energy of the secondary
-	 @param w			weight of the secondary
-	 @param tagOrigin 	tag of the secondary
-	 */
-	void addSecondary(int id, double energy, double w = 1., std::string tagOrigin = "SEC");
+	void addSecondary(Candidate* c);
+	inline void addSecondary(ref_ptr<Candidate> c) { 
+		addSecondary(c.get()); 
+	};
+
 	/**
 	 Add a new candidate to the list of secondaries.
 	 @param id			particle ID of the secondary
@@ -142,6 +137,7 @@ public:
 	 @param w			weight of the secondary
 	 @param tagOrigin 	tag of the secondary
 	 */
+	void addSecondary(int id, double energy, double w = 1., std::string tagOrigin = "SEC");
 	void addSecondary(int id, double energy, Vector3d position, double w = 1., std::string tagOrigin = "SEC");
 	void clearSecondaries();
 
