@@ -357,6 +357,7 @@ add_library(crpropa SHARED
   src/PhotonBackground.cpp
   src/ProgressBar.cpp
   src/Random.cpp
+  src/Sampler.cpp
   src/Source.cpp
   src/Variant.cpp
   src/module/AdiabaticCooling.cpp
