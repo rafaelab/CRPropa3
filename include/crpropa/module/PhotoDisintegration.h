@@ -1,11 +1,24 @@
 #ifndef CRPROPA_PHOTODISINTEGRATION_H
 #define CRPROPA_PHOTODISINTEGRATION_H
 
-#include "crpropa/Module.h"
-#include "crpropa/PhotonBackground.h"
-
-#include <vector>
+#include <cmath>
+#include <fstream>
+#include <limits>
 #include <map>
+#include <sstream>
+#include <stdexcept>
+#include <vector>
+
+
+#include "crpropa/Module.h"
+#include "crpropa/ParticleID.h"
+#include "crpropa/ParticleMass.h"
+#include "crpropa/PhotonBackground.h"
+#include "crpropa/Random.h"
+#include "crpropa/Sampler.h"
+#include "crpropa/Units.h"
+#include "kiss/logger.h"
+
 
 namespace crpropa {
 /**
@@ -18,71 +31,64 @@ namespace crpropa {
  @brief Photodisintegration of nuclei by background photons.
  */
 class PhotoDisintegration: public Module {
-private:
-	ref_ptr<PhotonField> photonField;
-	double limit; // fraction of mean free path for limiting the next step
-	bool havePhotons;
-	std::string interactionTag = "PD";
+	protected:
+		struct Branch {
+			int channel; // number of emitted (n, p, H2, H3, He3, He4)
+			std::vector<double> branchingRatio; // branching ratio as function of nucleus Lorentz factor
+		};
 
-	struct Branch {
-		int channel; // number of emitted (n, p, H2, H3, He3, He4)
-		std::vector<double> branchingRatio; // branching ratio as function of nucleus Lorentz factor
-	};
+		struct PhotonEmission {
+			double energy; // energy of emitted photon [J]
+			std::vector<double> emissionProbability; // emission probability as function of nucleus Lorentz factor
+		};
 
-	struct PhotonEmission {
-		double energy; // energy of emitted photon [J]
-		std::vector<double> emissionProbability; // emission probability as function of nucleus Lorentz factor
-	};
+		static constexpr double lgmin = 6; // minimum log10(Lorentz-factor)
+		static constexpr double lgmax = 14; // maximum log10(Lorentz-factor)
+		static constexpr size_t nlg = 201; // number of Lorentz-factor steps
 
-	std::vector<std::vector<double> > pdRate; // pdRate[Z * 31 + N] = total interaction rate
-	std::vector<std::vector<Branch> > pdBranch; // pdTable[Z * 31 + N] = branching ratios
-	mutable std::map<int, std::vector<PhotonEmission> > pdPhoton; // map of emitted photon energies and photon emission probabilities
+	private:
+		ref_ptr<PhotonField> photonField;
+		ref_ptr<SamplerEvents> sampler;	// sampler for the interaction rate (thinning)
+		double limit; // fraction of mean free path for limiting the next step
+		bool havePhotons;
+		std::string interactionTag;
+		std::vector<std::vector<double>> pdRate; // pdRate[Z * 31 + N] = total interaction rate
+		std::vector<std::vector<Branch>> pdBranch; // pdTable[Z * 31 + N] = branching ratios
+		mutable std::map<int, std::vector<PhotonEmission>> pdPhoton; // map of emitted photon energies and photon emission probabilities
 
-	static const double lgmin; // minimum log10(Lorentz-factor)
-	static const double lgmax; // maximum log10(Lorentz-factor)
-	static const size_t nlg; // number of Lorentz-factor steps
+	public:
+		/** Constructor.
+		@param photonField		target photon field
+		@param havePhotons		if true, add secondary photons as candidates
+		@param sampler		    sampling object (see Sampler.h)
+		@param limit			step size limit as fraction of mean free path
+		*/
+		PhotoDisintegration(ref_ptr<PhotonField> photonField, bool havePhotons = false, ref_ptr<SamplerEvents> sampling = ref_ptr<SamplerEvents>(new SamplerEventsNull()), double limit = 0.1);
 
-public:
-	/** Constructor.
-	 @param photonField		target photon field
-	 @param havePhotons		if true, add secondary photons as candidates
-	 @param limit			step size limit as fraction of mean free path
-	 */
-	PhotoDisintegration(ref_ptr<PhotonField> photonField, bool havePhotons = false, double limit = 0.1);
+		void setPhotonField(ref_ptr<PhotonField> photonField);
+		void setHavePhotons(bool havePhotons);
+		void setLimit(double limit);
+		void setSampler(ref_ptr<SamplerEvents> sampler);
+		void setInteractionTag(std::string tag);
 
-	// set the target photon field
-	void setPhotonField(ref_ptr<PhotonField> photonField);
+		std::string getInteractionTag() const;
 
-	// decide if secondary photons are added to the simulation
-	void setHavePhotons(bool havePhotons);
+		void initRate(std::string filename);
+		void initBranching(std::string filename);
+		void initPhotonEmission(std::string filename);
 
-	/** Limit the propagation step to a fraction of the mean free path
-	 * @param limit fraction of the mean free path
-	 */
-	void setLimit(double limit);
+		void process(Candidate* candidate) const;
+		void performInteraction(Candidate* candidate, int channel) const;
 
-	/** set a custom interaction tag to trace back this interaction
-	 * @param tag string that will be added to the candidate and output
-	 */
-	void setInteractionTag(std::string tag);
-	std::string getInteractionTag() const;
-
-	void initRate(std::string filename);
-	void initBranching(std::string filename);
-	void initPhotonEmission(std::string filename);
-
-	void process(Candidate *candidate) const;
-	void performInteraction(Candidate *candidate, int channel) const;
-
-	/**
-	 Calculates the loss length E dx/dE in [m] physical distance.
-	 This is not used in the simulation.
-	 @param	id		PDG particle id
-	 @param gamma	Lorentz factor of particle
-	 @param z		redshift
-	 @returns E dx/dE [in meters]
-	 */
-	double lossLength(int id, double gamma, double z = 0);
+		/**
+		Calculates the loss length E dx/dE in [m] physical distance.
+		This is not used in the simulation.
+		@param	id		PDG particle id
+		@param gamma	Lorentz factor of particle
+		@param z		redshift
+		@returns E dx/dE [in meters]
+		*/
+		double lossLength(int id, double gamma, double z = 0);
 };
 
 /** @}*/

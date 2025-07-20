@@ -1,30 +1,19 @@
 #include "crpropa/module/PhotoDisintegration.h"
-#include "crpropa/Units.h"
-#include "crpropa/ParticleID.h"
-#include "crpropa/ParticleMass.h"
-#include "crpropa/Random.h"
-#include "kiss/logger.h"
 
-#include <cmath>
-#include <limits>
-#include <sstream>
-#include <fstream>
-#include <stdexcept>
-
+#
 namespace crpropa {
 
-const double PhotoDisintegration::lgmin = 6;  // minimum log10(Lorentz-factor)
-const double PhotoDisintegration::lgmax = 14; // maximum log10(Lorentz-factor)
-const size_t PhotoDisintegration::nlg = 201;  // number of Lorentz-factor steps
 
-PhotoDisintegration::PhotoDisintegration(ref_ptr<PhotonField> f, bool havePhotons, double limit) {
-	setPhotonField(f);
-	this->havePhotons = havePhotons;
-	this->limit = limit;
+PhotoDisintegration::PhotoDisintegration(ref_ptr<PhotonField> photonField, bool havePhotons, ref_ptr<SamplerEvents> sampling, double limit) {
+	setInteractionTag("PD");
+	setPhotonField(photonField);
+	setHavePhotons(havePhotons);
+	setLimit(limit);
+	setSampler(sampling);
 }
 
-void PhotoDisintegration::setPhotonField(ref_ptr<PhotonField> photonField) {
-	this->photonField = photonField;
+void PhotoDisintegration::setPhotonField(ref_ptr<PhotonField> field) {
+	photonField = field;
 	std::string fname = photonField->getFieldName();
 	setDescription("PhotoDisintegration: " + fname);
 	initRate(getDataPath("Photodisintegration/rate_" + fname + ".txt"));
@@ -32,12 +21,24 @@ void PhotoDisintegration::setPhotonField(ref_ptr<PhotonField> photonField) {
 	initPhotonEmission(getDataPath("Photodisintegration/photon_emission_" + fname.substr(0,3) + ".txt"));
 }
 
-void PhotoDisintegration::setHavePhotons(bool havePhotons) {
-	this->havePhotons = havePhotons;
+void PhotoDisintegration::setHavePhotons(bool photons) {
+	havePhotons = photons;
 }
 
-void PhotoDisintegration::setLimit(double limit) {
-	this->limit = limit;
+void PhotoDisintegration::setLimit(double lim) {
+	limit = lim;
+}
+
+void PhotoDisintegration::setInteractionTag(std::string tag) {
+	interactionTag = tag;
+}
+
+void PhotoDisintegration::setSampler(ref_ptr<SamplerEvents> s) {
+	sampler = s;
+}
+
+std::string PhotoDisintegration::getInteractionTag() const {
+	return interactionTag;
 }
 
 void PhotoDisintegration::initRate(std::string filename) {
@@ -145,7 +146,7 @@ void PhotoDisintegration::initPhotonEmission(std::string filename) {
 	infile.close();
 }
 
-void PhotoDisintegration::process(Candidate *candidate) const {
+void PhotoDisintegration::process(Candidate* candidate) const {
 	// execute the loop at least once for limiting the next step
 	double step = candidate->getCurrentStep();
 	do {
@@ -176,7 +177,7 @@ void PhotoDisintegration::process(Candidate *candidate) const {
 
 		// check if interaction occurs in this step
 		// otherwise limit next step to a fraction of the mean free path
-		Random &random = Random::instance();
+		Random& random = Random::instance();
 		double randDist = -log(random.rand()) / rate;
 		if (step < randDist) {
 			candidate->limitNextStep(limit / rate);
@@ -184,7 +185,7 @@ void PhotoDisintegration::process(Candidate *candidate) const {
 		}
 
 		// select channel and interact
-		const std::vector<Branch> &branches = pdBranch[idx];
+		const std::vector<Branch>& branches = pdBranch[idx];
 		double cmp = random.rand();
 		int l = round((lg - lgmin) / (lgmax - lgmin) * (nlg - 1)); // index of closest tabulation point
 		size_t i = 0;
@@ -199,7 +200,7 @@ void PhotoDisintegration::process(Candidate *candidate) const {
 	} while (step > 0);
 }
 
-void PhotoDisintegration::performInteraction(Candidate *candidate, int channel) const {
+void PhotoDisintegration::performInteraction(Candidate* candidate, int channel) const {
 	KISS_LOG_DEBUG << "Photodisintegration::performInteraction. Channel " <<  channel << " on candidate " << candidate->getDescription(); 
 	// parse disintegration channel
 	int nNeutron = digit(channel, 100000);
@@ -218,10 +219,9 @@ void PhotoDisintegration::performInteraction(Candidate *candidate, int channel) 
 	double EpA = candidate->current.getEnergy() / A;
 
 	// create secondaries
-	Random &random = Random::instance();
+	Random& random = Random::instance();
 	Vector3d pos = random.randomInterpolatedPosition(candidate->previous.getPosition(), candidate->current.getPosition());
-	try
-	{
+	try {
 		for (size_t i = 0; i < nNeutron; i++)
 			candidate->addSecondary(nucleusId(1, 0), EpA, pos, 1., interactionTag);
 		for (size_t i = 0; i < nProton; i++)
@@ -235,14 +235,11 @@ void PhotoDisintegration::performInteraction(Candidate *candidate, int channel) 
 		for (size_t i = 0; i < nHe4; i++)
 			candidate->addSecondary(nucleusId(4, 2), EpA * 4, pos, 1., interactionTag);
 
-
-	// update particle
-	  candidate->created = candidate->current;
+		// update particle
+		candidate->created = candidate->current;
 		candidate->current.setId(nucleusId(A + dA, Z + dZ));
 		candidate->current.setEnergy(EpA * (A + dA));
-	}
-	catch (std::runtime_error &e)
-	{
+	} catch (std::runtime_error& e) {
 		KISS_LOG_ERROR << "Something went wrong in the PhotoDisentigration\n" << "Please report this error on https://github.com/CRPropa/CRPropa3/issues including your simulation setup and the following random seed:\n" << Random::instance().getSeed_base64();
 		throw;
 	}
@@ -252,11 +249,12 @@ void PhotoDisintegration::performInteraction(Candidate *candidate, int channel) 
 
 	// create photons
 	double z = candidate->getRedshift();
+	double E0 = candidate->current.getEnergy() * (1 + z);
 	double lg = log10(candidate->current.getLorentzFactor() * (1 + z));
 	double lf = candidate->current.getLorentzFactor();
 
 	int l = round((lg - lgmin) / (lgmax - lgmin) * (nlg - 1));  // index of closest tabulation point
-	int key = Z*1e6 + (A-Z)*1e4 + (Z+dZ)*1e2 + (A+dA) - (Z+dZ);
+	int key = Z * 1e6 + (A - Z) * 1e4 + (Z + dZ) * 1e2 + (A + dA) - (Z + dZ);
 
 	for (int i = 0; i < pdPhoton[key].size(); i++) {
 		// check for random emission
@@ -266,7 +264,9 @@ void PhotoDisintegration::performInteraction(Candidate *candidate, int channel) 
 		// boost to lab frame
 		double cosTheta = 2 * random.rand() - 1;
 		double E = pdPhoton[key][i].energy * lf * (1 - cosTheta);
-		candidate->addSecondary(22, E, pos, 1., interactionTag);
+		double w = sampler->computeWeight(22, E , E / E0);
+		if (w > 0)
+			candidate->addSecondary(22, E, pos, w, interactionTag);
 	}
 }
 
@@ -283,7 +283,7 @@ double PhotoDisintegration::lossLength(int id, double gamma, double z) {
 	// check if disintegration data available
 	if ((Z > 26) or (N > 30))
 		return std::numeric_limits<double>::max();
-	const std::vector<double> &rate = pdRate[idx];
+	const std::vector<double>& rate = pdRate[idx];
 	if (rate.size() == 0)
 		return std::numeric_limits<double>::max();
 
@@ -300,7 +300,7 @@ double PhotoDisintegration::lossLength(int id, double gamma, double z) {
 
 	// average number of nucleons lost for all disintegration channels
 	double avg_dA = 0;
-	const std::vector<Branch> &branches = pdBranch[idx];
+	const std::vector<Branch>& branches = pdBranch[idx];
 	for (size_t i = 0; i < branches.size(); i++) {
 		int channel = branches[i].channel;
 		int dA = 0;
@@ -319,12 +319,5 @@ double PhotoDisintegration::lossLength(int id, double gamma, double z) {
 	return 1 / lossRate;
 }
 
-void PhotoDisintegration::setInteractionTag(std::string tag) {
-	interactionTag = tag;
-}
-
-std::string PhotoDisintegration::getInteractionTag() const {
-	return interactionTag;
-}
 
 } // namespace crpropa
