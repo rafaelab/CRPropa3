@@ -1,16 +1,11 @@
 #include "crpropa/module/EMInverseComptonScattering.h"
 
 
-#include <fstream>
-#include <limits>
-#include <stdexcept>
-
 
 namespace crpropa {
 
-static const double mec2 = mass_electron * c_squared;
 
-EMInverseComptonScattering::EMInverseComptonScattering(ref_ptr<PhotonField> photonField, bool havePhotons, ref_ptr<SamplerEvents> sampling, double limit) {
+	EMInverseComptonScattering::EMInverseComptonScattering(ref_ptr<PhotonField> photonField, bool havePhotons, ref_ptr<SamplerEvents> sampling, double limit) {
 	setInteractionTag("EMICS");
 	setPhotonField(photonField);
 	setHavePhotons(havePhotons);

@@ -1,15 +1,8 @@
 #include "crpropa/module/EMPairProduction.h"
-#include "crpropa/Units.h"
-#include "crpropa/Random.h"
-
-#include <fstream>
-#include <limits>
-#include <stdexcept>
 
 
 namespace crpropa {
 
-static const double mec2 = mass_electron * c_squared;
 
 EMPairProduction::EMPairProduction(ref_ptr<PhotonField> field, bool electrons, ref_ptr<SamplerEvents> sampling, double lim) {
 	setInteractionTag("EMPP");

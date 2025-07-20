@@ -1,8 +1,10 @@
 #ifndef CRPROPA_EMINVERSECOMPTONSCATTERING_H
 #define CRPROPA_EMINVERSECOMPTONSCATTERING_H
 
-#include <fstream>
 #include <cmath>
+#include <fstream>
+#include <limits>
+#include <stdexcept>
 
 #include "crpropa/Common.h"
 #include "crpropa/Module.h"
@@ -30,44 +32,45 @@ namespace crpropa {
  Note that if sampling is used, the output must contain the column "weights", which should be included in the post-processing.
 */
 class EMInverseComptonScattering: public Module {
-private:
-	ref_ptr<PhotonField> photonField;
-	ref_ptr<SamplerEvents> sampler;
-	bool havePhotons;
-	double limit;
-	std::string interactionTag;
+	private:
+		ref_ptr<PhotonField> photonField;
+		ref_ptr<SamplerEvents> sampler;
+		bool havePhotons;
+		double limit;
+		std::string interactionTag;
 
-	// tabulated interaction rate 1/lambda(E)
-	std::vector<double> tabEnergy;  //!< electron energy in [J]
-	std::vector<double> tabRate;  //!< interaction rate in [1/m]
-	
-	// tabulated CDF(s_kin, E) = cumulative differential interaction rate
-	std::vector<double> tabE;  //!< electron energy in [J]
-	std::vector<double> tabs;  //!< s_kin = s - m^2 in [J**2]
-	std::vector<std::vector<double>> tabCDF;  //!< cumulative interaction rate
+		// tabulated interaction rate 1/lambda(E)
+		std::vector<double> tabEnergy;  //!< electron energy in [J]
+		std::vector<double> tabRate;  //!< interaction rate in [1/m]
+		
+		// tabulated CDF(s_kin, E) = cumulative differential interaction rate
+		std::vector<double> tabE;  //!< electron energy in [J]
+		std::vector<double> tabs;  //!< s_kin = s - m^2 in [J**2]
+		std::vector<std::vector<double>> tabCDF;  //!< cumulative interaction rate
 
-public:
-	/** Constructor
-	 @param photonField		target photon field
-	 @param havePhotons		if true, add secondary photons as candidates
-	 @param sampler		    sampling object (see Sampler.h)
-	 @param limit			step size limit as fraction of mean free path
-	 */
-	EMInverseComptonScattering(ref_ptr<PhotonField> photonField, bool havePhotons = false, ref_ptr<SamplerEvents> sampling = ref_ptr<SamplerEvents>(new SamplerEventsNull()), double limit = 0.1);
-	
-	void setPhotonField(ref_ptr<PhotonField> photonField);
-	void setHavePhotons(bool havePhotons);
-	void setLimit(double limit);
-	void setSampler(ref_ptr<SamplerEvents> sampler);
-	void setInteractionTag(std::string tag);
+	public:
+		/** Constructor
+		@param photonField		target photon field
+		@param havePhotons		if true, add secondary photons as candidates
+		@param sampler		    sampling object (see Sampler.h)
+		@param limit			step size limit as fraction of mean free path
+		*/
+		EMInverseComptonScattering(ref_ptr<PhotonField> photonField, bool havePhotons = false, ref_ptr<SamplerEvents> sampling = ref_ptr<SamplerEvents>(new SamplerEventsNull()), double limit = 0.1);
+		
+		void setPhotonField(ref_ptr<PhotonField> photonField);
+		void setHavePhotons(bool havePhotons);
+		void setLimit(double limit);
+		void setSampler(ref_ptr<SamplerEvents> sampler);
+		void setInteractionTag(std::string tag);
 
-	std::string getInteractionTag() const;
+		std::string getInteractionTag() const;
 
-	void initRate(std::string filename);
-	void initCumulativeRate(std::string filename);
+		void initRate(std::string filename);
+		void initCumulativeRate(std::string filename);
 
-	void performInteraction(Candidate* candidate) const;
-	void process(Candidate* candidate) const;
+		void performInteraction(Candidate* candidate) const;
+		void process(Candidate* candidate) const;
+
 };
 /** @}*/
 

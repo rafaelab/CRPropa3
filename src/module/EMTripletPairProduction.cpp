@@ -7,8 +7,7 @@
 #include <stdexcept>
 
 namespace crpropa {
-
-static const double mec2 = mass_electron * c_squared;
+	
 
 EMTripletPairProduction::EMTripletPairProduction(ref_ptr<PhotonField> photonField, bool haveElectrons, ref_ptr<SamplerEvents> sampling, double limit) {
 	setInteractionTag("EMTP");
