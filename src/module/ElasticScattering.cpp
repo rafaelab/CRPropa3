@@ -12,23 +12,32 @@
 
 namespace crpropa {
 
-const double ElasticScattering::lgmin = 6.;  // minimum log10(Lorentz-factor)
-const double ElasticScattering::lgmax = 14.; // maximum log10(Lorentz-factor)
-const size_t ElasticScattering::nlg = 201;   // number of Lorentz-factor steps
-const double ElasticScattering::epsmin = log10(2 * eV) + 3;    // log10 minimum photon background energy in nucleus rest frame for elastic scattering
-const double ElasticScattering::epsmax = log10(2 * eV) + 8.12; // log10 maximum photon background energy in nucleus rest frame for elastic scattering
-const size_t ElasticScattering::neps = 513; // number of photon background energies in nucleus rest frame
 
-ElasticScattering::ElasticScattering(ref_ptr<PhotonField> f) {
-	setPhotonField(f);
+ElasticScattering::ElasticScattering(ref_ptr<PhotonField> field, ref_ptr<SamplerEvents> sampling) {
+	setInteractionTag("ES");
+	setPhotonField(field);
+	setSampler(sampling);
 }
 
-void ElasticScattering::setPhotonField(ref_ptr<PhotonField> photonField) {
-	this->photonField = photonField;
+void ElasticScattering::setPhotonField(ref_ptr<PhotonField> field) {
+	photonField = field;
 	std::string fname = photonField->getFieldName();
 	setDescription("ElasticScattering: " + fname);
-	initRate(getDataPath("ElasticScattering/rate_" + fname.substr(0,3) + ".txt"));
-	initCDF(getDataPath("ElasticScattering/cdf_" + fname.substr(0,3) + ".txt"));
+	initRate(getDataPath("ElasticScattering/rate_" + fname.substr(0, 3) + ".txt"));
+	initCDF(getDataPath("ElasticScattering/cdf_" + fname.substr(0, 3) + ".txt"));
+}
+
+
+void ElasticScattering::setInteractionTag(std::string tag) {
+	interactionTag = tag;
+}
+
+void ElasticScattering::setSampler(ref_ptr<SamplerEvents> s) {
+	sampler = s;
+}
+
+std::string ElasticScattering::getInteractionTag() const {
+	return interactionTag;
 }
 
 void ElasticScattering::initRate(std::string filename) {
@@ -45,7 +54,7 @@ void ElasticScattering::initRate(std::string filename) {
 		}
 		double r;
 		infile >> r;
-		if (!infile)
+		if (! infile)
 			break;
 		tabRate.push_back(r / Mpc);
 	}
@@ -79,9 +88,10 @@ void ElasticScattering::initCDF(std::string filename) {
 	infile.close();
 }
 
-void ElasticScattering::process(Candidate *candidate) const {
+void ElasticScattering::process(Candidate* candidate) const {
 	int id = candidate->current.getId();
 	double z = candidate->getRedshift();
+	double E0 = candidate->current.getEnergy();
 
 	if (not isNucleus(id))
 		return;
@@ -102,7 +112,7 @@ void ElasticScattering::process(Candidate *candidate) const {
 		rate *= pow_integer<2>(1 + z) * photonField->getRedshiftScaling(z);  // cosmological scaling
 
 		// check for interaction
-		Random &random = Random::instance();
+		Random& random = Random::instance();
 		double randDist = -log(random.rand()) / rate;
 		if (step < randDist)
 			return;
@@ -118,19 +128,14 @@ void ElasticScattering::process(Candidate *candidate) const {
 		double E = eps * candidate->current.getLorentzFactor() * (1. - cosTheta);
 
 		Vector3d pos = random.randomInterpolatedPosition(candidate->previous.getPosition(), candidate->current.getPosition());
-		candidate->addSecondary(22, E, pos, 1., interactionTag);
+		double w = sampler->computeWeight(id, E / (1 + z), E / E0, 0);
+		if (w > 0)
+			candidate->addSecondary(22, E, pos, w, interactionTag);
 
 		// repeat with remaining step
 		step -= randDist;
 	}
 }
 
-void ElasticScattering::setInteractionTag(std::string tag) {
-	this -> interactionTag = tag;
-}
-
-std::string ElasticScattering::getInteractionTag() const {
-	return interactionTag;
-}
 
 } // namespace crpropa
