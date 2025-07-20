@@ -1,15 +1,12 @@
 #include "crpropa/Candidate.h"
-#include "crpropa/ParticleID.h"
-#include "crpropa/Units.h"
 
-#include <stdexcept>
 
 namespace crpropa {
 
 Candidate::Candidate(int id, double E, Vector3d pos, Vector3d dir, double z, double weight, std::string tagOrigin) :
 	redshift(z), trajectoryLength(0), weight(weight), currentStep(0), nextStep(0), active(true), parent(0), tagOrigin(tagOrigin) {
 	
-		ParticleState state(id, E, pos, dir);
+	ParticleState state(id, E, pos, dir);
 	source = state;
 	created = state;
 	previous = state;
