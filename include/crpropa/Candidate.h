@@ -23,12 +23,12 @@ namespace crpropa {
  */
 
 /**
- @class Candidate Candidate.h include/crpropa/Candidate.h
- @brief All information about the cosmic ray.
+@class Candidate
+@brief All information about the particle.
 
- The Candidate is a passive object, that holds the information about the state
- of the cosmic ray and the simulation itself.
- */
+The Candidate is a passive object, that holds the information about the state
+of the particle and the simulation itself.
+*/
 class Candidate: public Referenced {
 public:
 	ParticleState source; /**< particle state at the source */
@@ -70,9 +70,9 @@ public:
 	);
 
 	/**
-	 Creates a candidate, initializing the Candidate::source, Candidate::created,
-	 Candidate::previous and Candidate::current state with the argument.
-	 */
+	Creates a candidate, initializing the Candidate::source, Candidate::created,
+	Candidate::previous and Candidate::current state with the argument.
+	*/
 	Candidate(const ParticleState& state);
 
 	bool isActive() const;
@@ -85,36 +85,36 @@ public:
 	double getRedshift() const;
 
 	/**
-	 Sets weight of each candidate.
-	 Weights are calculated for each tracked secondary.
+	Sets weight of each candidate.
+	Weights are calculated for each tracked secondary.
 	 */
 	void setWeight(double weight);
     void updateWeight(double weight);
 	double getWeight() const;
 
 	/**
-	 Sets the current step and increases the trajectory length accordingly.
-	 Only the propagation module should use this.
-	 */
+	Sets the current step and increases the trajectory length accordingly.
+	Only the propagation module should use this.
+	*/
 	void setCurrentStep(double step);
 	double getCurrentStep() const;
 
 	/**
-	 Sets the proposed next step.
-	 Only the propagation module should use this.
-	 */
+	Sets the proposed next step.
+	Only the propagation module should use this.
+	*/
 	void setNextStep(double step);
 	double getNextStep() const;
 
 	/**
-	 Sets the tagOrigin of the candidate. Can be used to trace back the interactions
-	 */
+	Sets the tagOrigin of the candidate. Can be used to trace back the interactions
+	*/
 	void setTagOrigin(std::string tagOrigin);
 	std::string getTagOrigin() const;
 
 	/**
-	 Make a bid for the next step size: the lowest wins.
-	 */
+	Make a bid for the next step size: the lowest wins.
+	*/
 	void limitNextStep(double step);
 
 	void setProperty(const std::string& name, const Variant& value);
@@ -123,14 +123,14 @@ public:
 	bool hasProperty(const std::string& name) const;
 
 	/**
-	 Add a new candidate to the list of secondaries.
-	 @param c Candidate
+	Add a new candidate to the list of secondaries.
+	@param c Candidate
 
-	 Adds a new candidate to the list of secondaries of this candidate.
-	 The secondaries Candidate::source and Candidate::previous state are set to the _source_ and _previous_ state of its parent.
-	 The secondaries Candidate::created and Candidate::current state are set to the _current_ state of its parent, except for the secondaries current energy and particle id.
-	 Trajectory length and redshift are copied from the parent.
-	 */
+	Adds a new candidate to the list of secondaries of this candidate.
+	The secondaries Candidate::source and Candidate::previous state are set to the _source_ and _previous_ state of its parent.
+	The secondaries Candidate::created and Candidate::current state are set to the _current_ state of its parent, except for the secondaries current energy and particle id.
+	Trajectory length and redshift are copied from the parent.
+	*/
 	void addSecondary(Candidate* c);
 	inline void addSecondary(ref_ptr<Candidate> c) { 
 		addSecondary(c.get()); 
@@ -167,16 +167,17 @@ public:
 	static uint64_t getNextSerialNumber();
 
 	/**
-	 Create an exact clone of candidate
-	 @param recursive	recursively clone and add the secondaries
-	 */
+	Create an exact clone of candidate
+	@param recursive	recursively clone and add the secondaries
+	*/
 	ref_ptr<Candidate> clone(bool recursive = false) const;
 
 	/**
-	 Copy the source particle state to the current state
-	 and activate it if inactive, e.g. restart it
+	Copy the source particle state to the current state
+	and activate it if inactive, e.g. restart it
 	*/
 	void restart();
+
 };
 
 /** @}*/
