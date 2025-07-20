@@ -4,6 +4,65 @@
 
 namespace crpropa {
 
+	
+HadronicInteraction::CrossSection::CrossSection() { 
+}
+
+HadronicInteraction::CrossSection::CrossSection(std::string file) { 
+	loadData(file);
+}
+
+HadronicInteraction::CrossSection::CrossSection(std::string file, int id, double loss, bool add, int CR_Id) : nucleusId(id), weightEnergyLoss(loss), addSecondary(add), CR_Id(CR_Id) {
+	loadData(file);
+}
+
+void HadronicInteraction::CrossSection::loadData(std::string file) { 
+	std::ifstream infile(file.c_str());
+
+	if (! infile.good()) 
+		throw std::runtime_error("CrossSection::loadData could not open file " + file);
+
+	// clear old data 
+	sigma.clear();
+	Tp.clear();
+	eps.clear();
+
+	// skip header
+	while (infile.peek() == '#')
+		infile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+	// read secondary energy as the first row
+	double e; 
+	infile >> e; // ignore the first value
+	while (infile.good() and (infile.peek() != '\n')) {
+		infile >> e;
+		eps.push_back(e + secondary_mc2.at(nucleusId)); // we would like this energy to become the total energy of the secondary here
+	}	
+
+	// read the following lines Tp, sigma values
+	double a; // helper variable to store 
+	while (infile.good()) {
+		infile >> a;
+		if (! infile) 
+			break;	// end of file
+		
+		Tp.push_back(a);
+	
+		std::vector<double> cdf;
+		for (int i = 0; i < eps.size(); i++){
+			infile >> a;
+			cdf.push_back(a);
+		}
+		sigma.push_back(cdf);
+	}
+
+
+	// finaly close the file
+	infile.close();
+	
+}
+
+///////////////////////////////////////////////////////////////////////////////
 
 HadronicInteraction::HadronicInteraction(ref_ptr<Density> dens) : Module(), density(dens), limit(0.1) {
 	setDescription("HI");
@@ -18,17 +77,6 @@ HadronicInteraction::HadronicInteraction(ref_ptr<Density> dens, std::string conf
 void HadronicInteraction::addCrossSection(HadronicInteraction::CrossSection cs) { 
 	// problem there : I would need the ID corresponding to the cs to add it at the right place to CSList ; maybe I can add the 
 	crossSectionList.at(cs.CR_Id).push_back(cs);
-}
-
-HadronicInteraction::CrossSection::CrossSection() { 
-}
-
-HadronicInteraction::CrossSection::CrossSection(std::string file) { 
-	loadData(file);
-}
-
-HadronicInteraction::CrossSection::CrossSection(std::string file, int id, double loss, bool add, int CR_Id) : nucleusId(id), weightEnergyLoss(loss), addSecondary(add), CR_Id(CR_Id) {
-	loadData(file);
 }
 
 void HadronicInteraction::setLimit(double lim) {
@@ -92,52 +140,6 @@ double HadronicInteraction::totalInelasticCrossSection(double Tp, int id, int A_
 
 double HadronicInteraction::getDensityAtPosition(Vector3d& pos) const {
 	return density->getDensity(pos);
-}
-
-void HadronicInteraction::CrossSection::loadData(std::string file) { // function of the class crosssection
-	std::ifstream infile(file.c_str());
-
-	if (! infile.good()) 
-		throw std::runtime_error("CrossSection::loadData could not open file " + file);
-
-	// clear old data 
-	sigma.clear();
-	Tp.clear();
-	eps.clear();
-
-	// skip header
-	while (infile.peek() == '#')
-		infile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-
-	// read secondary energy as the first row
-	double e; 
-	infile >> e; // ignore the first value
-	while (infile.good() and (infile.peek() != '\n')) {
-		infile >> e;
-		eps.push_back(e + secondary_mc2.at(nucleusId)); // we would like this energy to become the total energy of the secondary here
-	}	
-
-	// read the following lines Tp, sigma values
-	double a; // helper variable to store 
-	while (infile.good()) {
-		infile >> a;
-		if (! infile) 
-			break;	// end of file
-		
-		Tp.push_back(a);
-	
-		std::vector<double> cdf;
-		for (int i = 0; i < eps.size(); i++){
-			infile >> a;
-			cdf.push_back(a);
-		}
-		sigma.push_back(cdf);
-	}
-
-
-	// finaly close the file
-	infile.close();
-	
 }
 
 void HadronicInteraction::loadData(std::string file, HadronicInteraction::CrossSection& cs) {
