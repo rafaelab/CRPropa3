@@ -83,7 +83,7 @@ static const double nanogauss = 1e-9 * gauss;
 static const double muG = microgauss;
 static const double nG = nanogauss;
 
-static const double erg = 1E-7 * joule;
+static const double erg = 1e-7 * joule;
 
 // electron volt
 static const double electronvolt = eplus * volt;
@@ -101,7 +101,7 @@ static const double TeV = teraelectronvolt;
 static const double PeV = petaelectronvolt;
 static const double EeV = exaelectronvolt;
 
-static const double barn = 1E-28 * meter * meter;
+static const double barn = 1e-28 * meter * meter;
 
 // astronomical distances
 static const double au = 149597870700 * meter;
@@ -133,7 +133,13 @@ static const double ms = millisecond;
 static const double sec = second;
 
 // volume
-static const double ccm = cm*cm*cm;
+static const double ccm = cm * cm * cm; // bad name; change to cm3 in the future
+static const double cm3 = cm * cm * cm;
+
+// other derived constants
+static const double mec2 = mass_electron * c_squared;
+static const double h_dirac = h_planck / (2 * M_PI);
+
 
 /** @}*/
 
