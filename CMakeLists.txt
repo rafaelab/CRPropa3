@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.14)
 project(CRPropa Fortran C CXX)
 set(CRPROPA_RELEASE_VERSION 3.o.1)  # Update for new release
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
 set(CRPROPA_EXTRA_SOURCES)
@@ -372,6 +372,7 @@ add_library(crpropa SHARED
   src/module/EMTripletPairProduction.cpp
   src/module/ElasticScattering.cpp
   src/module/ElectronPairProduction.cpp
+  src/module/HadronicInteraction.cpp
   src/module/HDF5Output.cpp
   src/module/MomentumDiffusion.cpp
   src/module/NuclearDecay.cpp
