@@ -1,15 +1,20 @@
 #ifndef CRPROPA_CANDIDATE_H
 #define CRPROPA_CANDIDATE_H
 
-#include "crpropa/AssocVector.h"
+// #include "crpropa/AssocVector.h"
+#include "crpropa/ParticleID.h"
 #include "crpropa/ParticleState.h"
 #include "crpropa/Referenced.h"
+#include "crpropa/Units.h"
 #include "crpropa/Variant.h"
 
-#include <vector>
 #include <map>
 #include <sstream>
+#include <stdexcept>
 #include <stdint.h>
+#include <unordered_map>
+#include <vector>
+
 
 namespace crpropa {
 /**
@@ -33,8 +38,10 @@ public:
 
 	std::vector<ref_ptr<Candidate>> secondaries; /**< secondary particles from interactions */
 
-	typedef Loki::AssocVector<std::string, Variant> PropertyMap;
+	// typedef Loki::AssocVector<std::string, Variant> PropertyMap;
+	typedef std::unordered_map<std::string, Variant> PropertyMap; /**< map of property names and their values. */
 	PropertyMap properties; /**< map of property names and their values. */
+	
 
 	/** Parent candidate. 0 if no parent (initial particle). Must not be a ref_ptr to prevent circular referencing. */
 	Candidate* parent;
