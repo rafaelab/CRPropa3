@@ -25,6 +25,17 @@ namespace crpropa {
  * \addtogroup EnergyLosses
  * @{
  */
+
+/**
+ * @class HadronicInteraction
+ * @brief Interaction between nuclei.
+ * 
+ * This module simulates hadronic interactions of cosmic ray nuclei with a target density field.
+ * The interaction is sampled from a tabulated cross section file.
+ * This closely follows the implementation from 
+ * 	https://gitlab.ruhr-uni-bochum.de/doernjkj/hadronic-interaction-in-crpropa/ ,
+ * by J. Dörner, with modifications by C. Prévotat to extend the energy range and allow heavier targets.
+ */
 class HadronicInteraction : public Module {
 	public:
 		class CrossSection {
@@ -68,7 +79,6 @@ class HadronicInteraction : public Module {
 		std::string interactionTag;
 		std::map<int, std::vector<CrossSection>> crossSectionList; // list of the included crosssections; dict : id of the CR
 
-
 		inline static const std::map<int, double> CR_rest_energy = {
 			{1000010010, mass_proton * c_squared }, 
 			{1000020040, 4.002602 * c_squared * amu}, 
@@ -86,8 +96,17 @@ class HadronicInteraction : public Module {
 			}; // in J
 
 	public:
-		HadronicInteraction(ref_ptr<Density> density);
-		HadronicInteraction(ref_ptr<Density> density, std::string configFile, double limit = 0.1);
+		HadronicInteraction(ref_ptr<Density> density, bool deactivateAfter = false, double limit = 0.1);
+		HadronicInteraction(ref_ptr<Density> density, std::string configFile, bool deactivateAfter = false, double limit = 0.1);
+
+		void setLimit(double limit); 
+		void setDensity(ref_ptr<Density> density);
+		void setInteractionTag(std::string tag);
+		void setDeactivatePrimary(bool b);
+
+		double getLimit() const;
+		std::string getInteractionTag() const;
+		bool getDeactivatePrimary() const;
 
 
 		void initData(std::string configFile);	
@@ -96,28 +115,19 @@ class HadronicInteraction : public Module {
 		void process(Candidate* candidate) const;
 		void performInteraction(Candidate* candidate, int A_t) const;
 
-		/* Total inelastic crosssection following the parametrisation from 
-			@param Tp:	kinetic energy of the proton in [J]
-		*/
+		/** Total inelastic crosssection following the parametrisation from 
+		 * @param Tp:	kinetic energy of the proton in [J]
+		 */
 		double totalInelasticCrossSection(double Tp, int id, int A_t) const;
 
-		// /* allow the given nucleusId as a secondary
-		// 	Search in the list of crosssections for the nucleus id and overwrite the information from the config file.
-		// 	@param nucleusId:	nucleusId of the secondary
-		// 	@param allow:	if true secondaries are allowed
-		// */
+		/** Allow the given nucleusId as a secondary
+		 * Search in the list of crosssections for the nucleus id and overwrite the information from the config file.
+		 * @param nucleusId:	nucleusId of the secondary
+		 * @param allow:	if true secondaries are allowed
+		 */
 		void allowSecondaryId(int nucleusId, bool allow = true);
 
 		double getDensityAtPosition(Vector3d& pos) const;
-
-		void setLimit(double limit); 
-		double getLimit() const;
-
-		void setInteractionTag(std::string tag);
-		std::string getInteractionTag() const;
-
-		void setDeactivatePrimary(bool b);
-		bool getDeactivatePrimary() const;
 
 		// void printCrosssections() {
 		// 	for(int i = 0; i < crosssectionList[1000010010].size(); i++) { // [1000010010] : print CS of protons
@@ -128,7 +138,6 @@ class HadronicInteraction : public Module {
 		// 			std::cout << "\t";
 		// 			for(int k = 0; k < 5; k++) 
 		// 				std::cout << sigma[j][k] << "\t";
-					
 		// 			std::cout << "\n";
 		// 		}
 		// 	}

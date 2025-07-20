@@ -20,17 +20,17 @@ namespace crpropa {
  * \addtogroup EnergyLosses
  * @{
  */
- 
-/**
- @class EMPairProduction
- @brief Electron-pair production of photons with background photons.
 
- This module simulates electron-pair production of cosmic ray photons with background photons:
- gamma + gamma_b --> e+ + e- (Breit-Wheeler process).
- The resulting electron positron pair is optionally created (default = false).
- The module limits the propagation step size to a fraction of the mean free path (default = 0.1).
- Optimised sampling strategies (e.g. thinning) are available. 
- Note that if sampling is used, the output must contain the column "weights", which should be included in the post-processing.
+/**
+ * @class EMPairProduction
+ * @brief Electron-pair production of photons with background photons.
+
+ * This module simulates electron-pair production of cosmic ray photons with background photons:
+ * gamma + gamma_b --> e+ + e- (Breit-Wheeler process).
+ * The resulting electron positron pair is optionally created (default = false).
+ * The module limits the propagation step size to a fraction of the mean free path (default = 0.1).
+ * Optimised sampling strategies (e.g. thinning) are available.
+ * Note that if sampling is used, the output must contain the column "weights", which should be included in the post-processing.
  */
 class EMPairProduction: public Module {
 	private:
