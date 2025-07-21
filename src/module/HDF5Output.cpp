@@ -1,15 +1,7 @@
 #ifdef CRPROPA_HAVE_HDF5
 
 #include "crpropa/module/HDF5Output.h"
-#include "crpropa/Version.h"
-#include "crpropa/Random.h"
-#include "kiss/logger.h"
 
-#include <hdf5.h>
-#include <cstring>
-
-const hsize_t RANK = 1;
-const hsize_t BUFFER_SIZE = 1024 * 16;
 
 namespace crpropa {
 
@@ -41,8 +33,7 @@ hid_t variantTypeToH5T_NATIVE(Variant::Type type) {
 		return H5T_NATIVE_DOUBLE;
 	else if(type == Variant::TYPE_STRING)
 		return H5T_C_S1;
-	else
-	{
+	else {
 		KISS_LOG_ERROR << "variantTypeToH5T_NATIVE:: Type: " << Variant::getTypeName(type) << " unknown.";
 		throw std::runtime_error("No matching HDF type for Variant type");
 	}
@@ -62,7 +53,7 @@ HDF5Output::~HDF5Output() {
 	close();
 }
 
-herr_t HDF5Output::insertStringAttribute(const std::string &key, const std::string &value){
+herr_t HDF5Output::insertStringAttribute(const std::string& key, const std::string& value){
 	hid_t   strtype, attr_space, version_attr;
 	hsize_t dims = 0;
 	herr_t  status;
@@ -79,7 +70,7 @@ herr_t HDF5Output::insertStringAttribute(const std::string &key, const std::stri
 	return status;
 }
 
-herr_t HDF5Output::insertDoubleAttribute(const std::string &key, const double &value){
+herr_t HDF5Output::insertDoubleAttribute(const std::string& key, const double& value){
 	hid_t   type, attr_space, version_attr;
 	hsize_t dims = 0;
 	herr_t  status;
@@ -114,14 +105,14 @@ void HDF5Output::open(const std::string& filename) {
 		H5Tinsert(sid, "ID", HOFFSET(OutputRow, ID), H5T_NATIVE_INT32);
 	if (fields.test(CurrentEnergyColumn))
 		H5Tinsert(sid, "E", HOFFSET(OutputRow, E), H5T_NATIVE_DOUBLE);
-	if (fields.test(CurrentPositionColumn) && oneDimensional)
+	if (fields.test(CurrentPositionColumn) and oneDimensional)
 		H5Tinsert(sid, "X", HOFFSET(OutputRow, X), H5T_NATIVE_DOUBLE);
-	if (fields.test(CurrentPositionColumn) && not oneDimensional) {
+	if (fields.test(CurrentPositionColumn) and not oneDimensional) {
 		H5Tinsert(sid, "X", HOFFSET(OutputRow, X), H5T_NATIVE_DOUBLE);
 		H5Tinsert(sid, "Y", HOFFSET(OutputRow, Y), H5T_NATIVE_DOUBLE);
 		H5Tinsert(sid, "Z", HOFFSET(OutputRow, Z), H5T_NATIVE_DOUBLE);
 	}
-	if (fields.test(CurrentDirectionColumn) && not oneDimensional) {
+	if (fields.test(CurrentDirectionColumn) and not oneDimensional) {
 		H5Tinsert(sid, "Px", HOFFSET(OutputRow, Px), H5T_NATIVE_DOUBLE);
 		H5Tinsert(sid, "Py", HOFFSET(OutputRow, Py), H5T_NATIVE_DOUBLE);
 		H5Tinsert(sid, "Pz", HOFFSET(OutputRow, Pz), H5T_NATIVE_DOUBLE);
@@ -132,14 +123,14 @@ void HDF5Output::open(const std::string& filename) {
 		H5Tinsert(sid, "ID0", HOFFSET(OutputRow, ID0), H5T_NATIVE_INT32);
 	if (fields.test(SourceEnergyColumn))
 		H5Tinsert(sid, "E0", HOFFSET(OutputRow, E0), H5T_NATIVE_DOUBLE);
-	if (fields.test(SourcePositionColumn) && oneDimensional)
+	if (fields.test(SourcePositionColumn) and oneDimensional)
 		H5Tinsert(sid, "X0", HOFFSET(OutputRow, X0), H5T_NATIVE_DOUBLE);
-	if (fields.test(SourcePositionColumn) && not oneDimensional){
+	if (fields.test(SourcePositionColumn) and not oneDimensional){
 		H5Tinsert(sid, "X0", HOFFSET(OutputRow, X0), H5T_NATIVE_DOUBLE);
 		H5Tinsert(sid, "Y0", HOFFSET(OutputRow, Y0), H5T_NATIVE_DOUBLE);
 		H5Tinsert(sid, "Z0", HOFFSET(OutputRow, Z0), H5T_NATIVE_DOUBLE);
 	}
-	if (fields.test(SourceDirectionColumn) && not oneDimensional) {
+	if (fields.test(SourceDirectionColumn) and not oneDimensional) {
 		H5Tinsert(sid, "P0x", HOFFSET(OutputRow, P0x), H5T_NATIVE_DOUBLE);
 		H5Tinsert(sid, "P0y", HOFFSET(OutputRow, P0y), H5T_NATIVE_DOUBLE);
 		H5Tinsert(sid, "P0z", HOFFSET(OutputRow, P0z), H5T_NATIVE_DOUBLE);
@@ -150,14 +141,14 @@ void HDF5Output::open(const std::string& filename) {
 		H5Tinsert(sid, "ID1", HOFFSET(OutputRow, ID1), H5T_NATIVE_INT32);
 	if (fields.test(CreatedEnergyColumn))
 		H5Tinsert(sid, "E1", HOFFSET(OutputRow, E1), H5T_NATIVE_DOUBLE);
-	if (fields.test(CreatedPositionColumn) && oneDimensional)
+	if (fields.test(CreatedPositionColumn) and oneDimensional)
 		H5Tinsert(sid, "X1", HOFFSET(OutputRow, X1), H5T_NATIVE_DOUBLE);
-	if (fields.test(CreatedPositionColumn) && not oneDimensional) {
+	if (fields.test(CreatedPositionColumn) and not oneDimensional) {
 		H5Tinsert(sid, "X1", HOFFSET(OutputRow, X1), H5T_NATIVE_DOUBLE);
 		H5Tinsert(sid, "Y1", HOFFSET(OutputRow, Y1), H5T_NATIVE_DOUBLE);
 		H5Tinsert(sid, "Z1", HOFFSET(OutputRow, Z1), H5T_NATIVE_DOUBLE);
 	}
-	if (fields.test(CreatedDirectionColumn) && not oneDimensional) {
+	if (fields.test(CreatedDirectionColumn) and not oneDimensional) {
 		H5Tinsert(sid, "P1x", HOFFSET(OutputRow, P1x), H5T_NATIVE_DOUBLE);
 		H5Tinsert(sid, "P1y", HOFFSET(OutputRow, P1y), H5T_NATIVE_DOUBLE);
 		H5Tinsert(sid, "P1z", HOFFSET(OutputRow, P1z), H5T_NATIVE_DOUBLE);
@@ -169,21 +160,18 @@ void HDF5Output::open(const std::string& filename) {
 		H5Tinsert(sid, "tag", HOFFSET(OutputRow, tag), H5T_C_S1);
 
 	size_t pos = 0;
-	for(std::vector<Output::Property>::const_iterator iter = properties.begin();
-			iter != properties.end(); ++iter)
-	{
+	for (std::vector<Output::Property>::const_iterator iter = properties.begin(); iter != properties.end(); ++iter) {
 			hid_t type = variantTypeToH5T_NATIVE((*iter).defaultValue.getType());
-			if (type == H5T_C_S1)
-			{ // set size of string field to size of default value!
+			if (type == H5T_C_S1) { // set size of string field to size of default value!
 				type = H5Tcopy(H5T_C_S1);
 				H5Tset_size(type, (*iter).defaultValue.toString().size());
 			}
 
 			H5Tinsert(sid, (*iter).name.c_str(), HOFFSET(OutputRow, propertyBuffer) + pos, type);
-		  pos += (*iter).defaultValue.getSize();
+			pos += (*iter).defaultValue.getSize();
 	}
-	if (pos >= propertyBufferSize)
-	{
+
+	if (pos >= propertyBufferSize) {
 		KISS_LOG_ERROR << "Using " << pos << " bytes for properties output. Maximum is " << propertyBufferSize << " bytes.";
 		throw std::runtime_error("Size of property buffer exceeded");
 	}
@@ -206,10 +194,9 @@ void HDF5Output::open(const std::string& filename) {
 	insertDoubleAttribute("LengthScale", this->lengthScale);
 	insertDoubleAttribute("EnergyScale", this->energyScale);
 
-	// add ranom seeds
-	std::vector< std::vector<uint32_t> > seeds = Random::getSeedThreads();
-	for (size_t i = 0; i < seeds.size(); i++)
-	{
+	// add random seeds
+	std::vector<std::vector<uint32_t>> seeds = Random::getSeedThreads();
+	for (size_t i = 0; i < seeds.size(); i++) {
 		hid_t   type, attr_space, version_attr;
 		herr_t  status;
 		hsize_t dims[] = {1, 0};
@@ -219,16 +206,14 @@ void HDF5Output::open(const std::string& filename) {
 
 		attr_space = H5Screate_simple(0, dims, NULL);
 		char nameBuffer[256];
-		sprintf(nameBuffer, "SEED_%03lu", i);
+		std::snprintf(nameBuffer, sizeof(nameBuffer), "SEED_%03lu", i);
 		KISS_LOG_DEBUG << "Creating HDF5 attribute: " << nameBuffer << " with dimensions " << dims[0] << "x" << dims[1] ;
 
 		version_attr = H5Acreate2(dset, nameBuffer, type, attr_space, H5P_DEFAULT, H5P_DEFAULT);
 		status = H5Awrite(version_attr, type, &seeds[i][0]);
 		status = H5Aclose(version_attr);
 		status = H5Sclose(attr_space);
-
 	}
-
 
 	H5Pclose(plist);
 
@@ -250,10 +235,10 @@ void HDF5Output::close() {
 void HDF5Output::process(Candidate* candidate) const {
 	#pragma omp critical(HDFOutput)
 	{
-	if (file == -1)
-		// This is ugly, but necesary as otherwise the user has to manually open the
-		// file before processing the first candidate
-		const_cast<HDF5Output*>(this)->open(filename);
+		if (file == -1)
+			// This is ugly, but necesary as otherwise the user has to manually open the
+			// file before processing the first candidate
+			const_cast<HDF5Output*>(this)->open(filename);
 	}
 
 	OutputRow r;
@@ -296,24 +281,18 @@ void HDF5Output::process(Candidate* candidate) const {
 	r.P1y = v.y;
 	r.P1z = v.z;
 
-	r.weight= candidate->getWeight();
-
+	r.weight = candidate->getWeight();
 	r.tag = candidate->getTagOrigin();
 
 	size_t pos = 0;
-	for(std::vector<Output::Property>::const_iterator iter = properties.begin();
-			iter != properties.end(); ++iter)
-	{
-		  Variant v;
-			if (candidate->hasProperty((*iter).name))
-			{
-				v = candidate->getProperty((*iter).name);
-			}
-			else
-			{
-				v = (*iter).defaultValue;
-			}
-			pos += v.copyToBuffer(&r.propertyBuffer[pos]);
+	for (std::vector<Output::Property>::const_iterator iter = properties.begin(); iter != properties.end(); ++iter) {
+		Variant v;
+		if (candidate->hasProperty((*iter).name)) {
+			v = candidate->getProperty((*iter).name);
+		} else {
+			v = (*iter).defaultValue;
+		}
+		pos += v.copyToBuffer(&r.propertyBuffer[pos]);
 	}
 
 	#pragma omp critical(HDFOutput)
@@ -324,18 +303,13 @@ void HDF5Output::process(Candidate* candidate) const {
 		buffer.push_back(r);
 
 
-		if (buffer.size() >= buffer.capacity())
-		{
+		if (buffer.size() >= buffer.capacity()) {
 			KISS_LOG_DEBUG << "HDF5Output: Flush due to buffer capacity exceeded";
 			flush();
-		}
-		else if (candidatesSinceFlush >= flushLimit)
-		{
+		} else if (candidatesSinceFlush >= flushLimit) {
 			KISS_LOG_DEBUG << "HDF5Output: Flush due to number of candidates";
 			flush();
-		}
-		else if (difftime(time(NULL), lastFlush) > 60*10)
-		{
+		} else if (difftime(time(NULL), lastFlush) > 60 * 10) {
 			KISS_LOG_DEBUG << "HDF5Output: Flush due to time exceeded";
 			flush();
 		}
@@ -382,8 +356,7 @@ std::string HDF5Output::getDescription() const  {
 	return "HDF5Output";
 }
 
-void HDF5Output::setFlushLimit(unsigned int N)
-{
+void HDF5Output::setFlushLimit(unsigned int N) {
 	flushLimit = N;
 }
 

@@ -3,16 +3,23 @@
 #ifndef CRPROPA_HDF5OUTPUT_H
 #define CRPROPA_HDF5OUTPUT_H
 
-
-#include "crpropa/module/Output.h"
-#include <stdint.h>
+#include <cstdio>
+#include <cstring>
 #include <ctime>
-
+#include <stdint.h>
+#include <hdf5.h>
 #include <H5Ipublic.h>
+
+#include "crpropa/Random.h"
+#include "crpropa/Version.h"
+#include "crpropa/module/HDF5Output.h"
+#include "crpropa/module/Output.h"
+#include "kiss/logger.h"
+
+
 
 namespace crpropa {
 
-const size_t propertyBufferSize = 1024;
 
 /**
  * \addtogroup Output
@@ -20,116 +27,122 @@ const size_t propertyBufferSize = 1024;
  */
 
 /**
- @class HDF5Output
- @brief Output to HDF5 Format.
-The base class gives an overview of possible columns
-
-HDF5 structure:
-```
-HDF5 "FILENAME.h5" {
-GROUP "/" {
-DATASET "OUTPUTTYPE" {
-  DATATYPE  H5T_COMPOUND {
-  ...
- }
- DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
- DATA {
-  ...
- }
-  ATTRIBUTE "Version" {
-  DATATYPE  H5T_STRING {
-      STRSIZE 100;
-      STRPAD H5T_STR_NULLTERM;
-      CSET H5T_CSET_ASCII;
-      CTYPE H5T_C_S1;
-      }
-  DATASPACE  SCALAR
-  DATA { (0): "VERSION" }
- }
-} } }
-```
-
+ * @class HDF5Output
+ *  @brief Output to HDF5 Format. The base class gives an overview of possible columns.
+ *
+ * HDF5 structure:
+ * ```
+ * HDF5 "FILENAME.h5" {
+ * GROUP "/" {
+ * DATASET "OUTPUTTYPE" {
+ * DATATYPE  H5T_COMPOUND {
+ * ...
+ * }
+ * DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
+ * DATA {
+ * ...
+ * }
+ * ATTRIBUTE "Version" {
+ * DATATYPE  H5T_STRING {
+ * 	STRSIZE 100;
+ * 	STRPAD H5T_STR_NULLTERM;
+ * 	CSET H5T_CSET_ASCII;
+ * 	CTYPE H5T_C_S1;
+ * 	}
+ * DATASPACE  SCALAR
+ * DATA { (0): "VERSION" }
+ * }
+ * } } }
+ * ```
+ *
  */
 class HDF5Output: public Output {
+	protected:
+		inline static const size_t propertyBufferSize = 1024;
+		inline static const hsize_t RANK = 1;
+		inline static const hsize_t BUFFER_SIZE = 1024 * 16;
 
-	typedef struct OutputRow {
-		double D;
-		double z;
-		uint64_t SN;
-		int32_t ID;
-		double E;
-		double X;
-		double Y;
-		double Z;
-		double Px;
-		double Py;
-		double Pz;
-		uint64_t SN0;
-		int32_t ID0;
-		double E0;
-		double X0;
-		double Y0;
-		double Z0;
-		double P0x;
-		double P0y;
-		double P0z;
-		uint64_t SN1;
-		int32_t ID1;
-		double E1;
-		double X1;
-		double Y1;
-		double Z1;
-		double P1x;
-		double P1y;
-		double P1z;
-		double weight;
-		std::string tag;
-		unsigned char propertyBuffer[propertyBufferSize];
-	} OutputRow;
 
-	std::string filename;
+		typedef struct OutputRow {
+			double D;
+			double z;
+			uint64_t SN;
+			int32_t ID;
+			double E;
+			double X;
+			double Y;
+			double Z;
+			double Px;
+			double Py;
+			double Pz;
+			uint64_t SN0;
+			int32_t ID0;
+			double E0;
+			double X0;
+			double Y0;
+			double Z0;
+			double P0x;
+			double P0y;
+			double P0z;
+			uint64_t SN1;
+			int32_t ID1;
+			double E1;
+			double X1;
+			double Y1;
+			double Z1;
+			double P1x;
+			double P1y;
+			double P1z;
+			double weight;
+			std::string tag;
+			unsigned char propertyBuffer[propertyBufferSize];
+		} OutputRow;
 
-	hid_t file, sid;
-	hid_t dset, dataspace;
-	mutable std::vector<OutputRow> buffer;
+		std::string filename;
+		hid_t file, sid;
+		hid_t dset, dataspace;
+		mutable std::vector<OutputRow> buffer;
+		time_t lastFlush;
+		unsigned int flushLimit;
+		unsigned int candidatesSinceFlush;
 
-	time_t lastFlush;
-	unsigned int flushLimit;
-	unsigned int candidatesSinceFlush;
-public:
-	/** Default constructor.
-	  	Does not run from scratch.
-	    At least open() has to be called in addition.
-		Units of energy and length are, by default, EeV and Mpc.
-	 	This can be changed with setEnergyScale and setLengthScale.
-	 */
-	HDF5Output();
-	/** Constructor with the default OutputType (everything).
-	 	@param filename	string containing name of output hdf5 file
-	 */
-	HDF5Output(const std::string &filename);
-	/** Constructor
-	 	@param outputtype	type of output: Trajectory1D, Trajectory3D, Event1D, Event3D, Everything
-	 	@param filename	string containing name of output hdf5 file
-	 */
-	HDF5Output(const std::string &filename, OutputType outputtype);
-	~HDF5Output();
+	public:
+		/** Default constructor.
+		 * 	Does not run from scratch.  At least open() has to be called in addition.
+		 *	Units of energy and length are, by default, EeV and Mpc.
+		 *	This can be changed with setEnergyScale and setLengthScale.
+		 */
+		HDF5Output();
 
-	void process(Candidate *candidate) const;
-	herr_t insertStringAttribute(const std::string &key, const std::string &value);
-	herr_t insertDoubleAttribute(const std::string &key, const double &value);
-	std::string getDescription() const;
+		/** Constructor with the default OutputType (everything).
+		 *	@param filename	string containing name of output hdf5 file
+		 */
+		HDF5Output(const std::string& filename);
 
-	/// Force flush after N events. In long running applications with scarse
-	/// output this can be set to 1 or 0 to avoid data corruption. In applications
-	/// with frequent output this should be set to a high number (default)
-	void setFlushLimit(unsigned int N);
+		/** Constructor
+		 *	@param outputtype	type of output: Trajectory1D, Trajectory3D, Event1D, Event3D, Everything
+		 *	@param filename	string containing name of output hdf5 file
+		 */
+		HDF5Output(const std::string& filename, OutputType outputtype);
 
-	/** Create and prepare a file as HDF5-file.
-	 */
-	void open(const std::string &filename);
-	void close();
-	void flush() const;
+		~HDF5Output();
+
+		void process(Candidate* candidate) const;
+		herr_t insertStringAttribute(const std::string& key, const std::string& value);
+		herr_t insertDoubleAttribute(const std::string& key, const double& value);
+		std::string getDescription() const;
+
+		/** Force flush after N events.
+		 * In long running applications with scarce output this can be set to 1 or 0 to avoid data corruption.
+		 * In applications with frequent output this should be set to a high number (default)
+		 */
+		void setFlushLimit(unsigned int N);
+
+		/** Create and prepare a file as HDF5-file.
+		 */
+		void open(const std::string& filename);
+		void close();
+		void flush() const;
 
 };
 /** @}*/
