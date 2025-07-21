@@ -4,8 +4,8 @@
 #include <cstddef>
 
 #ifdef DEBUG
-#include <iostream>
-#include <typeinfo>
+	#include <iostream>
+	#include <typeinfo>
 #endif
 
 namespace crpropa {
