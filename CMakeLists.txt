@@ -410,7 +410,7 @@ add_library(crpropa SHARED
   src/massDistribution/ConstantDensity.cpp
   src/massDistribution/Cordes.cpp
   src/massDistribution/Ferriere.cpp
-  src/massDistribution/Massdistribution.cpp
+  src/massDistribution/MassDistribution.cpp
   src/massDistribution/Nakanishi.cpp
 
   ${CRPROPA_EXTRA_SOURCES}
