@@ -1,6 +1,9 @@
 #ifndef CRPROPA_MEDIUMCOMPOSION_H
 #define CRPROPA_MEDIUMCOMPOSION_H
 
+#include <cstring>
+#include <sstream>
+
 #include "crpropa/ParticleID.h"
 #include "crpropa/Referenced.h"
 #include "crpropa/Units.h"
@@ -20,6 +23,9 @@ class MediumComposition: public Referenced {
 			return ! isNeutral();
 		}
 		virtual unsigned int getNumberOfNucleons() const = 0;
+		virtual std::string getDescription() const {
+			return "MediumComposition (abstract base class)";
+		};
 }; 
 
 
@@ -69,6 +75,12 @@ class MediumCompositionElementary : public MediumComposition {
 			}
 		
 			return 0; // no nucleons
+		}
+
+		std::string getDescription() const {
+			std::stringstream ss;
+			ss << "MediumCompositionElementary with particle ID: " << particleId << std::endl;
+			return ss.str();
 		}
 };
 
@@ -130,6 +142,12 @@ class MediumCompositionAtomic : public MediumComposition {
 		
 			return 0; // no nucleons
 		}
+
+		std::string getDescription() const {
+			std::stringstream ss;
+			ss << "MediumCompositionAtomic with nucleus ID: " << nucleusId << " and number of electrons: " << nElectrons << std::endl;
+			return ss.str();
+		}
 };
 
 /**
@@ -176,6 +194,15 @@ class MediumCompositionMolecular : public MediumComposition {
 			return true;
 		}
 
+		std::string getDescription() const {
+			std::stringstream ss;
+			ss << "MediumCompositionMolecular with nuclei IDs: ";
+			for (const auto& id : nucleiIds) {
+				ss << id << " ";
+			}
+			ss << "and number of electrons: " << nElectrons << std::endl;
+			return ss.str();
+		}
 };
 
 
