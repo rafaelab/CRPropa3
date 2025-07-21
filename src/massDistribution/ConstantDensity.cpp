@@ -1,137 +1,163 @@
 #include "crpropa/massDistribution/ConstantDensity.h"
 
-#include "kiss/logger.h"
 
-#include <sstream>
 
-namespace crpropa{
+namespace crpropa {
 
-ConstantDensity::ConstantDensity(double HI, double HII, double H2) {
+ConstantDensity::ConstantDensity(double HI, double HII, double H2, double He) {
 	// set all types active which are not equal 0 and change number density
-	if(HI!=0)
+	if (HI != 0)
 		setHI(true, HI);
-	if(HII!=0)
+	if (HII != 0)
 		setHII(true, HII);
-	if(H2!=0)
+	if (H2 != 0)
 		setH2(true, H2);
+	if (He != 0)
+		setHe(true, He);
 }
 
-double ConstantDensity::getDensity(const Vector3d &position) const {
+double ConstantDensity::getDensity(const Vector3d& position) const {
 	double n = 0;
 
-	if(isHI)
-		n += HIdensitynumber;
-	if(isHII)
-		n += HIIdensitynumber;
-	if(isH2)
-		n += H2densitynumber;
+	if (isHI)
+		n += densityHI;
+	if (isHII)
+		n += densityHII;
+	if (isH2)
+		n += densityH2;
+	if (isHe)
+		n += densityHe;
 
 	// check if all densities are deactivated and raise warning if so
-	if((isHI || isHII || isH2) == false){
-		KISS_LOG_WARNING
-			<< "\nCalled getNucleonDensity on fully deactivated ConstantDensity "
-			<< "gas density model. In this case the density is allways set to 0. \n";
+	if ((isHI or isHII or isH2 or isHe) == false) {
+		KISS_LOG_WARNING << "Called getNucleonDensity on fully deactivated ConstantDensity gas density model. In this case the density is always set to 0." << std::endl;
 	}
 
 	return n;
 }
 
-double ConstantDensity::getNucleonDensity(const Vector3d &position) const {
+double ConstantDensity::getNucleonDensity(const Vector3d& position) const {
 	double n = 0;
 
-	if(isHI)
-		n += HIdensitynumber;
-	if(isHII)
-		n += HIIdensitynumber;
-	if(isH2)
-		n += 2*H2densitynumber;
+	if (isHI)
+		n += densityHI;
+	if (isHII)
+		n += densityHII;
+	if (isH2)
+		n += 2 * densityH2;
+	if (isHe)
+		n += 4 * densityHe; // Helium has 4 nucleons
 
 	// check if all densities are deactivated and raise warning if so
-	if((isHI || isHII || isH2) == false){
-		KISS_LOG_WARNING
-			<< "\nCalled getNucleonDensity on fully deactivated ConstantDensity "
-			<< "gas density model. In this case the density is allways set to 0. \n";
+	if ((isHI or isHII or isH2 or isHe) == false) {
+		KISS_LOG_WARNING << "Called getNucleonDensity on fully deactivated ConstantDensity gas density model. In this case the density is always set to 0." << std::endl;
 	}
+
 	return n;
 }
 
-double ConstantDensity::getHIDensity(const Vector3d &position) const {
-	return HIdensitynumber;
+double ConstantDensity::getHIDensity(const Vector3d& position) const {
+	return densityHI;
 }
 
-double ConstantDensity::getHIIDensity(const Vector3d &position) const{
-	return HIIdensitynumber;
+double ConstantDensity::getHIIDensity(const Vector3d& position) const{
+	return densityHII;
 }
 
-double ConstantDensity::getH2Density(const Vector3d &position) const{
-	return H2densitynumber;
+double ConstantDensity::getH2Density(const Vector3d& position) const{
+	return densityH2;
 }
 
-bool ConstantDensity::getIsForHI() {
+bool ConstantDensity::isActiveHI() {
 	return isHI;
 }
 
-bool ConstantDensity::getIsForHII() {
+bool ConstantDensity::isActiveHII() {
 	return isHII;
 }
 
-bool ConstantDensity::getIsForH2() {
+bool ConstantDensity::isActiveH2() {
 	return isH2;
 }
 
-void ConstantDensity::setHI(bool activate, double densitynumber) {
+void ConstantDensity::setHI(bool activate, double density) {
 	isHI = activate;
-	HIdensitynumber = densitynumber;
+	densityHI = density;
 }
 
 void ConstantDensity::setHI(bool activate) {
-	setHI(activate, HIdensitynumber);
+	setHI(activate, densityHI);
 }
 
-void ConstantDensity::setHI(double densitynumber) {
-	setHI(isHI, densitynumber);
+void ConstantDensity::setHI(double density) {
+	setHI(isHI, density);
 }
 
-void ConstantDensity::setHII(bool activate, double densitynumber) {
+void ConstantDensity::setHII(bool activate, double density) {
 	isHII = activate;
-	HIIdensitynumber = densitynumber;
+	densityHII = density;
 }
 
 void ConstantDensity::setHII(bool activate) {
-	setHII(activate, HIIdensitynumber);
+	setHII(activate, densityHII);
 }
 
-void ConstantDensity::setHII(double densitynumber) {
-	setHII(isHII, densitynumber);
+void ConstantDensity::setHII(double density) {
+	setHII(isHII, density);
 }
 
-void ConstantDensity::setH2(bool activate, double densitynumber) {
+void ConstantDensity::setH2(bool activate, double density) {
 	isH2 = activate;
-	H2densitynumber = densitynumber;
+	densityH2 = density;
 }
 
 void ConstantDensity::setH2(bool activate) {
-	setH2(activate, H2densitynumber);
+	setH2(activate, densityH2);
 }
 
-void ConstantDensity::setH2(double densitynumber) {
-	setH2(isH2, densitynumber);
+void ConstantDensity::setH2(double density) {
+	setH2(isH2, density);
+}
+
+void ConstantDensity::setHe(bool activate, double density) {
+	isHe = activate;
+	densityHe = density;
+}
+
+void ConstantDensity::setHe(bool activate) {
+	setHe(activate, densityHe);
+}
+
+void ConstantDensity::setHe(double density) {
+	setHe(isHe, density);
 }
 
 std::string ConstantDensity::getDescription() {
 	std::stringstream s;
-	s << "ConstantDensity:\n";
-	s<< "HI component is ";
-	if(!isHI)
-		s<< "not ";
-	s<< "active and has a density of " << HIdensitynumber/ccm << " cm^-3" << "\nHII component is ";
-	if(!isHII)
-		s<< "not ";
-	s<<"active and has a density of " << HIIdensitynumber/ccm<<" cm^-3" <<  "\nH2 component is ";
-	if(!isH2)
-		s<<"not ";
-	s<<"active and has a density of " << H2densitynumber/ccm << " cm^-3";
+	s << "ConstantDensity:" << std::endl;
+
+	s << "HI component is ";
+	if (! isHI)
+		s << "not ";
+	s << "active and has a density of " << densityHI << " m^-3" << std::endl; 
+
+	s << "HII component is ";
+	if (! isHII)
+		s << "not ";
+	s << "active and has a density of " << densityHII << " m^-3" << std::endl;
+
+	s << "H2 component is ";
+	if (! isH2)
+		s << "not ";
+	s << "active and has a density of " << densityH2 << " m^-3" << std::endl;
+
+	s << "He component is ";
+	if (! isHe)
+		s << "not ";
+	s << "active and has a density of " << densityHe << " m^-3" << std::endl;
+
 	return s.str();
 }
+
 
 }  // namespace crpropa
