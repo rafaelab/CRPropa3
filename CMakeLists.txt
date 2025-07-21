@@ -153,7 +153,7 @@ list(APPEND CRPROPA_EXTRA_INCLUDES libs/HepPID/include)
 
 # SOPHIA (provided)
 add_subdirectory(libs/sophia)
-list(APPEND CRPROPA_EXTRA_LIBRARIES sophia gfortran)
+list(APPEND CRPROPA_EXTRA_LIBRARIES sophia)
 list(APPEND CRPROPA_EXTRA_INCLUDES libs/sophia)
 
 # Galactic magnetic lenses
@@ -430,7 +430,7 @@ if(BUILD_DOC)
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/doc/DoxygenLayout.xml ${CMAKE_CURRENT_BINARY_DIR}/DoxygenLayout.xml COPYONLY)
     add_custom_target(doxy ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} COMMENT "Generating API documentation with Doxygen" VERBATIM)
 
-    set_source_files_properties(${CMAKE_BINARY_DIR}/docstrings_from_doxy.i PROPERTIES GENERATED true )
+    set_source_files_properties(${CMAKE_BINARY_DIR}/docstrings_from_doxy.i PROPERTIES GENERATED true)
     add_custom_target(docstrings_from_doxy
       COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/libs/doxy2swig/doxy2swig.py ${CMAKE_CURRENT_BINARY_DIR}/xml/index.xml -o ${CMAKE_CURRENT_BINARY_DIR}/docstrings_from_doxy.i
       DEPENDS doxy
@@ -586,68 +586,68 @@ endif(BUILD_DOC AND DOXYGEN_FOUND AND SPHINX_EXECUTABLE)
 if(ENABLE_TESTING)
   enable_testing()
   add_executable(testCore test/testCore.cpp)
-  target_link_libraries(testCore  crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
+  target_link_libraries(testCore  crpropa gtest_main pthread ${COVERAGE_LIBS})
   add_test(testCore testCore)
 
   add_executable(testVector3 test/testVector3.cpp)
-  target_link_libraries(testVector3 crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
+  target_link_libraries(testVector3 crpropa gtest_main pthread ${COVERAGE_LIBS})
   add_test(testVector3 testVector3)
 
   add_executable(testModuleList test/testModuleList.cpp)
-  target_link_libraries(testModuleList crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
+  target_link_libraries(testModuleList crpropa gtest_main pthread ${COVERAGE_LIBS})
   add_test(testModuleList testModuleList)
 
   add_executable(testMagneticField test/testMagneticField.cpp)
-  target_link_libraries(testMagneticField crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
+  target_link_libraries(testMagneticField crpropa gtest_main pthread ${COVERAGE_LIBS})
   add_test(testMagneticField testMagneticField)
 
   add_executable(testTurbulentField test/testTurbulentField.cpp)
-  target_link_libraries(testTurbulentField crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
+  target_link_libraries(testTurbulentField crpropa gtest_main pthread ${COVERAGE_LIBS})
   add_test(testTurbulentField testTurbulentField)
 
   add_executable(testAdvectionField test/testAdvectionField.cpp)
-  target_link_libraries(testAdvectionField crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
+  target_link_libraries(testAdvectionField crpropa gtest_main pthread ${COVERAGE_LIBS})
   add_test(testAdvectionField testAdvectionField)
 
   add_executable(testDensity test/testDensity.cpp)
-  target_link_libraries(testDensity crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
+  target_link_libraries(testDensity crpropa gtest_main pthread ${COVERAGE_LIBS})
   add_test(testDensity testDensity)
 
   add_executable(testPropagation test/testPropagation.cpp)
-  target_link_libraries(testPropagation crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
+  target_link_libraries(testPropagation crpropa gtest_main pthread ${COVERAGE_LIBS})
   add_test(testPropagation testPropagation)
 
   add_executable(testBreakCondition test/testBreakCondition.cpp)
-  target_link_libraries(testBreakCondition crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
+  target_link_libraries(testBreakCondition crpropa gtest_main pthread ${COVERAGE_LIBS})
   add_test(testBreakCondition testBreakCondition)
 
   add_executable(testInteraction test/testInteraction.cpp)
-  target_link_libraries(testInteraction crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
+  target_link_libraries(testInteraction crpropa gtest_main pthread ${COVERAGE_LIBS})
   add_test(testInteraction testInteraction)
 
   add_executable(testSource test/testSource.cpp)
-  target_link_libraries(testSource crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
+  target_link_libraries(testSource crpropa gtest_main pthread ${COVERAGE_LIBS})
   add_test(testSource testSource)
 
   add_executable(testOutput test/testOutput.cpp)
-  target_link_libraries(testOutput crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
+  target_link_libraries(testOutput crpropa gtest_main pthread ${COVERAGE_LIBS})
   add_test(testOutput testOutput)
 
   add_executable(testFunctionalGroups test/testFunctionalGroups.cpp)
-  target_link_libraries(testFunctionalGroups crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
+  target_link_libraries(testFunctionalGroups crpropa gtest_main pthread ${COVERAGE_LIBS})
   add_test(testFunctionalGroups testFunctionalGroups)
 
   add_executable(testAdiabaticCooling test/testAdiabaticCooling.cpp)
-  target_link_libraries(testAdiabaticCooling crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
+  target_link_libraries(testAdiabaticCooling crpropa gtest_main pthread ${COVERAGE_LIBS})
   add_test(testAdiabaticCooling testAdiabaticCooling)
 
   add_executable(testCandidateSplitting test/testCandidateSplitting.cpp)
-  target_link_libraries(testCandidateSplitting crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
+  target_link_libraries(testCandidateSplitting crpropa gtest_main pthread ${COVERAGE_LIBS})
   add_test(testCandidateSplitting testCandidateSplitting)
 
   if(WITH_GALACTIC_LENSES)
     add_executable(testGalacticMagneticLens test/testMagneticLens.cpp)
-    target_link_libraries(testGalacticMagneticLens crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
+    target_link_libraries(testGalacticMagneticLens crpropa gtest_main pthread ${COVERAGE_LIBS})
     add_test(testGalacticMagneticLens testGalacticMagneticLens)
   endif(WITH_GALACTIC_LENSES)
 
