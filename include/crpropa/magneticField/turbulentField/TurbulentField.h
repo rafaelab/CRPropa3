@@ -108,9 +108,8 @@ class TurbulenceSpectrum : public Referenced {
 		}
 
 		/** Computes the magnetic field coherence length.
-		 * Obtained from the definition of \f$l_c = 1/B_{\rm rms}^2 \int_0^\infty dr\langleB(0)B^*(r)\rangle \f$
-		 * Approximates the true value correctly as long as lBendover <= lMax/8 (~5%
-		 * error) (for the true value the above integral should go from lMin to lMax)
+		 * Obtained from the definition of \f$ l_c = 1/B_{\rm rms}^2 \int_0^\infty dr\langleB(0)B^*(r)\rangle \f$
+		 * Approximates the true value correctly as long as lBendover <= lMax/8 (~5% error) (for the true value the above integral should go from lMin to lMax).
 		 */
 		virtual double getCorrelationLength() const {
 			return 4 * M_PI / ((sIndex + 2.0) * sIndex) * spectrumNormalization() * lBendover;
