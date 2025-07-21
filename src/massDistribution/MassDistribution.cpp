@@ -1,52 +1,52 @@
-#include "crpropa/massDistribution/Massdistribution.h"
+#include "crpropa/massDistribution/MassDistribution.h"
 
 
 namespace crpropa {
 
 void DensityList::addDensity(ref_ptr<Density> dens) {
-	DensityList.push_back(dens);
+	densityList.push_back(dens);
 }
 
-double DensityList::getDensity(const vector3d& position) const {
+double DensityList::getDensity(const Vector3d& position) const {
 	double n = 0.;
-	for (int i = 0; i < DensityList.size(); i++)
-		n += DensityList[i]->getDensity(position);
+	for (int i = 0; i < densityList.size(); i++)
+		n += densityList[i]->getDensity(position);
 	return n;
 }
 
-double DensityList::getHIDensity(const vector3d& position) const {
+double DensityList::getHIDensity(const Vector3d& position) const {
 	double n = 0.;
-	for (int i = 0; i < DensityList.size(); i++)
-		n += DensityList[i]->getHIDensity(position);
+	for (int i = 0; i < densityList.size(); i++)
+		n += densityList[i]->getHIDensity(position);
 	return n;
 }
 
-double DensityList::getHIIDensity(const vector3d& position) const {
+double DensityList::getHIIDensity(const Vector3d& position) const {
 	double n = 0.;
-	for (int i = 0; i < DensityList.size(); i++)
-		n += DensityList[i]->getHIIDensity(position);
+	for (int i = 0; i < densityList.size(); i++)
+		n += densityList[i]->getHIIDensity(position);
 	return n;
 }
 
-double DensityList::getH2Density(const vector3d& position) const {
+double DensityList::getH2Density(const Vector3d& position) const {
 	double n = 0.;
-	for (int i = 0; i < DensityList.size(); i++)
-		n += DensityList[i]->getH2Density(position);
+	for (int i = 0; i < densityList.size(); i++)
+		n += densityList[i]->getH2Density(position);
 	return n;
 }
 
-double DensityList::getNucleonDensity(const vector3d& position) const {
+double DensityList::getNucleonDensity(const Vector3d& position) const {
 	double n = 0.;
-	for (int i = 0; i < DensityList.size(); i++)
-		n += DensityList[i]->getNucleonDensity(position);
+	for (int i = 0; i < densityList.size(); i++)
+		n += densityList[i]->getNucleonDensity(position);
 	return n;
 }
 
 std::string DensityList::getDescription() {
 	std::stringstream ss; 
-	ss << "DensityList with " << DensityList.size() << " modules: \n";
-	for (int i = 0; i < DensityList.size(); i++) {
-		ss << "density " << i + 1 << ": " << DensityList[i] -> getDescription();
+	ss << "DensityList with " << densityList.size() << " modules: \n";
+	for (int i = 0; i < densityList.size(); i++) {
+		ss << "density " << i + 1 << ": " << densityList[i] -> getDescription();
 	}
 	
 	return ss.str();
@@ -66,28 +66,28 @@ void DensityGrid::checkAndWarn() {
 	}
 }
 
-double DensityGrid::getHIDensity(const vector3d& position) const {
+double DensityGrid::getHIDensity(const Vector3d& position) const {
 	if (isForHI)
 		return grid->interpolate(position);
 	else 
 		return 0.;
 }
 
-double DensityGrid::getHIIDensity(const vector3d& position) const {
+double DensityGrid::getHIIDensity(const Vector3d& position) const {
 	if (isForHII) 
 		return grid->interpolate(position);
 	else
 		return 0.;
 }
 
-double DensityGrid::getH2Density(const vector3d& position) const {
+double DensityGrid::getH2Density(const Vector3d& position) const {
 	if (isForH2)
 		return grid->interpolate(position);
 	else
 		return 0.;
 }
 
-double DensityGrid::getDensity(const vector3d& position) const {
+double DensityGrid::getDensity(const Vector3d& position) const {
 	double n = 0;
 	n += getHIDensity(position);
 	n += getHIIDensity(position);
@@ -96,7 +96,7 @@ double DensityGrid::getDensity(const vector3d& position) const {
 	return n;
 }
 
-double DensityGrid::getNucleonDensity(const vector3d& position) const {
+double DensityGrid::getNucleonDensity(const Vector3d& position) const {
 	double n = 0;
 	n += getHIDensity(position);
 	n += getHIIDensity(position);
