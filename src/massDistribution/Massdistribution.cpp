@@ -1,40 +1,41 @@
 #include "crpropa/massDistribution/Massdistribution.h"
-#include <sstream>
+
+
 namespace crpropa {
 
 void DensityList::addDensity(ref_ptr<Density> dens) {
 	DensityList.push_back(dens);
 }
 
-double DensityList::getDensity(const Vector3d &position) const {
+double DensityList::getDensity(const vector3d& position) const {
 	double n = 0.;
 	for (int i = 0; i < DensityList.size(); i++)
 		n += DensityList[i]->getDensity(position);
 	return n;
 }
 
-double DensityList::getHIDensity(const Vector3d &position) const {
+double DensityList::getHIDensity(const vector3d& position) const {
 	double n = 0.;
 	for (int i = 0; i < DensityList.size(); i++)
 		n += DensityList[i]->getHIDensity(position);
 	return n;
 }
 
-double DensityList::getHIIDensity(const Vector3d &position) const {
+double DensityList::getHIIDensity(const vector3d& position) const {
 	double n = 0.;
 	for (int i = 0; i < DensityList.size(); i++)
 		n += DensityList[i]->getHIIDensity(position);
 	return n;
 }
 
-double DensityList::getH2Density(const Vector3d &position) const {
+double DensityList::getH2Density(const vector3d& position) const {
 	double n = 0.;
 	for (int i = 0; i < DensityList.size(); i++)
 		n += DensityList[i]->getH2Density(position);
 	return n;
 }
 
-double DensityList::getNucleonDensity(const Vector3d &position) const {
+double DensityList::getNucleonDensity(const vector3d& position) const {
 	double n = 0.;
 	for (int i = 0; i < DensityList.size(); i++)
 		n += DensityList[i]->getNucleonDensity(position);
@@ -61,34 +62,32 @@ DensityGrid::DensityGrid(ref_ptr<Grid1f> grid, bool isForHI, bool isForHII, bool
 void DensityGrid::checkAndWarn() {
 	bool allDeactivated = (isForHI == false) && (isForHII == false) && (isForH2 == false);
 	if (allDeactivated) {
-		KISS_LOG_WARNING << "DensityGrid has all types deactivated."
-			<< "In this case all output will be n = 0. \n"
-		 	<< "Please activate the intended particle type. \n";
+		KISS_LOG_WARNING << "DensityGrid has all types deactivated. In this case all output will be n = 0. \n Please activate the intended particle type." << std::endl;
 	}
 }
 
-double DensityGrid::getHIDensity(const Vector3d &position) const {
+double DensityGrid::getHIDensity(const vector3d& position) const {
 	if (isForHI)
-		return grid -> interpolate(position);
+		return grid->interpolate(position);
 	else 
 		return 0.;
 }
 
-double DensityGrid::getHIIDensity(const Vector3d &position) const {
+double DensityGrid::getHIIDensity(const vector3d& position) const {
 	if (isForHII) 
-		return grid -> interpolate(position);
+		return grid->interpolate(position);
 	else
 		return 0.;
 }
 
-double DensityGrid::getH2Density(const Vector3d &position) const {
+double DensityGrid::getH2Density(const vector3d& position) const {
 	if (isForH2)
-		return grid -> interpolate(position);
+		return grid->interpolate(position);
 	else
 		return 0.;
 }
 
-double DensityGrid::getDensity(const Vector3d &position) const {
+double DensityGrid::getDensity(const vector3d& position) const {
 	double n = 0;
 	n += getHIDensity(position);
 	n += getHIIDensity(position);
@@ -97,7 +96,7 @@ double DensityGrid::getDensity(const Vector3d &position) const {
 	return n;
 }
 
-double DensityGrid::getNucleonDensity(const Vector3d &position) const {
+double DensityGrid::getNucleonDensity(const vector3d& position) const {
 	double n = 0;
 	n += getHIDensity(position);
 	n += getHIIDensity(position);
