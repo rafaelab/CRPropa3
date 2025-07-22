@@ -2,6 +2,7 @@
 #define CRPROPA_MEDIUMCOMPOSION_H
 
 #include <cstring>
+#include <numeric>
 #include <sstream>
 
 #include "crpropa/ParticleID.h"
@@ -16,16 +17,19 @@ namespace crpropa {
 class MediumComposition: public Referenced {
 	public:
 		virtual ~MediumComposition() = default;
+		virtual bool isAdmixed() const = 0;
 		virtual bool isMolecular() const = 0;
 		virtual bool isIonized() const = 0;
 		virtual bool isNeutral() const = 0;
 		bool isCharged() const {
 			return ! isNeutral();
 		}
-		virtual unsigned int getNumberOfNucleons() const = 0;
 		virtual double getCompositionWeight() const = 0;
 		virtual std::string getDescription() const {
 			return "MediumComposition (abstract base class)";
+		};
+		virtual unsigned int numberOfComponents() const {
+			return 1; 
 		};
 }; 
 
@@ -55,15 +59,19 @@ class MediumCompositionElementary : public MediumComposition {
 			return particleId;
 		}
 
-		bool isIonized() const {
+		bool isAdmixed() const override {
 			return false;
 		}
 
-		bool isNeutral() const { 
+		bool isIonized() const override {
+			return false;
+		}
+
+		bool isNeutral() const override {
 			return HepPID::charge(particleId) == 0;
 		}
 
-		bool isMolecular() const {
+		bool isMolecular() const override {
 			return false;
 		}
 
@@ -78,11 +86,11 @@ class MediumCompositionElementary : public MediumComposition {
 			return 0; // no nucleons
 		}
 
-		double getCompositionWeight() const {
+		double getCompositionWeight() const override {
 			return 0;
 		}
 
-		std::string getDescription() const {
+		std::string getDescription() const override {
 			std::stringstream ss;
 			ss << "MediumCompositionElementary with particle ID: " << particleId << std::endl;
 			return ss.str();
@@ -125,15 +133,19 @@ class MediumCompositionAtomic : public MediumComposition {
 			return nElectrons;
 		}
 
-		bool isIonized() const {
+		bool isAdmixed() const override {
+			return false;
+		}
+
+		bool isIonized() const override {
 			return nElectrons != chargeNumber(nucleusId);
 		}
 
-		bool isNeutral() const {
+		bool isNeutral() const override {
 			return chargeNumber(nucleusId) == nElectrons;
 		}
 
-		bool isMolecular() const {
+		bool isMolecular() const override {
 			return false;
 		}
 
@@ -148,11 +160,11 @@ class MediumCompositionAtomic : public MediumComposition {
 			return 0; // no nucleons
 		}
 
-		double getCompositionWeight() const {
+		double getCompositionWeight() const override {
 			return 1.0 * getNumberOfNucleons();
 		}
 
-		std::string getDescription() const {
+		std::string getDescription() const override {
 			std::stringstream ss;
 			ss << "MediumCompositionAtomic with nucleus ID: " << nucleusId << " and number of electrons: " << nElectrons << std::endl;
 			return ss.str();
@@ -161,7 +173,7 @@ class MediumCompositionAtomic : public MediumComposition {
 
 /**
  * @class MediumCompositionMolecular
- * @brief Represents a molecule consisting of multiple possibly ionized nuclei.
+ * @brief Represents a molecule consisting of multiple possibly ionised nuclei.
  * The ionisation state indicates the number of extra/missing electrons compared to the neutral state.
  */
 class MediumCompositionMolecular : public MediumComposition {
@@ -206,15 +218,19 @@ class MediumCompositionMolecular : public MediumComposition {
 			return nucleiIds;
 		}
 
-		bool isIonized() const {
+		bool isAdmixed() const override{
+			return false;
+		}
+
+		bool isIonized() const override {
 			return nElectrons != 0;
 		}
 
-		bool isNeutral() const {
+		bool isNeutral() const override {
 			return nElectrons == 0;
 		}
 
-		bool isMolecular() const {
+		bool isMolecular() const override {
 			return true;
 		}
 
@@ -225,11 +241,11 @@ class MediumCompositionMolecular : public MediumComposition {
 			return nNucleons;
 		}
 
-		double getCompositionWeight() const {
+		double getCompositionWeight() const override {
 			return 1.0 * getNumberOfNucleons();
 		}
 
-		std::string getDescription() const {
+		std::string getDescription() const override {
 			std::stringstream ss;
 			ss << "MediumCompositionMolecular with nuclei IDs: ";
 			for (const auto& id : nucleiIds) {
@@ -241,6 +257,85 @@ class MediumCompositionMolecular : public MediumComposition {
 };
 
 
+/**
+ * @class MediumCompositionList
+ * @brief Represents a list of medium compositions, allowing for complex admixtures.
+ * This class can be used to represent a mixture of different medium compositions.
+ * The weights indicate the relative abundance of each composition in the mixture (not weighted by the number of nucleons).
+ */
+class MediumCompositionList : public MediumComposition {
+	protected:
+		std::vector<ref_ptr<MediumComposition>> compositions;
+		std::vector<double> weights;
+
+	public:
+		MediumCompositionList() {
+		}
+
+		MediumCompositionList(const std::vector<ref_ptr<MediumComposition>>& comps, const std::vector<double>& weights) {
+			if (comps.size() != weights.size()) {
+				KISS_LOG_WARNING << "MediumCompositionList: Compositions and weights must have the same size." << std::endl;
+				throw std::invalid_argument("MediumCompositionList: Compositions and weights must have the same size.");
+			}
+			
+			for (size_t i = 0; i < comps.size(); ++i)
+				add(comps[i], weights[i]);
+		}
+
+		void add(ref_ptr<MediumComposition> composition, double weight = 1.0) {
+			compositions.push_back(composition);
+			weights.push_back(weight);
+		}
+
+		const std::vector<ref_ptr<MediumComposition>>& getCompositions() const {
+			return compositions;
+		}
+
+		const std::vector<double>& getWeights() const {
+			return weights;
+		}
+
+		bool isAdmixed() const override {
+			return compositions.size() > 1;
+		}
+
+		bool isMolecular() const override {
+			return false; 
+		}
+
+		bool isIonized() const override {
+			return false;
+		}
+
+		bool isNeutral() const override {
+			return false;
+		}
+
+		unsigned int numberOfComponents() const override {
+			return compositions.size();
+		}
+
+		double getCompositionWeight() const override {
+			double weight = 0.0;
+			double sumWeights = accumulate(weights.begin(), weights.end(), 0.);
+			for (size_t i = 0; i < numberOfComponents(); ++i) {
+				weight += (weights[i] * compositions[i]->getCompositionWeight() / sumWeights);
+			}
+
+			return weight;
+		}
+
+		std::string getDescription() const override {
+			std::stringstream ss;
+			ss << "MediumCompositionList with " << compositions.size() << " components." << std::endl;
+			for (const auto& comp : compositions)
+				ss << comp->getDescription();
+
+			return ss.str();
+		}
+};
+
+
 }  // namespace crpropa
 
-#endif  // CRPROPA_MediumComposition_H
+#endif  // CRPROPA_MEDIUMCOMPOSITION_H
