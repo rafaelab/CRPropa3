@@ -21,15 +21,12 @@ namespace crpropa {
 */
 class ConstantDensity: public Density {
 	protected:
-		ref_ptr<MediumComposition> target;
 		double densityValue;
 
 	public:
 		ConstantDensity(double value, ref_ptr<MediumComposition> target);
 		void setDensityValue(double density);
-		void setTargetMedium(ref_ptr<MediumComposition> target);
 		double getDensityValue() const;
-		ref_ptr<MediumComposition> getTargetMedium() const;
 		double getDensity(const Vector3d& position, const double& z = 0) const;
 		std::string getDescription() const;
 };

@@ -5,7 +5,7 @@
 namespace crpropa {
 
 ConstantDensity::ConstantDensity(double density, ref_ptr<MediumComposition> target) {
-	setTargetMedium(target);
+	Density::setTargetMedium(target);
 	setDensityValue(density);
 }
 
@@ -13,16 +13,8 @@ void ConstantDensity::setDensityValue(double density) {
 	densityValue = density;
 }
 
-void ConstantDensity::setTargetMedium(ref_ptr<MediumComposition> field) {
-	target = field;
-}
-
 double ConstantDensity::getDensityValue() const {
 	return densityValue;
-}
-
-ref_ptr<MediumComposition> ConstantDensity::getTargetMedium() const {
-	return target;
 }
 
 double ConstantDensity::getDensity(const Vector3d& position, const double& z) const {
