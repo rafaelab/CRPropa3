@@ -36,7 +36,7 @@ std::string DensityEvolution::getDescription() const {
 }
 
 
-
+///////////////////////////////////////////////////////////////////////////////
 
 DensityGrid::DensityGrid(ref_ptr<MediumComposition> field, ref_ptr<Grid1f> densityGrid) {
 	setTargetMedium(field);
@@ -63,8 +63,7 @@ std::string DensityGrid::getDescription() const {
 }
 
 
-
-
+///////////////////////////////////////////////////////////////////////////////
 
 void DensityList::addDensity(ref_ptr<Density> density) {
 	densityList.push_back(density);
