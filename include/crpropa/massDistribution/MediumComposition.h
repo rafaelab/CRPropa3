@@ -23,6 +23,7 @@ class MediumComposition: public Referenced {
 			return ! isNeutral();
 		}
 		virtual unsigned int getNumberOfNucleons() const = 0;
+		virtual double getCompositionWeight() const = 0;
 		virtual std::string getDescription() const {
 			return "MediumComposition (abstract base class)";
 		};
@@ -75,6 +76,10 @@ class MediumCompositionElementary : public MediumComposition {
 			}
 		
 			return 0; // no nucleons
+		}
+
+		double getCompositionWeight() const {
+			return 0;
 		}
 
 		std::string getDescription() const {
@@ -143,6 +148,10 @@ class MediumCompositionAtomic : public MediumComposition {
 			return 0; // no nucleons
 		}
 
+		double getCompositionWeight() const {
+			return 1.0 * getNumberOfNucleons();
+		}
+
 		std::string getDescription() const {
 			std::stringstream ss;
 			ss << "MediumCompositionAtomic with nucleus ID: " << nucleusId << " and number of electrons: " << nElectrons << std::endl;
@@ -161,9 +170,24 @@ class MediumCompositionMolecular : public MediumComposition {
 		int nElectrons;
 
 	public:
-		MediumCompositionMolecular(const std::vector<int>& ids, int nElectrons) {
-			setNucleiIds(ids);
+		MediumCompositionMolecular(int nElectrons = 0) {
+			nucleiIds.clear();
 			setNumberOfElectrons(nElectrons);
+		}
+
+		MediumCompositionMolecular(const std::vector<int>& ids, int nElectrons) {
+			for (const auto& id : ids) {
+				add(id);
+			}
+			setNumberOfElectrons(nElectrons);
+		}
+
+		void add(int id) {
+			if (! isNucleus(id)) {
+				KISS_LOG_WARNING << "MediumCompositionMolecular works for atomic nuclei only. You provided a particle that is not a nucleus." << std::endl;
+				throw std::invalid_argument("MediumCompositionMolecular works for atomic nuclei only. You provided a particle that is not a nucleus.");
+			}
+			nucleiIds.push_back(id);
 		}
 
 		void setNucleiIds(const std::vector<int>& ids) {
@@ -192,6 +216,17 @@ class MediumCompositionMolecular : public MediumComposition {
 
 		bool isMolecular() const {
 			return true;
+		}
+
+		unsigned int getNumberOfNucleons() const {
+			int nNucleons = 0;
+			for (const auto& nucleusId : nucleiIds)
+				nNucleons += massNumber(nucleusId);
+			return nNucleons;
+		}
+
+		double getCompositionWeight() const {
+			return 1.0 * getNumberOfNucleons();
 		}
 
 		std::string getDescription() const {
