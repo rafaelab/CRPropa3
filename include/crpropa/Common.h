@@ -1,14 +1,27 @@
 #ifndef CRPROPA_COMMON_H
 #define CRPROPA_COMMON_H
 
+
+#include <algorithm>
+#include <cmath>
+#include <cstdlib>
+#include <filesystem>
+#include <fstream>
+#include <ranges>
 #include <string>
 #include <vector>
+
+#include "kiss/logger.h"
+
+
+
 /**
- @file
- @brief Common helper functions
+ * @file
+ * @brief Common helper functions
  */
 
 namespace crpropa {
+	
 /**
  * \addtogroup Core
  * @{
@@ -46,31 +59,45 @@ double interpolateEquidistant(double x, double lo, double hi, const std::vector<
 
 // Find index of value in a sorted vector X that is closest to x
 size_t closestIndex(double x, const std::vector<double>& X);
-/** @}*/
+
 
 
 // pow implementation as template for integer exponents pow_integer<2>(x)
 // evaluates to x*x
 template<unsigned int exponent>
-inline double pow_integer(double base) {
-  return pow_integer<(exponent >> 1)>(base*base) * (((exponent & 1) > 0) ? base : 1);
+constexpr double pow_integer(double base) {
+	if constexpr (exponent == 0) {
+		return 1.;
+	} else if constexpr (exponent == 1) {
+		return base;
+	} else {
+		double result = 1.;
+		double current = base;
+		unsigned int exp = exponent;
+		while (exp > 0) {
+			if (exp & 1) {
+				result *= current;
+			}
+			current *= current;
+			exp >>= 1;
+		}
+		return result;
+	}
 }
 
-template<>
-inline double pow_integer<0>(double base) {
-	return 1;
-}
+/** @}*/
 
 // - input:  function over which to integrate, integration limits A and B
 // - output: 8-points Gauß-Legendre integral
-static const double X[8] = {.0950125098, .2816035507, .4580167776, .6178762444, .7554044083, .8656312023, .9445750230, .9894009349};
-static const double W[8] = {.1894506104, .1826034150, .1691565193, .1495959888, .1246289712, .0951585116, .0622535239, .0271524594};
+constexpr std::array<double, 8> X = {.0950125098, .2816035507, .4580167776, .6178762444, .7554044083, .8656312023, .9445750230, .9894009349};
+constexpr std::array<double, 8> W = {.1894506104, .1826034150, .1691565193, .1495959888, .1246289712, .0951585116, .0622535239, .0271524594};
 template<typename Integrand>
-double gaussInt(Integrand&& integrand, double A, double B) {
+[[nodiscard]] constexpr double gaussInt(Integrand&& integrand, double A, double B) {
 	const double XM = 0.5 * (B + A);
 	const double XR = 0.5 * (B - A);
 	double SS = 0.;
-	for (int i = 0; i < 8; ++i) {
+
+	for (int i = 0; i < X.size(); ++i) {
 		double DX = XR * X[i];
 		SS += W[i] * (integrand(XM + DX) + integrand(XM - DX));
 	}
