@@ -72,6 +72,29 @@ double HadronicInteraction::CrossSection::totalInelasticCrossSectionProton(const
 	return sigma;
 }
 
+double HadronicInteraction::CrossSection::totalInelasticCrossSection(const double& T, const int& id, const int& At) { 
+	double sigmaPP = totalInelasticCrossSectionProton(T); 
+	double sigmaPP0 = totalInelasticCrossSectionProton(1 * TeV);
+
+	// mass number of the projectile
+	int Ap = massNumber(id); 
+
+	double beta0;
+	if (Ap == 1) {
+		beta0 = 2.247 - 0.915 * (1 + pow(At, - 1 / 3));
+	} else {
+		beta0 = 1.581 - 0.876 * (pow(Ap, - 1 / 3) + pow(At, - 1 / 3));
+	}
+
+	// follows Sihver et al. PRC 47 (1993) 1225
+	// also eq. 17 of Kafexhiu et al.
+	double sigmaR = M_PI * pow_integer<2>(radius_electron) * pow_integer<2>((pow(Ap, 1. / 3) + pow(At, 1. / 3) - beta0 * (pow(Ap, -1. / 3) + pow(At, -1. / 3))));
+
+	// eq. 18 of Kafexhiu et al.
+	double G = 1 + std::log(std::max(1.0, sigmaPP / sigmaPP0)); 
+
+	return sigmaR * G;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -253,30 +276,6 @@ std::string HadronicInteraction::getInteractionTag() const {
 	return interactionTag;
 }
 
-double HadronicInteraction::totalInelasticCrossSection(const double& T, const int& id, const int& At) const { 
-	double sigmaPP = CrossSection::totalInelasticCrossSectionProton(T); 
-	double sigmaPP0 = CrossSection::totalInelasticCrossSectionProton(1 * TeV);
-
-	// mass number of the projectile
-	int Ap = massNumber(id); 
-
-	double beta0;
-	if (Ap == 1) {
-		beta0 = 2.247 - 0.915 * (1 + pow(At, - 1 / 3));
-	} else {
-		beta0 = 1.581 - 0.876 * (pow(Ap, - 1 / 3) + pow(At, - 1 / 3));
-	}
-
-	// follows Sihver et al. PRC 47 (1993) 1225
-	// also eq. 17 of Kafexhiu et al.
-	double sigmaR = M_PI * pow_integer<2>(radius_electron) * pow_integer<2>((pow(Ap, 1. / 3) + pow(At, 1. / 3) - beta0 * (pow(Ap, -1. / 3) + pow(At, -1. / 3))));
-
-	// eq. 18 of Kafexhiu et al.
-	double G = 1 + std::log(std::max(1.0, sigmaPP / sigmaPP0)); 
-
-	return sigmaR * G;
-}
-
 double HadronicInteraction::getDensityAtPosition(const Vector3d& pos) const {
 	return density->getDensity(pos);
 }
@@ -324,7 +323,7 @@ void HadronicInteraction::process(Candidate* candidate) const {
 
 		// decide on interaction 
 		double n0 = density->getDensity(pos, z);
-		double prob = totalInelasticCrossSection(Eprimary, id, At) * n0 * step;
+		double prob = CrossSection::totalInelasticCrossSection(Eprimary, id, At) * n0 * step;
 
 		if (random.rand() < prob){
 			performInteraction(candidate, At);
@@ -344,7 +343,7 @@ void HadronicInteraction::performInteraction(Candidate* candidate, const int& At
 	double z = candidate->getRedshift();
 	double Eprimary = candidate->current.getEnergy() * (1 + z);
 	double K = Eprimary - CR_rest_energy.at(id); // kinetic energy of the primary in [J] ; Tp is the kinetic energy of the projectile
-	double sigmaTot = totalInelasticCrossSection(K, id, At) / (milli * barn);
+	double sigmaTot = CrossSection::totalInelasticCrossSection(K, id, At) / (milli * barn);
 	double totalEnergyLoss = 0;
 	double sampledEnergy = 0;
 

@@ -69,12 +69,9 @@ class HadronicInteraction : public Module {
 				CrossSection(std::string file, int id, double lossFactor, bool addSecondary, int CR_Id);
 				void loadData(std::string file);
 
-				/** Computes the inelastic cross section
-				 * @param Tp:	kinetic energy of the primary [GeV]
-				 * @param subvector_Ep:	energies of the secondary particle [GeV]
-				 * @param dSigma:	integrated differential cross section (CDF) for the secondary particle
-				 */
 				static double totalInelasticCrossSectionProton(const double& energy);
+				static double totalInelasticCrossSection(const double& T, const int& id, const int& At);
+
 
 		};
 
@@ -148,13 +145,6 @@ class HadronicInteraction : public Module {
 
 		void process(Candidate* candidate) const;
 		void performInteraction(Candidate* candidate, const int& At) const;
-
-		/** Total inelastic cross section following the parametrisation from 
-		 * @param T:	kinetic energy of the nucleus [J]
-		 * @param id:	particle id of the projectile
-		 * @param At:	mass number of the target nucleus
-		 */
-		double totalInelasticCrossSection(const double& T, const int& id, const int& At) const;
 
 		/** Allow the given nucleusId as a secondary
 		 * Search in the list of cross sections for the nucleus id and overwrite the information from the config file.
