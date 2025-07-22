@@ -17,14 +17,6 @@ void DensityEvolution::setEvolutionIndex(double m) {
 	index = m;
 }
 
-ref_ptr<Density> DensityEvolution::getDensity() const {
-	return density;
-}
-
-double DensityEvolution::getEvolutionIndex() const {
-	return index;
-}
-
 double DensityEvolution::getDensity(const Vector3d& position, const double& z) const {
 	return density->getDensity(position, z) * std::pow(1 + z, index);
 }
@@ -39,20 +31,16 @@ std::string DensityEvolution::getDescription() const {
 ///////////////////////////////////////////////////////////////////////////////
 
 DensityGrid::DensityGrid(ref_ptr<MediumComposition> field, ref_ptr<Grid1f> densityGrid) {
-	setTargetMedium(field);
+	Density::setTargetMedium(field);
 	setGrid(densityGrid);
-}
-
-double DensityGrid::getDensity(const Vector3d& position, const double& z) const {
-	return grid->interpolate(position);
 }
 
 void DensityGrid::setGrid(ref_ptr<Grid1f> g) {
 	grid = g;
 }
 
-void DensityGrid::setTargetMedium(ref_ptr<MediumComposition> t) {
-	target = t;
+double DensityGrid::getDensity(const Vector3d& position, const double& z) const {
+	return grid->interpolate(position);
 }
 
 
@@ -63,28 +51,36 @@ std::string DensityGrid::getDescription() const {
 }
 
 
-///////////////////////////////////////////////////////////////////////////////
+// ///////////////////////////////////////////////////////////////////////////////
 
-void DensityList::addDensity(ref_ptr<Density> density) {
-	densityList.push_back(density);
-}
+// DensityList::DensityList() {
+// }
 
-double DensityList::getDensity(const Vector3d& position, const double& z) const {
-	double n = 0.;
-	for (int i = 0; i < densityList.size(); i++)
-		n += densityList[i]->getDensity(position, z);
-	return n;
-}
+// DensityList::DensityList(std::vector<ref_ptr<Density>> densities) {
+// 	for (const auto& density : densities)
+// 		addDensity(density);
+// }
 
-std::string DensityList::getDescription() const {
-	std::stringstream ss; 
-	ss << "DensityList with " << densityList.size() << " modules: \n";
-	for (int i = 0; i < densityList.size(); i++) {
-		ss << "density " << i + 1 << ": " << densityList[i] -> getDescription();
-	}
+// void DensityList::addDensity(ref_ptr<Density> density) {
+// 	densityList.push_back(density);
+// }
+
+// double DensityList::getDensity(const Vector3d& position, const double& z) const {
+// 	double n = 0.;
+// 	for (const auto& density : densityList)
+// 		n += density->getDensity(position, z);
+
+// 	return n;
+// }
+
+// std::string DensityList::getDescription() const {
+// 	std::stringstream ss; 
+// 	ss << "DensityList with " << densityList.size() << " modules: \n";
+// 	for (const auto& density : densityList)
+// 		ss << "density " << i + 1 << ": " << density->getDescription();
 	
-	return ss.str();
-}
+// 	return ss.str();
+// }
 
 
 
