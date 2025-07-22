@@ -15,6 +15,7 @@
 #include "crpropa/Units.h"
 #include "crpropa/massDistribution/Density.h"
 #include "kiss/logger.h"
+#include "HepPID/ParticleIDMethods.hh"
 
 
 
@@ -55,9 +56,9 @@ class HadronicInteraction : public Module {
 				}; // should be in GeV
 
 				int nucleusId; //< id of the secondary particle
-				std::vector<double> Tp; //< tabulated values of the kinetic energy of the primary
-				std::vector<double> eps; //< tabulated values of the energy of the secondary particle
-				std::vector< std::vector<double>> sigma; //< integrated differential crossecton (CDF); sigma[Tp][eps]
+				std::vector<double> energyPrimary; //< tabulated values of the kinetic energy of the primary
+				std::vector<double> energySecondary; //< tabulated values of the energy of the secondary particle
+				std::vector<std::vector<double>> sigma; //< integrated differential cross section (CDF); sigma[Tp][eps]
 				double weightEnergyLoss; //< weight of the energy loss 
 				bool addSecondary; //< decide if secondaries are injected to the simulation
 				int CR_Id; // to know which table should be loaded ; need to know the CR and the target (p or He)
@@ -67,6 +68,14 @@ class HadronicInteraction : public Module {
 				CrossSection(std::string file);
 				CrossSection(std::string file, int id, double lossFactor, bool addSecondary, int CR_Id);
 				void loadData(std::string file);
+
+				/** Computes the inelastic cross section
+				 * @param Tp:	kinetic energy of the primary [GeV]
+				 * @param subvector_Ep:	energies of the secondary particle [GeV]
+				 * @param dSigma:	integrated differential cross section (CDF) for the secondary particle
+				 */
+				static double totalInelasticCrossSectionProton(const double& energy);
+
 		};
 
 	protected:
@@ -76,8 +85,13 @@ class HadronicInteraction : public Module {
 		ref_ptr<Density> density; //< target field (proton number density)
 		double limit; //< limit the next step to a fraction of the mean free path
 		bool deactivatePrimary; //< deactivate the primary particle after the interaction
+		bool havePhotons; //< if true, photons are produced and added as candidates
+		bool haveElectrons; //< if true, electrons are produced and added as candidates
+		bool haveNeutrinos; //< if true, neutrinos are produced and added as candidates
+		bool haveAntiNucleons; //< if true, anti-nucleons are produced and
 		std::string interactionTag;
 		std::map<int, std::vector<CrossSection>> crossSectionList; // list of the included crosssections; dict : id of the CR
+		ref_ptr<SamplerEvents> sampler;		// sampler for the interaction rate (thinning)
 
 		inline static const std::map<int, double> CR_rest_energy = {
 			{1000010010, mass_proton * c_squared }, 
@@ -95,39 +109,61 @@ class HadronicInteraction : public Module {
 			{1000260560, 100 * GeV} 
 			}; // in J
 
-	public:
-		HadronicInteraction(ref_ptr<Density> density, bool deactivateAfter = false, double limit = 0.1);
-		HadronicInteraction(ref_ptr<Density> density, std::string configFile, bool deactivateAfter = false, double limit = 0.1);
+		inline static const std::vector<int> availableNuclei = {
+			1000010010, // hydrogen
+			1000020040, // helium
+			1000060120, // carbon
+			1000130260, // aluminium
+			1000260560  // iron
+		}; // list of available nuclei in the cross section files
 
+	public:
+		HadronicInteraction(ref_ptr<Density> density, bool havePhotons = false, bool haveElectrons = false, bool haveNeutrinos = false, bool haveAntiNucleons = false, bool deactivateAfter = false, ref_ptr<SamplerEvents> sampling = ref_ptr<SamplerEvents>(new SamplerEventsNull()), double limit = 0.1);
+		HadronicInteraction(ref_ptr<Density> density, std::string configFile, bool deactivateAfter = false, ref_ptr<SamplerEvents> sampling = ref_ptr<SamplerEvents>(new SamplerEventsNull()), double limit = 0.1);
+
+
+		void setHavePhotons(bool b);
+		void setHaveElectrons(bool b);
+		void setHaveNeutrinos(bool b);
+		void setHaveAntiNucleons(bool b);
 		void setLimit(double limit); 
 		void setDensity(ref_ptr<Density> density);
 		void setInteractionTag(std::string tag);
 		void setDeactivatePrimary(bool b);
+		void setSampler(ref_ptr<SamplerEvents> sampler);
 
+		bool getHavePhotons() const;
+		bool getHaveElectrons() const;
+		bool getHaveNeutrinos() const;
+		bool getHaveAntiNucleons() const;
+		bool getDeactivatePrimary() const;
 		double getLimit() const;
 		std::string getInteractionTag() const;
-		bool getDeactivatePrimary() const;
+		
 
 
 		void initData(std::string configFile);	
 		void addCrossSection(CrossSection cs);
+		bool isPrimaryImplemented(const int& id) const;
 
 		void process(Candidate* candidate) const;
-		void performInteraction(Candidate* candidate, int A_t) const;
+		void performInteraction(Candidate* candidate, const int& At) const;
 
-		/** Total inelastic crosssection following the parametrisation from 
-		 * @param Tp:	kinetic energy of the proton in [J]
+		/** Total inelastic cross section following the parametrisation from 
+		 * @param T:	kinetic energy of the nucleus [J]
+		 * @param id:	particle id of the projectile
+		 * @param At:	mass number of the target nucleus
 		 */
-		double totalInelasticCrossSection(double Tp, int id, int A_t) const;
+		double totalInelasticCrossSection(const double& T, const int& id, const int& At) const;
 
 		/** Allow the given nucleusId as a secondary
-		 * Search in the list of crosssections for the nucleus id and overwrite the information from the config file.
+		 * Search in the list of cross sections for the nucleus id and overwrite the information from the config file.
 		 * @param nucleusId:	nucleusId of the secondary
 		 * @param allow:	if true secondaries are allowed
 		 */
 		void allowSecondaryId(int nucleusId, bool allow = true);
 
-		double getDensityAtPosition(Vector3d& pos) const;
+		double getDensityAtPosition(const Vector3d& pos) const;
 
 		// void printCrosssections() {
 		// 	for(int i = 0; i < crosssectionList[1000010010].size(); i++) { // [1000010010] : print CS of protons
