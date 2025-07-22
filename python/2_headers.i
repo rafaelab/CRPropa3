@@ -43,6 +43,7 @@
 %ignore operator crpropa::ObserverFeature*;
 %ignore operator crpropa::MagneticField*;
 %ignore operator crpropa::PhotonField*;
+%ignore operator crpropa::MediumComposition*;
 %ignore operator crpropa::AdvectionField*;
 %ignore operator crpropa::ParticleCollector*;
 %ignore operator crpropa::Density*;
@@ -318,6 +319,12 @@
 %feature("director") crpropa::Density;
 %include "crpropa/massDistribution/Density.h"
 
+%implicitconv crpropa::ref_ptr<crpropa::MediumComposition>;
+%template(MediumCompositionRefPtr) crpropa::ref_ptr<crpropa::MediumComposition>;
+%feature("director") crpropa::MediumComposition;
+%include "crpropa/massDistribution/MediumComposition.h"
+
+
 %include "crpropa/Grid.h"
 %include "crpropa/GridTools.h"
 
@@ -561,7 +568,6 @@
 %include "crpropa/massDistribution/Nakanishi.h"
 %include "crpropa/massDistribution/Cordes.h"
 %include "crpropa/massDistribution/Ferriere.h"
-%include "crpropa/massDistribution/MassDistribution.h"
 %include "crpropa/massDistribution/ConstantDensity.h"
 
 

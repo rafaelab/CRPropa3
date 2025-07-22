@@ -1,4 +1,3 @@
-/// CRPRopa public definitions
 #ifndef CRPROPA_H
 #define CRPROPA_H
 
@@ -80,7 +79,6 @@
 
 #include "crpropa/massDistribution/MediumComposition.h"
 #include "crpropa/massDistribution/Density.h"
-#include "crpropa/massDistribution/MassDistribution.h"
 #include "crpropa/massDistribution/ConstantDensity.h"
 #include "crpropa/massDistribution/Nakanishi.h"
 #include "crpropa/massDistribution/Cordes.h"
@@ -146,7 +144,7 @@
  * @}
  *
  * \defgroup Acceleration Acceleration Processes
- * @{ @brief Modules and techniques to simualte particle acceleration
+ * @{ @brief Modules and techniques to simulate particle acceleration
  *
  *  These particle acceleration features is analogue to an energy loss due to
  *  an interaction with a background photon, but for energy loss/gain in
