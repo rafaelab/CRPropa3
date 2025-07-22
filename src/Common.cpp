@@ -48,7 +48,7 @@ std::string getInstallPrefix() {
 	return _path;
 }
 
-double interpolate(double x, const std::vector<double>& X, const std::vector<double>& Y) {
+double interpolate(double x, std::span<const double> X, const std::span<const double> Y) {
 	auto it = std::ranges::upper_bound(X, x);
 	if (it == X.begin())
 		return Y.front();
@@ -59,7 +59,7 @@ double interpolate(double x, const std::vector<double>& X, const std::vector<dou
 	return Y[i] + (x - X[i]) * (Y[i + 1] - Y[i]) / (X[i + 1] - X[i]);
 }
 
-double interpolate2d(double x, double y, const std::vector<double>& X, const std::vector<double>& Y, const std::vector<double>& Z) {
+double interpolate2d(double x, double y, std::span<const double> X, std::span<const double> Y, std::span<const double> Z) {
 	if (x < X.front() or x > X.back() or y < Y.front() or y > Y.back())
 		return 0;
 
@@ -80,7 +80,7 @@ double interpolate2d(double x, double y, const std::vector<double>& X, const std
 	return ((Y[j + 1] - y) / (Y[j + 1] - Y[j])) * R1 + ((y - Y[j]) / (Y[j + 1] - Y[j])) * R2;
 }
 
-double interpolateEquidistant(double x, double lo, double hi, const std::vector<double>& Y) {
+double interpolateEquidistant(double x, double lo, double hi, const  std::span<const double> Y) {
 	if (x <= lo)
 		return Y.front();
 	if (x >= hi)
@@ -92,7 +92,7 @@ double interpolateEquidistant(double x, double lo, double hi, const std::vector<
 	return Y[i] + (p - i) * (Y[i + 1] - Y[i]);
 }
 
-size_t closestIndex(double x, const std::vector<double>& X) {
+size_t closestIndex(double x, const std::span<const double> X) {
 	auto it = std::ranges::min_element(X, [x](double a, double b) {
 		return std::fabs(a - x) < std::fabs(b - x);
 	});
