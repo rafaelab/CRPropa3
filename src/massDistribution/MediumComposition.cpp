@@ -4,6 +4,9 @@
 namespace crpropa {
 
 
+MediumCompositionElementary::MediumCompositionElementary() {
+}
+
 MediumCompositionElementary::MediumCompositionElementary(int id) {
 	setParticleId(id);
 }
@@ -57,6 +60,9 @@ std::string MediumCompositionElementary::getDescription() const {
 
 
 ///////////////////////////////////////////////////////////////////////////////
+
+MediumCompositionAtomic::MediumCompositionAtomic() {
+}
 
 MediumCompositionAtomic::MediumCompositionAtomic(int id, int nElectrons) {
 	setNucleusId(id);
@@ -121,6 +127,9 @@ std::string MediumCompositionAtomic::getDescription() const {
 
 
 ///////////////////////////////////////////////////////////////////////////////
+
+MediumCompositionMolecular::MediumCompositionMolecular() {
+}
 
 MediumCompositionMolecular::MediumCompositionMolecular(int nElectrons) {
 	nucleiIds.clear();

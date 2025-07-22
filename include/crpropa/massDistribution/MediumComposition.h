@@ -32,10 +32,12 @@ class MediumComposition: public Referenced {
 		virtual bool isNeutral() const = 0;
 		bool isCharged() const {
 			return ! isNeutral();
-		}
+		};
 		virtual double getCompositionWeight() const = 0;
 		virtual std::string getDescription() const = 0;
-		virtual unsigned int numberOfComponents() const = 0;
+		virtual unsigned int numberOfComponents() const {
+			return 1;
+		};
 };
 
 
@@ -50,6 +52,7 @@ class MediumCompositionElementary : public MediumComposition {
 		int particleId;
 
 	public:
+		MediumCompositionElementary();
 		MediumCompositionElementary(int id);
 		void setParticleId(int id);
 		int getParticleId() const;
@@ -75,7 +78,8 @@ class MediumCompositionAtomic : public MediumComposition {
 		int nElectrons;
 
 	public:
-		MediumCompositionAtomic(int id, int nElectrons);
+		MediumCompositionAtomic();
+		MediumCompositionAtomic(int id, int nElectrons = 0);
 		void setNucleusId(int id);
 		void setNumberOfElectrons(int n);
 		int getNucleusId() const;
@@ -103,8 +107,9 @@ class MediumCompositionMolecular : public MediumComposition {
 		int nElectrons;
 
 	public:
-		MediumCompositionMolecular(int nElectrons = 0);
-		MediumCompositionMolecular(const std::vector<int>& ids, int nElectrons);
+		MediumCompositionMolecular();
+		MediumCompositionMolecular(int nElectrons);
+		MediumCompositionMolecular(const std::vector<int>& ids, int nElectrons = 0);
 		void add(int id);
 		void setNucleiIds(const std::vector<int>& ids);
 		void setNumberOfElectrons(int n);
