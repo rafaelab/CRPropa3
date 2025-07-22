@@ -15,22 +15,21 @@ namespace crpropa {
  */
 
 /**
- @class Vector3
- @brief Template class for 3-vectors of type float, double, ...
-
- Allows accessing and changing the elements x, y, z directly or  through the
- corresponding get and set methods.
-
- Angle definitions are
- phi [-pi, pi]: azimuthal angle in the x-y plane, 0 pointing in x-direction
- theta [0, pi]: zenith angle towards the z axis, 0 pointing in z-direction
+ * @class Vector3
+ * @brief Template class for 3-vectors of type float, double, ...
+ *
+ * Allows accessing and changing the elements x, y, z directly or  through the
+ * corresponding get and set methods.
+ *
+ * Angle definitions are
+ * phi [-pi, pi]: azimuthal angle in the x-y plane, 0 pointing in x-direction
+ * theta [0, pi]: zenith angle towards the z axis, 0 pointing in z-direction
  */
 template<typename T>
 class Vector3 {
 public:
 	union {
-		struct
-		{
+		struct {
 			T x;
 			T y;
 			T z;
@@ -42,34 +41,33 @@ public:
 	}
 
 	// avoid creation of default non-conversion constructor
-	Vector3(const Vector3 &v) : data{v.data[0], v.data[1], v.data[2]} {
+	Vector3(const Vector3& v) : data{v.data[0], v.data[1], v.data[2]} {
 	}
 
 	// Provides implicit conversion
 	template<typename U>
-	Vector3(const Vector3<U> &v) {
+	Vector3(const Vector3<U>& v) {
 		data[0] = v.x;
 		data[1] = v.y;
 		data[2] = v.z;
 	}
 
-	~Vector3()
-	{
+	~Vector3() {
 	}
 
-	explicit Vector3(const double *v) {
+	explicit Vector3(const double* v) {
 		data[0] = v[0];
 		data[1] = v[1];
 		data[2] = v[2];
 	}
 
-	explicit Vector3(const float *v) {
+	explicit Vector3(const float* v) {
 		data[0] = v[0];
 		data[1] = v[1];
 		data[2] = v[2];
 	}
 
-	explicit Vector3(const T &X, const T &Y, const T &Z) : data{X, Y, Z} {
+	explicit Vector3(const T& X, const T& Y, const T& Z) : data{X, Y, Z} {
 	}
 
 	explicit Vector3(T t) : data{t, t, t} {
@@ -116,12 +114,12 @@ public:
 	}
 
 	// magnitude (2-norm) of the vector
-	T getR() const {
+	constexpr T getR() const {
 		return std::sqrt(x * x + y * y + z * z);
 	}
 
 	// square of magnitude of the vector
-	T getR2() const {
+	constexpr T getR2() const {
 		return x * x + y * y + z * z;
 	}
 
@@ -152,8 +150,7 @@ public:
 	Vector3<T> getUnitVectorTheta() const {
 		T theta = getTheta();
 		T phi = getPhi();
-		return Vector3<T>(cos(theta) * cos(phi), cos(theta) * sin(phi),
-				-sin(theta));
+		return Vector3<T>(cos(theta) * cos(phi), cos(theta) * sin(phi), -sin(theta));
 	}
 
 	// return the unit-vector e_phi
@@ -228,43 +225,42 @@ public:
 	}
 
 	// return vector with absolute values
-	Vector3<T> abs() const {
+	constexpr Vector3<T> abs() const {
 		return Vector3<T>(std::abs(x), std::abs(y), std::abs(z));
 	}
 
 	// return vector with floored values
-	Vector3<T> floor() const {
+	constexpr Vector3<T> floor() const {
 		return Vector3<T>(std::floor(x), std::floor(y), std::floor(z));
 	}
 
 	// return vector with ceiled values
-	Vector3<T> ceil() const {
+	constexpr Vector3<T> ceil() const {
 		return Vector3<T>(std::ceil(x), std::ceil(y), std::ceil(z));
 	}
 
 	// minimum element
-	T min() const {
+	constexpr T min() const {
 		return std::min(x, std::min(y, z));
 	}
 
 	// maximum element
-	T max() const {
+	constexpr T max() const {
 		return std::max(x, std::max(y, z));
 	}
 
 	// dot product
-	T dot(const Vector3<T> &v) const {
+	constexpr T dot(const Vector3<T> &v) const {
 		return x * v.x + y * v.y + z * v.z;
 	}
 
 	// cross product
-	Vector3<T> cross(const Vector3<T> &v) const {
-		return Vector3<T>(y * v.z - v.y * z, z * v.x - v.z * x,
-				x * v.y - v.x * y);
+	constexpr Vector3<T> cross(const Vector3<T> &v) const {
+		return Vector3<T>(y * v.z - v.y * z, z * v.x - v.z * x, x * v.y - v.x * y);
 	}
 
 	// returns true if all elements of the two vectors are equal
-	bool operator ==(const Vector3<T> &v) const {
+	constexpr bool operator ==(const Vector3<T> &v) const {
 		if (x != v.x)
 			return false;
 		if (y != v.y)
@@ -274,37 +270,37 @@ public:
 		return true;
 	}
 
-	Vector3<T> operator +(const Vector3<T> &v) const {
+	constexpr Vector3<T> operator +(const Vector3<T> &v) const {
 		return Vector3(x + v.x, y + v.y, z + v.z);
 	}
 
-	Vector3<T> operator +(const T &f) const {
+	constexpr Vector3<T> operator +(const T &f) const {
 		return Vector3(x + f, y + f, z + f);
 	}
 
-	Vector3<T> operator -(const Vector3<T> &v) const {
+	constexpr Vector3<T> operator -(const Vector3<T> &v) const {
 		return Vector3(x - v.x, y - v.y, z - v.z);
 	}
 
-	Vector3<T> operator -(const T &f) const {
+	constexpr Vector3<T> operator -(const T &f) const {
 		return Vector3(x - f, y - f, z - f);
 	}
 
 	// element-wise multiplication
-	Vector3<T> operator *(const Vector3<T> &v) const {
+	constexpr Vector3<T> operator *(const Vector3<T> &v) const {
 		return Vector3(x * v.x, y * v.y, z * v.z);
 	}
 
-	Vector3<T> operator *(T v) const {
+	constexpr Vector3<T> operator *(T v) const {
 		return Vector3(data[0] * v, data[1] * v, data[2] * v);
 	}
 
 	// element-wise division
-	Vector3<T> operator /(const Vector3<T> &v) const {
+	constexpr Vector3<T> operator /(const Vector3<T> &v) const {
 		return Vector3(x / v.x, y / v.y, z / v.z);
 	}
 
-	Vector3<T> operator /(const T &f) const {
+	constexpr Vector3<T> operator /(const T &f) const {
 		return Vector3(x / f, y / f, z / f);
 	}
 
@@ -317,14 +313,14 @@ public:
 		return Vector3(fmod(x, f), fmod(y, f), fmod(z, f));
 	}
 
-	Vector3<T> &operator -=(const Vector3<T> &v) {
+	Vector3<T>& operator -=(const Vector3<T> &v) {
 		data[0] -= v.x;
 		data[1] -= v.y;
 		data[2] -= v.z;
 		return *this;
 	}
 
-	Vector3<T> &operator -=(const T &f) {
+	Vector3<T>& operator -=(const T &f) {
 		data[0] -= f;
 		data[1] -= f;
 		data[2] -= f;
@@ -338,7 +334,7 @@ public:
 		return *this;
 	}
 
-	Vector3<T> &operator +=(const T &f) {
+	Vector3<T>& operator +=(const T &f) {
 		data[0] += f;
 		data[1] += f;
 		data[2] += f;
@@ -346,14 +342,14 @@ public:
 	}
 
 	// element-wise multiplication
-	Vector3<T> &operator *=(const Vector3<T> &v) {
+	Vector3<T>& operator *=(const Vector3<T> &v) {
 		data[0] *= v.x;
 		data[1] *= v.y;
 		data[2] *= v.z;
 		return *this;
 	}
 
-	Vector3<T> &operator *=(const T &f) {
+	Vector3<T>& operator *=(const T &f) {
 		data[0] *= f;
 		data[1] *= f;
 		data[2] *= f;
@@ -361,14 +357,14 @@ public:
 	}
 
 	// element-wise division
-	Vector3<T> &operator /=(const Vector3<T> &v) {
+	Vector3<T>& operator /=(const Vector3<T> &v) {
 		data[0] /= v.x;
 		data[1] /= v.y;
 		data[2] /= v.z;
 		return *this;
 	}
 
-	Vector3<T> &operator /=(const T &f) {
+	Vector3<T>& operator /=(const T &f) {
 		data[0] /= f;
 		data[1] /= f;
 		data[2] /= f;
@@ -376,21 +372,21 @@ public:
 	}
 
 	// element-wise modulo operation
-	Vector3<T> &operator %=(const Vector3<T> &v) {
+	Vector3<T>& operator %=(const Vector3<T> &v) {
 		data[0] = fmod(x, v.x);
 		data[1] = fmod(y, v.y);
 		data[2] = fmod(z, v.z);
 		return *this;
 	}
 
-	Vector3<T> &operator %=(const T &f) {
+	Vector3<T>& operator %=(const T &f) {
 		data[0] = fmod(x, f);
 		data[1] = fmod(y, f);
 		data[2] = fmod(z, f);
 		return *this;
 	}
 
-	Vector3<T> &operator =(const Vector3<T> &v) {
+	Vector3<T>& operator =(const Vector3<T> &v) {
 		data[0] = v.x;
 		data[1] = v.y;
 		data[2] = v.z;
@@ -404,7 +400,7 @@ public:
 	//	return *this;
 	//}
 
-	Vector3<T> &operator =(const T &f) {
+	Vector3<T>& operator =(const T &f) {
 		data[0] = f;
 		data[1] = f;
 		data[2] = f;
@@ -413,17 +409,17 @@ public:
 };
 
 #ifndef SWIG
-template<typename T>
-inline std::ostream &operator <<(std::ostream &out, const Vector3<T> &v) {
-	out << v.x << " " << v.y << " " << v.z;
-	return out;
-}
+	template<typename T>
+	inline std::ostream &operator <<(std::ostream &out, const Vector3<T> &v) {
+		out << v.x << " " << v.y << " " << v.z;
+		return out;
+	}
 
-template<typename T>
-inline std::istream &operator >>(std::istream &in, Vector3<T> &v) {
-	in >> v.x >> v.y >> v.z;
-	return in;
-}
+	template<typename T>
+	inline std::istream &operator >>(std::istream &in, Vector3<T> &v) {
+		in >> v.x >> v.y >> v.z;
+		return in;
+	}
 #endif
 
 template<typename T>
