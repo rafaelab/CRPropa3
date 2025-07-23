@@ -2,8 +2,15 @@
 #define CRPROPA_PARTICLE_ID_H
 
 #include <cstddef>
-#include <vector>
+#include <source_location>
 #include <string>
+#include <string_view>
+#include <vector>
+
+#include "HepPID/ParticleIDMethods.hh"
+#include "HepPID/ParticleName.hh"
+#include "kiss/convert.h"
+
 
 namespace crpropa {
 /**
@@ -12,8 +19,8 @@ namespace crpropa {
  */
 
 /**
- @file
- @brief 2012 Monte Carlo nuclear code scheme
+ * @file
+ * @brief 2012 Monte Carlo nuclear code scheme
  */
 
 /** This implements the 2012 Monte Carlo nuclear code scheme.
@@ -31,6 +38,7 @@ bool isNucleus(int id);
 
 /* Additional modules */
 std::string convertIdToName(int id); 
+
 
 /** @}*/
 } // namespace crpropa

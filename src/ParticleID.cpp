@@ -1,26 +1,17 @@
 #include "crpropa/ParticleID.h"
 
-#include "HepPID/ParticleIDMethods.hh"
-#include "HepPID/ParticleName.hh"
-#include "kiss/convert.h"
 
-#include <string>
 
 namespace crpropa {
 
 int nucleusId(int a, int z) {
 	if (z < 0)
-		throw std::runtime_error(
-				"crpropa::Nucleus: no nucleus with Z < 0, A=" + kiss::str(a) + " Z="
-						+ kiss::str(z));
+		throw std::runtime_error(std::format("crpropa::Nucleus: no nucleus with Z < 0, A={} Z={} (at {})", a, z, std::source_location::current().function_name()));
 	if (a < 1)
-		throw std::runtime_error(
-				"crpropa::Nucleus: no nucleus with A < 1, A=" + kiss::str(a) + " Z="
-						+ kiss::str(z));
+		throw std::runtime_error(std::format("crpropa::Nucleus: no nucleus with A < 1, A={} Z={} (at {})", a, z, std::source_location::current().function_name()));
 	if (a < z)
-		throw std::runtime_error(
-				"crpropa::Nucleus: no nucleus with A < Z, A=" + kiss::str(a) + " Z="
-						+ kiss::str(z));
+		throw std::runtime_error(std::format("crpropa::Nucleus: no nucleus with A < Z, A={} Z={} (at {})", a, z, std::source_location::current().function_name()));
+
 	return 1000000000 + z * 10000 + a * 10;
 }
 
