@@ -12,30 +12,42 @@ Candidate::Candidate(int id, double E, Vector3d pos, Vector3d dir, double z, dou
 	previous = state;
 	current = state;
 
-#if defined(OPENMP_3_1)
+	#if defined(OPENMP_3_1)
 		#pragma omp atomic capture
-		{serialNumber = nextSerialNumber++;}
-#elif defined(__GNUC__)
-		{serialNumber = __sync_add_and_fetch(&nextSerialNumber, 1);}
-#else
+		{
+			serialNumber = nextSerialNumber++;
+		}
+	#elif defined(__GNUC__)
+		{
+			serialNumber = __sync_add_and_fetch(&nextSerialNumber, 1);
+		}
+	#else
 		#pragma omp critical(serialNumber)
-		{serialNumber = nextSerialNumber++;}
-#endif
+		{
+			serialNumber = nextSerialNumber++;
+		}
+	#endif
 
 }
 
 Candidate::Candidate(const ParticleState& state) :
 		source(state), created(state), current(state), previous(state), redshift(0), trajectoryLength(0), currentStep(0), nextStep(0), active(true), parent(0), tagOrigin ("PRIM") {
 
-#if defined(OPENMP_3_1)
+	#if defined(OPENMP_3_1)
 		#pragma omp atomic capture
-		{serialNumber = nextSerialNumber++;}
-#elif defined(__GNUC__)
-		{serialNumber = __sync_add_and_fetch(&nextSerialNumber, 1);}
-#else
+		{
+			serialNumber = nextSerialNumber++;
+		}
+	#elif defined(__GNUC__)
+		{
+			serialNumber = __sync_add_and_fetch(&nextSerialNumber, 1);
+		}
+	#else
 		#pragma omp critical(serialNumber)
-		{serialNumber = nextSerialNumber++;}
-#endif
+		{
+			serialNumber = nextSerialNumber++;
+		}
+	#endif
 
 }
 
@@ -124,10 +136,7 @@ bool Candidate::removeProperty(const std::string& name) {
 }
 
 bool Candidate::hasProperty(const std::string& name) const {
-	PropertyMap::const_iterator i = properties.find(name);
-	if (i == properties.end())
-		return false;
-	return true;
+	return properties.contains(name); 
 }
 
 void Candidate::addSecondary(Candidate* c) {
@@ -179,11 +188,7 @@ void Candidate::clearSecondaries() {
 }
 
 std::string Candidate::getDescription() const {
-	std::stringstream ss;
-	ss << "Particle at z = " << getRedshift() << "\n";
-	ss << "  source:  " << source.getDescription() << "\n";
-	ss << "  current: " << current.getDescription();
-	return ss.str();
+	return std::format("Particle at z = {}\n  source:  {}\n  current: {}", getRedshift(), source.getDescription(), current.getDescription());
 }
 
 ref_ptr<Candidate> Candidate::clone(bool recursive) const {

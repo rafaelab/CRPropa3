@@ -1,19 +1,18 @@
 #ifndef CRPROPA_CANDIDATE_H
 #define CRPROPA_CANDIDATE_H
 
-// #include "crpropa/AssocVector.h"
-#include "crpropa/ParticleID.h"
-#include "crpropa/ParticleState.h"
-#include "crpropa/Referenced.h"
-#include "crpropa/Units.h"
-#include "crpropa/Variant.h"
-
 #include <map>
 #include <sstream>
 #include <stdexcept>
 #include <stdint.h>
 #include <unordered_map>
 #include <vector>
+
+#include "crpropa/ParticleID.h"
+#include "crpropa/ParticleState.h"
+#include "crpropa/Referenced.h"
+#include "crpropa/Units.h"
+#include "crpropa/Variant.h"
 
 
 namespace crpropa {
@@ -23,160 +22,160 @@ namespace crpropa {
  */
 
 /**
-@class Candidate
-@brief All information about the particle.
-
-The Candidate is a passive object, that holds the information about the state
-of the particle and the simulation itself.
-*/
+ * @class Candidate
+ * @brief All information about the particle.
+ *
+ * The Candidate is a passive object, that holds the information about the state
+ * of the particle and the simulation itself.
+ */
 class Candidate: public Referenced {
-public:
-	ParticleState source; /**< particle state at the source */
-	ParticleState created; /**< particle state of parent particle at the time of creation */
-	ParticleState current; /**< current particle state */
-	ParticleState previous; /**< particle state at the end of the previous step */
+	public:
+		ParticleState source; /**< particle state at the source */
+		ParticleState created; /**< particle state of parent particle at the time of creation */
+		ParticleState current; /**< current particle state */
+		ParticleState previous; /**< particle state at the end of the previous step */
 
-	std::vector<ref_ptr<Candidate>> secondaries; /**< secondary particles from interactions */
+		std::vector<ref_ptr<Candidate>> secondaries; /**< secondary particles from interactions */
 
-	// typedef Loki::AssocVector<std::string, Variant> PropertyMap;
-	typedef std::unordered_map<std::string, Variant> PropertyMap; /**< map of property names and their values. */
-	PropertyMap properties; /**< map of property names and their values. */
-	
+		// typedef Loki::AssocVector<std::string, Variant> PropertyMap;
+		typedef std::unordered_map<std::string, Variant> PropertyMap; /**< map of property names and their values. */
+		PropertyMap properties; /**< map of property names and their values. */
+		
 
-	/** Parent candidate. 0 if no parent (initial particle). Must not be a ref_ptr to prevent circular referencing. */
-	Candidate* parent;
+		/** Parent candidate. 0 if no parent (initial particle). Must not be a ref_ptr to prevent circular referencing. */
+		Candidate* parent;
+		// std::optional<Candidate*> parent; 
 
-private:
-	bool active; /**< active status */
-	double weight; /**< weight of the candidate */
-	double redshift; /**< current simulation time-point in terms of redshift z */
-	double trajectoryLength; /**< comoving distance [m] the candidate has traveled so far */
-	double currentStep; /**< size of the currently performed step in [m] comoving units */
-	double nextStep; /**< proposed size of the next propagation step in [m] comoving units */
-	std::string tagOrigin; /**< name of interaction/source process which created this candidate */
+	private:
+		bool active; /**< active status */
+		double weight; /**< weight of the candidate */
+		double redshift; /**< current simulation time-point in terms of redshift z */
+		double trajectoryLength; /**< comoving distance [m] the candidate has traveled so far */
+		double currentStep; /**< size of the currently performed step in [m] comoving units */
+		double nextStep; /**< proposed size of the next propagation step in [m] comoving units */
+		std::string tagOrigin; /**< name of interaction/source process which created this candidate */
 
-	static uint64_t nextSerialNumber;
-	uint64_t serialNumber;
+		static uint64_t nextSerialNumber;
+		uint64_t serialNumber;
 
-public:
-	Candidate(
-		int id = 0,
-		double energy = 0,
-		Vector3d position = Vector3d(0, 0, 0),
-		Vector3d direction = Vector3d(-1, 0, 0),
-		double z = 0,
-		double weight = 1., 
-		std::string tagOrigin = "PRIM"
-	);
+	public:
+		Candidate(
+			int id = 0,
+			double energy = 0,
+			Vector3d position = Vector3d(0, 0, 0),
+			Vector3d direction = Vector3d(-1, 0, 0),
+			double z = 0,
+			double weight = 1., 
+			std::string tagOrigin = "PRIM"
+		);
 
-	/**
-	Creates a candidate, initializing the Candidate::source, Candidate::created,
-	Candidate::previous and Candidate::current state with the argument.
-	*/
-	Candidate(const ParticleState& state);
+		/**
+		 * Creates a candidate, initializing the Candidate::source, Candidate::created,
+		 * Candidate::previous and Candidate::current state with the argument.
+		 */
+		Candidate(const ParticleState& state);
 
-	bool isActive() const;
-	void setActive(bool b);
+		bool isActive() const;
+		void setActive(bool b);
 
-	void setTrajectoryLength(double length);
-	double getTrajectoryLength() const;
+		void setTrajectoryLength(double length);
+		double getTrajectoryLength() const;
 
-	void setRedshift(double z);
-	double getRedshift() const;
+		void setRedshift(double z);
+		double getRedshift() const;
 
-	/**
-	Sets weight of each candidate.
-	Weights are calculated for each tracked secondary.
-	 */
-	void setWeight(double weight);
-    void updateWeight(double weight);
-	double getWeight() const;
+		/**
+		 * Sets weight of each candidate.
+		 * Weights are calculated for each tracked secondary.
+		 */
+		void setWeight(double weight);
+		void updateWeight(double weight);
+		double getWeight() const;
 
-	/**
-	Sets the current step and increases the trajectory length accordingly.
-	Only the propagation module should use this.
-	*/
-	void setCurrentStep(double step);
-	double getCurrentStep() const;
+		/**
+		 * Sets the current step and increases the trajectory length accordingly.
+		 * Only the propagation module should use this.
+		 */
+		void setCurrentStep(double step);
+		double getCurrentStep() const;
 
-	/**
-	Sets the proposed next step.
-	Only the propagation module should use this.
-	*/
-	void setNextStep(double step);
-	double getNextStep() const;
+		/**
+		 * Sets the proposed next step.
+		 * Only the propagation module should use this.
+		 */
+		void setNextStep(double step);
+		double getNextStep() const;
 
-	/**
-	Sets the tagOrigin of the candidate. Can be used to trace back the interactions
-	*/
-	void setTagOrigin(std::string tagOrigin);
-	std::string getTagOrigin() const;
+		/**
+		 * Sets the tagOrigin of the candidate. Can be used to trace back the interactions
+		 */
+		void setTagOrigin(std::string tagOrigin);
+		std::string getTagOrigin() const;
 
-	/**
-	Make a bid for the next step size: the lowest wins.
-	*/
-	void limitNextStep(double step);
+		/**
+		Make a bid for the next step size: the lowest wins.
+		*/
+		void limitNextStep(double step);
 
-	void setProperty(const std::string& name, const Variant& value);
-	const Variant& getProperty(const std::string& name) const;
-	bool removeProperty(const std::string& name);
-	bool hasProperty(const std::string& name) const;
+		void setProperty(const std::string& name, const Variant& value);
+		const Variant& getProperty(const std::string& name) const;
+		bool removeProperty(const std::string& name);
+		bool hasProperty(const std::string& name) const;
 
-	/**
-	Add a new candidate to the list of secondaries.
-	@param c Candidate
+		/**
+		* Add a new candidate to the list of secondaries.
+		* @param c Candidate
+		* 	
+		* Adds a new candidate to the list of secondaries of this candidate.
+		* The secondaries Candidate::source and Candidate::previous state are set to the _source_ and _previous_ state of its parent.
+		* The secondaries Candidate::created and Candidate::current state are set to the _current_ state of its parent, except for the secondaries current energy and particle id.
+		* Trajectory length and redshift are copied from the parent.
+		*/
+		void addSecondary(Candidate* c);
+		inline void addSecondary(ref_ptr<Candidate> c) { 
+			addSecondary(c.get()); 
+		};
 
-	Adds a new candidate to the list of secondaries of this candidate.
-	The secondaries Candidate::source and Candidate::previous state are set to the _source_ and _previous_ state of its parent.
-	The secondaries Candidate::created and Candidate::current state are set to the _current_ state of its parent, except for the secondaries current energy and particle id.
-	Trajectory length and redshift are copied from the parent.
-	*/
-	void addSecondary(Candidate* c);
-	inline void addSecondary(ref_ptr<Candidate> c) { 
-		addSecondary(c.get()); 
-	};
+		/**
+		 * Add a new candidate to the list of secondaries.
+		 * @param id			particle ID of the secondary
+		 * @param energy		energy of the secondary
+		 * @param position	start position of the secondary
+		 * @param w			weight of the secondary
+		 * @param tagOrigin 	tag of the secondary
+		 */
+		void addSecondary(int id, double energy, double w = 1., std::string tagOrigin = "SEC");
+		void addSecondary(int id, double energy, Vector3d position, double w = 1., std::string tagOrigin = "SEC");
+		void clearSecondaries();
 
-	/**
-	 Add a new candidate to the list of secondaries.
-	 @param id			particle ID of the secondary
-	 @param energy		energy of the secondary
-	 @param position	start position of the secondary
-	 @param w			weight of the secondary
-	 @param tagOrigin 	tag of the secondary
-	 */
-	void addSecondary(int id, double energy, double w = 1., std::string tagOrigin = "SEC");
-	void addSecondary(int id, double energy, Vector3d position, double w = 1., std::string tagOrigin = "SEC");
-	void clearSecondaries();
+		std::string getDescription() const;
 
-	std::string getDescription() const;
+		/** Unique (inside process) serial number (id) of candidate */
+		uint64_t getSerialNumber() const;
+		void setSerialNumber(const uint64_t snr);
 
-	/** Unique (inside process) serial number (id) of candidate */
-	uint64_t getSerialNumber() const;
-	void setSerialNumber(const uint64_t snr);
+		/** Serial number of candidate at source*/
+		uint64_t getSourceSerialNumber() const;
 
-	/** Serial number of candidate at source*/
-	uint64_t getSourceSerialNumber() const;
+		/** Serial number of candidate at creation */
+		uint64_t getCreatedSerialNumber() const;
 
-	/** Serial number of candidate at creation */
-	uint64_t getCreatedSerialNumber() const;
+		/** Set the next serial number to use */
+		static void setNextSerialNumber(uint64_t snr);
 
-	/** Set the next serial number to use */
-	static void setNextSerialNumber(uint64_t snr);
+		/** Get the next serial number that will be assigned */
+		static uint64_t getNextSerialNumber();
 
-	/** Get the next serial number that will be assigned */
-	static uint64_t getNextSerialNumber();
+		/**
+		 * Create an exact clone of candidate
+		 * @param recursive	recursively clone and add the secondaries
+		 */
+		ref_ptr<Candidate> clone(bool recursive = false) const;
 
-	/**
-	Create an exact clone of candidate
-	@param recursive	recursively clone and add the secondaries
-	*/
-	ref_ptr<Candidate> clone(bool recursive = false) const;
-
-	/**
-	Copy the source particle state to the current state
-	and activate it if inactive, e.g. restart it
-	*/
-	void restart();
+		/**
+		 * Copy the source particle state to the current state and activate it if inactive, e.g. restart it
+		 */
+		void restart();
 
 };
 
