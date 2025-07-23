@@ -1,35 +1,30 @@
 #include "crpropa/Cosmology.h"
-#include "crpropa/Units.h"
-#include "crpropa/Common.h"
 
-#include <vector>
-#include <cmath>
-#include <stdexcept>
 
 namespace crpropa {
 
 /**
- @class Cosmology
- @brief Cosmology calculations
+ * @class Cosmology
+ * @brief Cosmology calculations
  */
 struct Cosmology {
 	double H0; // Hubble parameter at z=0
 	double omegaM; // matter density parameter
 	double omegaL; // vacuum energy parameter
 
-	static const int n;
-	static const double zmin;
-	static const double zmax;
+	static constexpr int n = 1000;
+	static constexpr double zmin = 0.0001;
+	static constexpr double zmax = 100.0;
 
-	std::vector<double> Z;  // redshift
-	std::vector<double> Dc; // comoving distance [m]
-	std::vector<double> Dl; // luminosity distance [m]
-	std::vector<double> Dt; // light travel distance [m]
+	std::array<double, n> Z;  // redshift
+	std::array<double, n> Dc; // comoving distance [m]
+	std::array<double, n> Dl; // luminosity distance [m]
+	std::array<double, n> Dt; // light travel distance [m]
 
 	void update() {
 		double dH = c_light / H0; // Hubble distance
 
-		std::vector<double> E(n);
+		std::array<double, n> E;
 		E[0] = 1;
 
 		// Relation between comoving distance r and redshift z (cf. J.A. Peacock, Cosmological physics, p. 89 eq. 3.76)
@@ -41,10 +36,7 @@ struct Cosmology {
 			E[i] = sqrt(omegaL + omegaM * pow_integer<3>(1 + Z[i]));
 			Dc[i] = Dc[i - 1] + dH * dz * (1 / E[i] + 1 / E[i - 1]) / 2;
 			Dl[i] = (1 + Z[i]) * Dc[i];
-			Dt[i] = Dt[i - 1]
-					+ dH * dz
-							* (1 / ((1 + Z[i]) * E[i])
-									+ 1 / ((1 + Z[i - 1]) * E[i - 1])) / 2;
+			Dt[i] = Dt[i - 1] + dH * dz * (1 / ((1 + Z[i]) * E[i]) + 1 / ((1 + Z[i - 1]) * E[i - 1])) / 2;
 		}
 	}
 
@@ -53,11 +45,6 @@ struct Cosmology {
 		H0 = 67.3 * 1000 * meter / second / Mpc; // default values
 		omegaM = 0.315;
 		omegaL = 1 - omegaM;
-
-		Z.resize(n);
-		Dc.resize(n);
-		Dl.resize(n);
-		Dt.resize(n);
 
 		Z[0] = 0;
 		Dc[0] = 0;
@@ -75,9 +62,7 @@ struct Cosmology {
 	}
 };
 
-const int Cosmology::n = 1000;
-const double Cosmology::zmin = 0.0001;
-const double Cosmology::zmax = 100;
+
 
 static Cosmology cosmology; // instance is created at runtime
 
