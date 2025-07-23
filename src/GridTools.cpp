@@ -1,8 +1,5 @@
 #include "crpropa/GridTools.h"
-#include "crpropa/magneticField/MagneticField.h"
 
-#include <fstream>
-#include <sstream>
 
 namespace crpropa {
 
@@ -132,12 +129,10 @@ void fromMagneticFieldStrength(ref_ptr<Grid1f> grid, ref_ptr<MagneticField> fiel
 }
 
 void loadGrid(ref_ptr<Grid3f> grid, std::string filename, double c) {
-	std::ifstream fin(filename.c_str(), std::ios::binary);
-	if (!fin) {
-		std::stringstream ss;
-		ss << "load Grid3f: " << filename << " not found";
-		throw std::runtime_error(ss.str());
+	if (! std::filesystem::exists(filename)) {
+		throw std::runtime_error("load Grid3f: " + filename + " not found.");
 	}
+	std::ifstream fin(filename.c_str(), std::ios::binary);
 
 	// get length of file and compare to size of grid
 	fin.seekg(0, fin.end);
@@ -166,12 +161,9 @@ void loadGrid(ref_ptr<Grid3f> grid, std::string filename, double c) {
 }
 
 void loadGrid(ref_ptr<Grid1f> grid, std::string filename, double c) {
+	if (! std::filesystem::exists(filename))
+		throw std::runtime_error("load Grid1f: " + filename + " not found.");
 	std::ifstream fin(filename.c_str(), std::ios::binary);
-	if (!fin) {
-		std::stringstream ss;
-		ss << "load Grid1f: " << filename << " not found";
-		throw std::runtime_error(ss.str());
-	}
 
 	// get length of file and compare to size of grid
 	fin.seekg(0, fin.end);
@@ -198,12 +190,11 @@ void loadGrid(ref_ptr<Grid1f> grid, std::string filename, double c) {
 }
 
 void dumpGrid(ref_ptr<Grid3f> grid, std::string filename, double c) {
-	std::ofstream fout(filename.c_str(), std::ios::binary);
-	if (!fout) {
-		std::stringstream ss;
-		ss << "dump Grid3f: " << filename << " not found";
-		throw std::runtime_error(ss.str());
+	if (! std::filesystem::exists(filename)) {
+		throw std::runtime_error("load Grid3f: " + filename + " not found.");
 	}
+	std::ofstream fout(filename.c_str(), std::ios::binary);
+
 	for (int ix = 0; ix < grid->getNx(); ix++) {
 		for (int iy = 0; iy < grid->getNy(); iy++) {
 			for (int iz = 0; iz < grid->getNz(); iz++) {
@@ -218,12 +209,11 @@ void dumpGrid(ref_ptr<Grid3f> grid, std::string filename, double c) {
 }
 
 void dumpGrid(ref_ptr<Grid1f> grid, std::string filename, double c) {
-	std::ofstream fout(filename.c_str(), std::ios::binary);
-	if (!fout) {
-		std::stringstream ss;
-		ss << "dump Grid1f: " << filename << " not found";
-		throw std::runtime_error(ss.str());
+	if (! std::filesystem::exists(filename)) {
+		throw std::runtime_error("load Grid1f: " + filename + " not found.");
 	}
+	std::ofstream fout(filename.c_str(), std::ios::binary);
+
 	for (int ix = 0; ix < grid->getNx(); ix++) {
 		for (int iy = 0; iy < grid->getNy(); iy++) {
 			for (int iz = 0; iz < grid->getNz(); iz++) {
@@ -236,12 +226,11 @@ void dumpGrid(ref_ptr<Grid1f> grid, std::string filename, double c) {
 }
 
 void loadGridFromTxt(ref_ptr<Grid3f> grid, std::string filename, double c) {
-	std::ifstream fin(filename.c_str());
-	if (!fin) {
-		std::stringstream ss;
-		ss << "load Grid3f: " << filename << " not found";
-		throw std::runtime_error(ss.str());
+	if (! std::filesystem::exists(filename)) {
+		throw std::runtime_error("load Grid3f: " + filename + " not found.");
 	}
+	std::ifstream fin(filename.c_str(), std::ios::binary);
+
 	// skip header lines
 	while (fin.peek() == '#')
 		fin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
@@ -261,12 +250,10 @@ void loadGridFromTxt(ref_ptr<Grid3f> grid, std::string filename, double c) {
 }
 
 ref_ptr<Grid3f> loadGrid3fFromTxt(std::string filename, double c) {
-	std::ifstream fin(filename.c_str());
-	if (!fin) {
-		std::stringstream ss;
-		ss << "load Grid3f: " << filename << " not found";
-		throw std::runtime_error(ss.str());
+	if (! std::filesystem::exists(filename)) {
+		throw std::runtime_error("load Grid3f: " + filename + " not found.");
 	}
+	std::ifstream fin(filename.c_str(), std::ios::binary);
 
 	// search in header lines for GridProperties
 	while (fin.peek() == '#') {
@@ -282,7 +269,7 @@ ref_ptr<Grid3f> loadGrid3fFromTxt(std::string filename, double c) {
 			std::string name, type;
 			ss >> name >> name >> name >> type;
 			if (type != "Grid3f") 
-				throw std::runtime_error("Tried to load Grid3f, but Gridproperties assume grid type " + type);
+				throw std::runtime_error("Tried to load Grid3f, but GridProperties assume grid type " + type);
 
 			// grid origin
 			double x, y, z;
