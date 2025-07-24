@@ -18,7 +18,7 @@ TextOutput::TextOutput(std::ostream& out, OutputType outputtype) :
 
 TextOutput::TextOutput(const std::string& filename) :  
 Output(), outfile(filename.c_str(), std::ios::binary), out(&outfile),  filename(filename), storeRandomSeeds(false) {
-	if (! outfile.is_open())
+	if (not outfile.is_open())
 		throw std::runtime_error(std::string("Cannot create file: ") + filename);
 	if (kiss::ends_with(filename, ".gz"))
 		gzip();
@@ -26,7 +26,7 @@ Output(), outfile(filename.c_str(), std::ios::binary), out(&outfile),  filename(
 
 TextOutput::TextOutput(const std::string& filename, OutputType outputtype) : 
 	Output(outputtype), outfile(filename.c_str(), std::ios::binary), out(&outfile), filename(filename), storeRandomSeeds(false) {
-	if (! outfile.is_open())
+	if (not outfile.is_open())
 		throw std::runtime_error(std::string("Cannot create file: ") + filename);
 	if (kiss::ends_with(filename, ".gz"))
 		gzip();
@@ -92,7 +92,7 @@ void TextOutput::printHeader() const {
 	if (fields.test(CurrentIdColumn) or fields.test(CreatedIdColumn) or fields.test(SourceIdColumn))
 		*out << "# ID/ID0/ID1    Particle type (PDG MC numbering scheme)\n";
 	if (fields.test(CurrentEnergyColumn) or fields.test(CreatedEnergyColumn) or fields.test(SourceEnergyColumn))
-		*out << "# E/E0/E1       Energy [" << energyScale / EeV << " EeV]\n";
+		*out << "# E/E0/E1       Energy [" << energyScale / eV << " eV]\n";
 	if (fields.test(CurrentPositionColumn) or fields.test(CreatedPositionColumn) or fields.test(SourcePositionColumn))
 		*out << "# X/X0/X1...    Position [" << lengthScale / Mpc << " Mpc]\n";
 	if (fields.test(CurrentDirectionColumn) or fields.test(CreatedDirectionColumn) or fields.test(SourceDirectionColumn))
@@ -101,12 +101,13 @@ void TextOutput::printHeader() const {
 		*out << "# W             Weights" << " \n";
 	if (fields.test(CandidateTagColumn)) {
 		*out << "# tag           Candidate tag can be given by the source feature (user defined tag) or by the following interaction process \n";
-		*out << "#\tES  \tElasticScattering \n" << "#\tEPP \tElectronPairProduction \n" << "#\tEMPP\tEMPairProduction\n"
+		*out 
+			<< "#\tES  \tElasticScattering \n" << "#\tEPP \tElectronPairProduction \n" << "#\tEMPP\tEMPairProduction\n"
 			<< "#\tEMDP\tEMDoublePairProduction\n" << "#\tEMTP\tEMTripletPairProduction \n" << "#\tEMIC\tEMInverseComptonScattering\n"
 			<< "#\tND  \tNuclearDecay\n" << "#\tPD  \tPhotoDisintegration\n" << "#\tPPP  \tPhotoPionProduction\n" << "#\tSYN \tSynchrotronRadiation\n"
 			<< "#\tPRIM/SEC\t primary / secondary particle\n";
 	}
-	for(std::vector<Property>::const_iterator iter = properties.begin(); iter != properties.end(); ++iter) {
+	for (std::vector<Property>::const_iterator iter = properties.begin(); iter != properties.end(); ++iter) {
 		*out << "# " << (*iter).name << " " << (*iter).comment << "\n";
 	}
 
@@ -240,9 +241,9 @@ void TextOutput::load(const std::string &filename, ParticleCollector *collector)
 	std::ifstream infile(filename.c_str());
 	
 	double lengthScale = Mpc; // default Mpc
-	double energyScale = EeV; // default EeV
+	double energyScale = eV; // default eV
 
-	if (! infile.good())
+	if (not infile.good())
 		throw std::runtime_error("crpropa::TextOutput: could not open file " + filename);
 	in = &infile;
 	
