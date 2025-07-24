@@ -6,7 +6,7 @@
 #include "crpropa/ParticleID.h"
 
 #ifdef CRPROPA_HAVE_MUPARSER
-#include "muParser.h"
+	#include "muParser.h"
 #endif
 
 #include <sstream>
@@ -21,15 +21,15 @@ void Source::add(SourceFeature* property) {
 
 ref_ptr<Candidate> Source::getCandidate() const {
 	ref_ptr<Candidate> candidate = new Candidate();
-	for (int i = 0; i < features.size(); i++)
+	for (size_t i = 0; i < features.size(); i++)
 		(*features[i]).prepareCandidate(*candidate);
 	return candidate;
 }
 
 std::string Source::getDescription() const {
 	std::stringstream ss;
-	ss << "Cosmic ray source\n";
-	for (int i = 0; i < features.size(); i++)
+	ss << "Source\n";
+	for (size_t i = 0; i < features.size(); i++)
 		ss << "    " << features[i]->getDescription();
 	return ss.str();
 }
@@ -51,8 +51,8 @@ ref_ptr<Candidate> SourceList::getCandidate() const {
 
 std::string SourceList::getDescription() const {
 	std::stringstream ss;
-	ss << "List of cosmic ray sources\n";
-	for (int i = 0; i < sources.size(); i++)
+	ss << "List of sources\n";
+	for (size_t i = 0; i < sources.size(); i++)
 		ss << "  " << sources[i]->getDescription();
 	return ss.str();
 }
@@ -109,7 +109,7 @@ void SourceMultipleParticleTypes::prepareParticle(ParticleState& particle) const
 void SourceMultipleParticleTypes::setDescription() {
 	std::stringstream ss;
 	ss << "SourceMultipleParticleTypes: Random particle type\n";
-	for (int i = 0; i < particleTypes.size(); i++)
+	for (size_t i = 0; i < particleTypes.size(); i++)
 		ss << "      ID = " << particleTypes[i] << "\n";
 	description = ss.str();
 }
@@ -131,14 +131,13 @@ void SourceEnergy::setDescription() {
 }
 
 // ----------------------------------------------------------------------------
-SourcePowerLawSpectrum::SourcePowerLawSpectrum(double Emin, double Emax,
-		double index) :
+SourcePowerLawSpectrum::SourcePowerLawSpectrum(double Emin, double Emax, double index) : 
 		Emin(Emin), Emax(Emax), index(index) {
 	setDescription();
 }
 
 void SourcePowerLawSpectrum::prepareParticle(ParticleState& particle) const {
-	Random &random = Random::instance();
+	Random& random = Random::instance();
 	double E = random.randPowerLaw(index, Emin, Emax);
 	particle.setEnergy(E);
 }
@@ -184,7 +183,7 @@ void SourceComposition::prepareParticle(ParticleState& particle) const {
 	if (nuclei.size() == 0)
 		throw std::runtime_error("SourceComposition: No source isotope set");
 
-	Random &random = Random::instance();
+	Random& random = Random::instance();
 
 	// draw random particle type
 	size_t i = random.randBin(cdf);
@@ -201,7 +200,7 @@ void SourceComposition::setDescription() {
 	ss << "SourceComposition: Random element and energy ";
 	ss << "E = " << Emin / EeV << " - Z*" << Rmax / EeV << " EeV, ";
 	ss << "dN/dE ~ E^" << index << "\n";
-	for (int i = 0; i < nuclei.size(); i++)
+	for (size_t i = 0; i < nuclei.size(); i++)
 		ss << "      ID = " << nuclei[i] << "\n";
 	description = ss.str();
 }
@@ -249,7 +248,7 @@ void SourceMultiplePositions::prepareParticle(ParticleState& particle) const {
 void SourceMultiplePositions::setDescription() {
 	std::stringstream ss;
 	ss << "SourceMultiplePositions: Random position from list\n";
-	for (int i = 0; i < positions.size(); i++)
+	for (size_t i = 0; i < positions.size(); i++)
 		ss << "  " << positions[i] / Mpc << " Mpc\n";
 	description = ss.str();
 }
@@ -261,7 +260,7 @@ SourceUniformSphere::SourceUniformSphere(Vector3d center, double radius) :
 }
 
 void SourceUniformSphere::prepareParticle(ParticleState& particle) const {
-	Random &random = Random::instance();
+	Random& random = Random::instance();
 	double r = pow(random.rand(), 1. / 3.) * radius;
 	particle.setPosition(center + random.randVector() * r);
 }
@@ -285,7 +284,7 @@ SourceUniformHollowSphere::SourceUniformHollowSphere(
 }
 
 void SourceUniformHollowSphere::prepareParticle(ParticleState& particle) const {
-	Random &random = Random::instance();
+	Random& random = Random::instance();
 	double r = radius_inner + pow(random.rand(), 1. / 3.) * (radius_outer - radius_inner);
 	particle.setPosition(center + random.randVector() * r);
 }
@@ -306,7 +305,7 @@ SourceUniformShell::SourceUniformShell(Vector3d center, double radius) :
 }
 
 void SourceUniformShell::prepareParticle(ParticleState& particle) const {
-	Random &random = Random::instance();
+	Random& random = Random::instance();
 	particle.setPosition(center + random.randVector() * radius);
 }
 
@@ -325,7 +324,7 @@ SourceUniformBox::SourceUniformBox(Vector3d origin, Vector3d size) :
 }
 
 void SourceUniformBox::prepareParticle(ParticleState& particle) const {
-	Random &random = Random::instance();
+	Random& random = Random::instance();
 	Vector3d pos(random.rand(), random.rand(), random.rand());
 	particle.setPosition(pos * size + origin);
 }
@@ -344,7 +343,7 @@ SourceUniformCylinder::SourceUniformCylinder(Vector3d origin, double height, dou
 }
 
 void SourceUniformCylinder::prepareParticle(ParticleState& particle) const {
-  Random &random = Random::instance();
+  Random& random = Random::instance();
   double phi = 2*M_PI*random.rand();
   double RandRadius = radius*pow(random.rand(), 1. / 2.);
   Vector3d pos(cos(phi)*RandRadius, sin(phi)*RandRadius, (-0.5+random.rand())*height);
@@ -380,7 +379,7 @@ SourceSNRDistribution::SourceSNRDistribution(double rEarth, double alpha, double
 }
 
 void SourceSNRDistribution::prepareParticle(ParticleState& particle) const {
-  	Random &random = Random::instance();
+  	Random& random = Random::instance();
 	double RPos;
 	while (true) {
 		RPos = random.rand() * rMax;
@@ -502,7 +501,7 @@ SourcePulsarDistribution::SourcePulsarDistribution(double rEarth, double beta, d
 }
 
 void SourcePulsarDistribution::prepareParticle(ParticleState& particle) const {
-  	Random &random = Random::instance();
+  	Random& random = Random::instance();
 	double Rtilde;
 	while (true) {
 		Rtilde = random.rand() * rMax;
@@ -557,12 +556,12 @@ double SourcePulsarDistribution::ftheta(int i, double r) const {
 }
 
 double SourcePulsarDistribution::blurR(double rTilde) const {
-	Random &random = Random::instance();
+	Random& random = Random::instance();
 	return random.randNorm(rTilde, rBlur * rTilde);
 }
 
 double SourcePulsarDistribution::blurTheta(double thetaTilde, double rTilde) const {
-	Random &random = Random::instance();
+	Random& random = Random::instance();
 	double thetaCorr = (random.rand() - 0.5) * 2 * M_PI;
 	double tau = thetaCorr * exp(- thetaBlur * rTilde);
 	return thetaTilde + tau;
@@ -669,9 +668,9 @@ void SourceUniform1D::setDescription() {
 SourceDensityGrid::SourceDensityGrid(ref_ptr<Grid1f> grid) :
 		grid(grid) {
 	float sum = 0;
-	for (int ix = 0; ix < grid->getNx(); ix++) {
-		for (int iy = 0; iy < grid->getNy(); iy++) {
-			for (int iz = 0; iz < grid->getNz(); iz++) {
+	for (size_t ix = 0; ix < grid->getNx(); ix++) {
+		for (size_t iy = 0; iy < grid->getNy(); iy++) {
+			for (size_t iz = 0; iz < grid->getNz(); iz++) {
 				sum += grid->get(ix, iy, iz);
 				grid->get(ix, iy, iz) = sum;
 			}
@@ -681,7 +680,7 @@ SourceDensityGrid::SourceDensityGrid(ref_ptr<Grid1f> grid) :
 }
 
 void SourceDensityGrid::prepareParticle(ParticleState& particle) const {
-	Random &random = Random::instance();
+	Random& random = Random::instance();
 
 	// draw random bin
 	size_t i = random.randBin(grid->getGrid());
@@ -709,7 +708,7 @@ SourceDensityGrid1D::SourceDensityGrid1D(ref_ptr<Grid1f> grid) :
 		throw std::runtime_error("SourceDensityGrid1D: Nz != 1");
 
 	float sum = 0;
-	for (int ix = 0; ix < grid->getNx(); ix++) {
+	for (size_t ix = 0; ix < grid->getNx(); ix++) {
 		sum += grid->get(ix, 0, 0);
 		grid->get(ix, 0, 0) = sum;
 	}
@@ -717,7 +716,7 @@ SourceDensityGrid1D::SourceDensityGrid1D(ref_ptr<Grid1f> grid) :
 }
 
 void SourceDensityGrid1D::prepareParticle(ParticleState& particle) const {
-	Random &random = Random::instance();
+	Random& random = Random::instance();
 
 	// draw random bin
 	size_t i = random.randBin(grid->getGrid());
@@ -740,7 +739,7 @@ SourceIsotropicEmission::SourceIsotropicEmission() {
 }
 
 void SourceIsotropicEmission::prepareParticle(ParticleState& particle) const {
-	Random &random = Random::instance();
+	Random& random = Random::instance();
 	particle.setDirection(random.randVector());
 }
 
@@ -755,8 +754,8 @@ SourceDirectedEmission::SourceDirectedEmission(Vector3d mu, double kappa): mu(mu
 	setDescription();
 }
 
-void SourceDirectedEmission::prepareCandidate(Candidate &candidate) const {
-	Random &random = Random::instance();
+void SourceDirectedEmission::prepareCandidate(Candidate& candidate) const {
+	Random& random = Random::instance();
 
 	Vector3d muvec = mu / mu.getR();
         Vector3d v = random.randFisherVector(muvec, kappa);
@@ -782,14 +781,14 @@ void SourceDirectedEmission::setDescription() {
 }
 
 // ----------------------------------------------------------------------------
-SourceLambertDistributionOnSphere::SourceLambertDistributionOnSphere(const Vector3d &center, double radius, bool inward) :
+SourceLambertDistributionOnSphere::SourceLambertDistributionOnSphere(const Vector3d &center, double radius, bool inward) : 
 		center(center), radius(radius) {
 	this->inward = inward;
 	setDescription();
 }
 
 void SourceLambertDistributionOnSphere::prepareParticle(ParticleState& particle) const {
-	Random &random = Random::instance();
+	Random& random = Random::instance();
 	Vector3d normalVector = random.randVector();
 	particle.setPosition(center + normalVector * radius);
 	double sign = inward ? -1 : 1; // negative (positive) Lamberts vector for inward (outward) directed emission
@@ -825,7 +824,7 @@ SourceEmissionMap::SourceEmissionMap(EmissionMap *emissionMap) : emissionMap(emi
 	setDescription();
 }
 
-void SourceEmissionMap::prepareCandidate(Candidate &candidate) const {
+void SourceEmissionMap::prepareCandidate(Candidate& candidate) const {
 	if (emissionMap) {
 		bool accept = emissionMap->checkDirection(candidate.source);
 		candidate.setActive(accept);
@@ -849,7 +848,7 @@ SourceEmissionCone::SourceEmissionCone(Vector3d direction, double aperture) :
 }
 
 void SourceEmissionCone::prepareParticle(ParticleState& particle) const {
-	Random &random = Random::instance();
+	Random& random = Random::instance();
 	particle.setDirection(random.randConeVector(direction, aperture));
 }
 
@@ -1018,7 +1017,7 @@ void SourceGenericComposition::prepareParticle(ParticleState& particle) const {
 	if (nuclei.size() == 0)
 		throw std::runtime_error("SourceComposition: No source isotope set");
 
-	Random &random = Random::instance();
+	Random& random = Random::instance();
 
 
 	// draw random particle type
@@ -1043,7 +1042,7 @@ SourceTag::SourceTag(std::string tag) {
 	setTag(tag);
 }
 
-void SourceTag::prepareCandidate(Candidate &cand) const {
+void SourceTag::prepareCandidate(Candidate& cand) const {
 	cand.setTagOrigin(sourceTag);
 }
 
@@ -1074,8 +1073,8 @@ void SourceMassDistribution::setXrange(double xMin, double xMax) {
 		KISS_LOG_WARNING << "SourceMassDistribution: minimal x-value must not exceed the maximal one\n";
 		return;
 	}
-	this -> xMin = xMin;
-	this -> xMax = xMax;
+	this->xMin = xMin;
+	this->xMax = xMax;
 }
 
 void SourceMassDistribution::setYrange(double yMin, double yMax) {
@@ -1083,8 +1082,8 @@ void SourceMassDistribution::setYrange(double yMin, double yMax) {
 		KISS_LOG_WARNING << "SourceMassDistribution: minimal y-value must not exceed the maximal one\n";
 		return;
 	}
-	this -> yMin = yMin;
-	this -> yMax = yMax;
+	this->yMin = yMin;
+	this->yMax = yMax;
 }
 
 void SourceMassDistribution::setZrange(double zMin, double zMax) {
@@ -1092,15 +1091,15 @@ void SourceMassDistribution::setZrange(double zMin, double zMax) {
 		KISS_LOG_WARNING << "SourceMassDistribution: minimal z-value must not exceed the maximal one\n";
 		return;
 	}
-	this -> zMin = zMin;
-	this -> zMax = zMax;
+	this->zMin = zMin;
+	this->zMax = zMax;
 }
 
 Vector3d SourceMassDistribution::samplePosition() const {
 	Vector3d pos; 
-	Random &rand = Random::instance();
+	Random& rand = Random::instance();
 
-	for (int i = 0; i < maxTries; i++) {
+	for (size_t i = 0; i < maxTries; i++) {
 		pos.x = rand.randUniform(xMin, xMax);
 		pos.y = rand.randUniform(yMin, yMax);
 		pos.z = rand.randUniform(zMin, zMax);
@@ -1122,13 +1121,13 @@ void SourceMassDistribution::prepareParticle(ParticleState &state) const {
 }
 
 void SourceMassDistribution::setMaximalTries(int tries) {
-	this -> maxTries = tries;
+	this->maxTries = tries;
 }
 
 std::string SourceMassDistribution::getDescription() {
 	std::stringstream ss;
-	ss << "SourceMassDistribuion: following the density distribution :\n";
-	ss << "\t" << density -> getDescription();
+	ss << "SourceMassDistribution: following the density distribution :\n";
+	ss << "\t" << density->getDescription();
 	ss << "with a maximal density of " << maxDensity << " / m^3 \n";
 	ss << "using the sampling range: \n";
 	ss << "\t x in [" << xMin / kpc << " ; " << xMax / kpc << "] kpc \n";
