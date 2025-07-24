@@ -484,7 +484,7 @@
 
   crpropa::ref_ptr<crpropa::Module> __getitem__(size_t i) {
     if (i >= $self->size()) {
-            throw RangeError();
+      throw RangeError();
     }
     return (*($self))[i];
   }
