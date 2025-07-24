@@ -1,7 +1,5 @@
 #include "crpropa/module/Output.h"
-#include "crpropa/Units.h"
 
-#include <stdexcept>
 
 namespace crpropa {
 
@@ -30,7 +28,7 @@ void Output::modify() {
 		throw std::runtime_error("Output: cannot change Output parameters after data has been written to file.");
 }
 
-void Output::process(Candidate *c) const {
+void Output::process(Candidate* c) const {
 	count++;
 }
 
@@ -122,7 +120,7 @@ size_t Output::size() const {
 	return count;
 }
 
-void Output::enableProperty(const std::string &property, const Variant &defaultValue, const std::string &comment) {
+void Output::enableProperty(const std::string& property, const Variant& defaultValue, const std::string& comment) {
 	modify();
 	Property prop;
 	prop.name = property;
