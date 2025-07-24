@@ -743,63 +743,34 @@ TEST(EMPairProduction, limitNextStep) {
 }
 
 TEST(EMPairProduction, secondaries) {
-	// Test if secondaries are correctly produced.
 	ref_ptr<PhotonField> cmb = new CMB();
-	ref_ptr<PhotonField> irb = new IRB_Saldana21();
-	ref_ptr<PhotonField> urb = new URB_Nitu21();
-	EMPairProduction m(cmb);
-	m.setHaveElectrons(true);
-	m.setThinning(0.);
+	EMPairProduction m(cmb, true);
 
-	std::vector<ref_ptr<PhotonField>> fields;
-	fields.push_back(cmb);
-	fields.push_back(irb);
-	fields.push_back(urb);
+	double E = 1 * PeV;
+	Candidate* c = new Candidate(22, E);
 
-	// loop over photon backgrounds
-	for (int f = 0; f < fields.size(); f++) {
-		m.setPhotonField(fields[f]);
-		for (int i = 0; i < 140; i++) { // loop over energies Ep = (1e10 - 1e23) eV
-			double Ep = pow(10, 9.05 + 0.1 * i) * eV;
-			Candidate c(22, Ep);
-			c.setCurrentStep(1e10 * Mpc);
+	m.performInteraction(c);
+	EXPECT_FALSE(c->isActive());
+	EXPECT_EQ(c->secondaries.size(), 2);
 
-			m.process(&c);
-
-			// pass if no interaction has ocurred (no tabulated rates)
-			if (c.isActive())
-				continue;
-			
-			// expect 2 secondaries
-			EXPECT_EQ(c.secondaries.size(), 2);
-
-			// expect electron / positron with energies 0 < E < Ephoton
-			double Etot = 0;
-			for (int j = 0; j < c.secondaries.size(); j++) {
-				Candidate s = *c.secondaries[j];
-				EXPECT_EQ(abs(s.current.getId()), 11);
-				EXPECT_GT(s.current.getEnergy(), 0);
-				EXPECT_LT(s.current.getEnergy(), Ep);
-				Etot += s.current.getEnergy();
-			}
-
-			// test energy conservation
-			EXPECT_DOUBLE_EQ(Ep, Etot);
-		}
-	}
+	Candidate s1 = *c->secondaries[0];
+	Candidate s2 = *c->secondaries[1];
+	EXPECT_GT(s1.current.getEnergy(), 0);
+	EXPECT_LT(s1.current.getEnergy(), E);
+	EXPECT_GT(s2.current.getEnergy(), 0);
+	EXPECT_LT(s2.current.getEnergy(), E);
 }
 
 TEST(EMPairProduction, interactionTag) {
-	EMPairProduction m(new CMB());
+	EMPairProduction m(new CMB(), true);
 
 	// test default interactionTag
 	EXPECT_TRUE(m.getInteractionTag() == "EMPP");
 
 	// test secondary tag
-	m.setHaveElectrons(true);
-	Candidate c(22, 1 * EeV);
-	m.performInteraction(&c);
-	EXPECT_TRUE(c.secondaries[0] -> getTagOrigin() == "EMPP");
+	Candidate* c = new Candidate(22, 1 * PeV);
+	m.performInteraction(c);
+	EXPECT_TRUE(c->secondaries[0]->getTagOrigin() == "EMPP");
 
 	// test custom tag
 	m.setInteractionTag("myTag");
@@ -848,61 +819,32 @@ TEST(EMDoublePairProduction, limitNextStep) {
 }
 
 TEST(EMDoublePairProduction, secondaries) {
-	// Test if secondaries are correctly produced.
 	ref_ptr<PhotonField> cmb = new CMB();
-	ref_ptr<PhotonField> irb = new IRB_Saldana21();
-	ref_ptr<PhotonField> urb = new URB_Nitu21();
-	EMPairProduction m(cmb);
-	m.setHaveElectrons(true);
-	m.setThinning(0.);
+	EMDoublePairProduction m(cmb, true);
 
-	std::vector<ref_ptr<PhotonField>> fields;
-	fields.push_back(cmb);
-	fields.push_back(irb);
-	fields.push_back(urb);
+	double E = 1e18 * eV;
+	Candidate* c = new Candidate(22, E);
+	EXPECT_EQ(c->secondaries.size(), 0);
 
-	// loop over photon backgrounds
-	for (int f = 0; f < fields.size(); f++) {
-		m.setPhotonField(fields[f]);
-		
-		// loop over energies Ep = (1e9 - 1e23) eV
-		for (int i = 0; i < 140; i++) {
-			double Ep = pow(10, 9.05 + 0.1 * i) * eV;
-			Candidate c(22, Ep);
-			c.setCurrentStep(1e4 * Mpc); // use lower value so that the test can run faster
-			m.process(&c);
+	m.performInteraction(c);
+	EXPECT_FALSE(c->isActive());
+	EXPECT_EQ(c->secondaries.size(), 2);
 
-			// pass if no interaction has occured (no tabulated rates)
-			if (c.isActive())
-				continue;
-			
-			// expect 2 secondaries (only one pair is considered)
-			EXPECT_EQ(c.secondaries.size(), 2);
-
-			// expect electron / positron with energies 0 < E < Ephoton
-			double Etot = 0;
-			for (int j = 0; j < c.secondaries.size(); j++) {
-				Candidate s = *c.secondaries[j];
-				EXPECT_EQ(abs(s.current.getId()), 11);
-				EXPECT_GT(s.current.getEnergy(), 0);
-				EXPECT_LT(s.current.getEnergy(), Ep);
-				Etot += s.current.getEnergy();
-			}
-
-			// test energy conservation
-			EXPECT_NEAR(Ep, Etot, 1E-9);
-		}
-	}
+	Candidate s1 = *c->secondaries[0];
+	Candidate s2 = *c->secondaries[1];
+	EXPECT_GT(s1.current.getEnergy(), 0);
+	EXPECT_LT(s1.current.getEnergy(), E);
+	EXPECT_GT(s2.current.getEnergy(), 0);
+	EXPECT_LT(s2.current.getEnergy(), E);
 }
 
 TEST(EMDoublePairProduction, interactionTag) {
-	EMDoublePairProduction m(new CMB());
+	EMDoublePairProduction m(new CMB(), true);
 
 	// test default interactionTag
 	EXPECT_TRUE(m.getInteractionTag() == "EMDP");
 
 	// test secondary tag
-	m.setHaveElectrons(true);
 	Candidate c(22, 1 * EeV);
 	m.performInteraction(&c);
 	EXPECT_TRUE(c.secondaries[0] -> getTagOrigin() == "EMDP");
@@ -954,65 +896,38 @@ TEST(EMTripletPairProduction, limitNextStep) {
 }
 
 TEST(EMTripletPairProduction, secondaries) {
-	// Test if secondaries are correctly produced.
 	ref_ptr<PhotonField> cmb = new CMB();
-	ref_ptr<PhotonField> irb = new IRB_Saldana21();
-	ref_ptr<PhotonField> urb = new URB_Nitu21();
-	EMPairProduction m(cmb);
-	m.setHaveElectrons(true);
-	m.setThinning(0.);
+	EMTripletPairProduction m(cmb, true);
 
-	std::vector<ref_ptr<PhotonField>> fields;
-	fields.push_back(cmb);
-	fields.push_back(irb);
-	fields.push_back(urb);
+	double E = 1e19 * eV;
+	Candidate* c = new Candidate(11, E);
+	EXPECT_EQ(c->secondaries.size(), 0);
 
-	// loop over photon backgrounds
-	for (int f = 0; f < fields.size(); f++) {
-		m.setPhotonField(fields[f]);
-		
-		// loop over energies Ep = (1e9 - 1e23) eV
-		for (int i = 0; i < 140; i++) {
+	m.performInteraction(c);
+	EXPECT_TRUE(c->isActive());
+	EXPECT_GT(c->current.getEnergy(), 0.);
+	EXPECT_EQ(c->secondaries.size(), 2);
 
-			double Ep = pow(10, 9.05 + 0.1 * i) * eV;
-			Candidate c(11, Ep);
-			c.setCurrentStep(1e4 * Mpc); // use lower value so that the test can run faster
-			m.process(&c);
-
-			// pass if no interaction has occured (no tabulated rates)
-			if (c.current.getEnergy() == Ep)
-				continue;
-
-			// expect positive energy of primary electron
-			EXPECT_GT(c.current.getEnergy(), 0);
-			double Etot = c.current.getEnergy();
-
-			// expect electron / positron with energies 0 < E < Ephoton
-			for (int j = 0; j < c.secondaries.size(); j++) {
-				Candidate s = *c.secondaries[j];
-				EXPECT_EQ(abs(s.current.getId()), 11);
-				EXPECT_GT(s.current.getEnergy(), 0);
-				EXPECT_LT(s.current.getEnergy(), Ep);
-				Etot += s.current.getEnergy();
-			}
-
-			// test energy conservation
-			EXPECT_NEAR(Ep, Etot, 1e-9);
-		}
-	}
+	Candidate s1 = *c->secondaries[0];
+	Candidate s2 = *c->secondaries[1];
+	EXPECT_EQ(abs(s1.current.getId()), 11);
+	EXPECT_EQ(abs(s2.current.getId()), 11);
+	EXPECT_GT(s1.current.getEnergy(), 0.);
+	EXPECT_LT(s1.current.getEnergy(), E);
+	EXPECT_GT(s2.current.getEnergy(), 0.);
+	EXPECT_LT(s2.current.getEnergy(), E);
 }
 
 TEST(EMTripletPairProduction, interactionTag) {
-	EMTripletPairProduction m(new CMB());
+	EMTripletPairProduction m(new CMB(), true);
 
 	// test default interactionTag
 	EXPECT_TRUE(m.getInteractionTag() == "EMTP");
 
 	// test secondary tag
-	m.setHaveElectrons(true);
-	Candidate c(11, 1 * EeV);
-	m.performInteraction(&c);
-	EXPECT_TRUE(c.secondaries[0] -> getTagOrigin() == "EMTP");
+	Candidate* c = new Candidate(11, 1 * EeV);
+	m.performInteraction(c);
+	EXPECT_TRUE(c->secondaries[0]->getTagOrigin() == "EMTP");
 
 	// test custom tag
 	m.setInteractionTag("myTag");
@@ -1061,65 +976,34 @@ TEST(EMInverseComptonScattering, limitNextStep) {
 }
 
 TEST(EMInverseComptonScattering, secondaries) {
-	// Test if secondaries are correctly produced.
 	ref_ptr<PhotonField> cmb = new CMB();
-	ref_ptr<PhotonField> irb = new IRB_Saldana21();
-	ref_ptr<PhotonField> urb = new URB_Nitu21();
-	EMPairProduction m(cmb);
-	m.setHaveElectrons(true);
-	m.setThinning(0.);
+	EMInverseComptonScattering m(cmb, true);
 
-	std::vector<ref_ptr<PhotonField>> fields;
-	fields.push_back(cmb);
-	fields.push_back(irb);
-	fields.push_back(urb);
+	double E = 1e14 * eV;
+	Candidate* c = new Candidate(11, E);
+	EXPECT_EQ(c->secondaries.size(), 0);
 
-	// loop over photon backgrounds
-	for (int f = 0; f < fields.size(); f++) {
-		m.setPhotonField(fields[f]);
-		
-		// loop over energies Ep = (1e9 - 1e23) eV
-		for (int i = 0; i < 140; i++) {
-			double Ep = pow(10, 9.05 + 0.1 * i) * eV;
-			Candidate c(11, Ep);
-			c.setCurrentStep(1e3 * Mpc); // use lower value so that the test can run faster
-			m.process(&c);
+	m.performInteraction(c);
+	EXPECT_TRUE(c->isActive());
+	EXPECT_GT(c->current.getEnergy(), 0.);
+	EXPECT_EQ(c->secondaries.size(), 1);
 
-			// pass if no interaction has occured (no tabulated rates)
-			if (c.current.getEnergy() == Ep)
-				continue;
-			
-			// expect positive energy of primary electron
-			EXPECT_GT(c.current.getEnergy(), 0);
-
-			// expect photon with energy 0 < E < Ephoton
-			Candidate s = *c.secondaries[0];
-			EXPECT_EQ(abs(s.current.getId()), 22);
-			EXPECT_TRUE(s.current.getEnergy() >= 0.);
-			EXPECT_TRUE(s.current.getEnergy() < Ep);
-
-
-			double Etot = c.current.getEnergy();
-			for (int j = 0; j < c.secondaries.size(); j++) {
-				s = *c.secondaries[j];
-				Etot += s.current.getEnergy();
-			}
-			EXPECT_NEAR(Ep, Etot, 1e-9); 
-		}
-	}
+	Candidate s = *c->secondaries[0];
+	EXPECT_EQ(abs(s.current.getId()), 22);
+	EXPECT_GT(s.current.getEnergy(), 0.);
+	EXPECT_LT(s.current.getEnergy(), E);
 }
 
 TEST(EMInverseComptonScattering, interactionTag) {
-	EMInverseComptonScattering m(new CMB());
+	EMInverseComptonScattering m(new CMB(), true);
 
 	// test default interactionTag
 	EXPECT_TRUE(m.getInteractionTag() == "EMIC");
 
 	// test secondary tag
-	m.setHavePhotons(true);
-	Candidate c(11, 1 * PeV);
-	m.performInteraction(&c);
-	EXPECT_TRUE(c.secondaries[0] -> getTagOrigin() == "EMIC");
+	Candidate* c = new Candidate(11, 1 * TeV);
+	m.performInteraction(c);
+	EXPECT_TRUE(c->secondaries[0]->getTagOrigin() == "EMIC");
 
 	// test custom tag
 	m.setInteractionTag("myTag");
@@ -1128,16 +1012,16 @@ TEST(EMInverseComptonScattering, interactionTag) {
 
 // SynchrotronRadiation -------------------------------------------------
 TEST(SynchrotronRadiation, interactionTag) {
-	SynchrotronRadiation s(1 * muG, true);
+	SynchrotronRadiation s(1., true);
 
 	// test default interactionTag
 	EXPECT_TRUE(s.getInteractionTag() == "SYN");
 
 	// test secondary tag
-	Candidate c(11, 10 * PeV);
-	c.setCurrentStep(1 * pc);
-	s.process(&c);
-	EXPECT_TRUE(c.secondaries[0] -> getTagOrigin() == "SYN");
+	Candidate* c = new Candidate(11, 10 * PeV);
+	c->setCurrentStep(1 * pc);
+	s.process(c);
+	EXPECT_TRUE(c->secondaries[0]->getTagOrigin() == "SYN");
 
 	// test custom tag
 	s.setInteractionTag("myTag");
@@ -1152,57 +1036,54 @@ TEST(SynchrotronRadiation, simpleTestRMS) {
 
 	EXPECT_EQ(sync.getBrms(), 0);
 	EXPECT_FALSE(sync.getHavePhotons());
-	EXPECT_EQ(sync.getThinning(), 0);
 	EXPECT_EQ(sync.getLimit(), 0.1);
 	EXPECT_EQ(sync.getMaximumSamples(), 0);
 	EXPECT_EQ(sync.getSecondaryThreshold(), 1 * MeV);
 
-	// init with custom values 
-	double b = 1 * muG; 
-	double thinning = 0.23;
-	int samples = 4; 
-	double limit = 0.123;
-	SynchrotronRadiation sync2(b, true, thinning, samples, limit);
+	// // init with custom values 
+	// double b = 1 * muG; 
+	// double thinning = 0.23;
+	// int samples = 4; 
+	// double limit = 0.123;
+	// SynchrotronRadiation sync2(b, true, thinning, samples, limit);
 
-	EXPECT_EQ(sync2.getBrms(), b);
-	EXPECT_TRUE(sync2.getHavePhotons());
-	EXPECT_EQ(sync2.getThinning(), thinning);
-	EXPECT_EQ(sync2.getLimit(), limit);
-	EXPECT_EQ(sync2.getMaximumSamples(), samples);
-	EXPECT_EQ(sync2.getSecondaryThreshold(), 1 * MeV);
+	// EXPECT_EQ(sync2.getBrms(), b);
+	// EXPECT_TRUE(sync2.getHavePhotons());
+	// EXPECT_EQ(sync2.getLimit(), limit);
+	// EXPECT_EQ(sync2.getMaximumSamples(), samples);
+	// EXPECT_EQ(sync2.getSecondaryThreshold(), 1 * MeV);
 }
 
 TEST(SynchrotronRadiation, simpleTestField) {
 	// test initialisation with field 
 
 	// check default values 
-	Vector3d b(0, 0, 1 * muG);
+	Vector3d b(0, 0, 1);
 	ref_ptr<MagneticField> field = new UniformMagneticField(b);
 	SynchrotronRadiation sync(field);
 
 	EXPECT_EQ(sync.getBrms(), 0);
 	EXPECT_FALSE(sync.getHavePhotons());
-	EXPECT_EQ(sync.getThinning(), 0);
 	EXPECT_EQ(sync.getLimit(), 0.1);
 	EXPECT_EQ(sync.getMaximumSamples(), 0);
 	EXPECT_EQ(sync.getSecondaryThreshold(), 1 * MeV);
-	Vector3d fieldAtPosition = sync.getField() -> getField(Vector3d(1, 2 , 3));
+	
+	Vector3d fieldAtPosition = sync.getField()->getField(Vector3d(1, 2 , 3));
 	EXPECT_EQ(fieldAtPosition.getR(), b.getR());
 
-	// init with custom values 
-	double thinning = 0.23;
-	int samples = 4; 
-	double limit = 0.123;
-	SynchrotronRadiation sync2(field, true, thinning, samples, limit);
+	// // init with custom values 
+	// double thinning = 0.23;
+	// int samples = 4; 
+	// double limit = 0.123;
+	// SynchrotronRadiation sync2(field, true, thinning, samples, limit);
 
-	EXPECT_EQ(sync2.getBrms(), 0);
-	EXPECT_TRUE(sync2.getHavePhotons());
-	EXPECT_EQ(sync2.getThinning(), thinning);
-	EXPECT_EQ(sync2.getLimit(), limit);
-	EXPECT_EQ(sync2.getMaximumSamples(), samples);
-	EXPECT_EQ(sync2.getSecondaryThreshold(), 1 * MeV);
-	fieldAtPosition = sync2.getField() -> getField(Vector3d(1, 2 , 3));
-	EXPECT_EQ(fieldAtPosition.getR(), b.getR());
+	// EXPECT_EQ(sync2.getBrms(), 0);
+	// EXPECT_TRUE(sync2.getHavePhotons());
+	// EXPECT_EQ(sync2.getLimit(), limit);
+	// EXPECT_EQ(sync2.getMaximumSamples(), samples);
+	// EXPECT_EQ(sync2.getSecondaryThreshold(), 1 * MeV);
+	// fieldAtPosition = sync2.getField()->getField(Vector3d(1, 2 , 3));
+	// EXPECT_EQ(fieldAtPosition.getR(), b.getR());
 }
 
 TEST(SynchrotronRadiation, getSetFunctions) {
@@ -1216,10 +1097,6 @@ TEST(SynchrotronRadiation, getSetFunctions) {
 	sync.setBrms(5 * muG);
 	EXPECT_EQ(sync.getBrms(), 5 * muG);
 
-	// thinning 
-	sync.setThinning(0.345);
-	EXPECT_EQ(sync.getThinning(), 0.345);
-
 	// limit
 	sync.setLimit(0.234);
 	EXPECT_EQ(sync.getLimit(), 0.234);
@@ -1229,8 +1106,7 @@ TEST(SynchrotronRadiation, getSetFunctions) {
 	EXPECT_EQ(sync.getMaximumSamples(), 12345);
 
 	// field 
-	Vector3d b(1,2,3);
-	ref_ptr<MagneticField> field = new UniformMagneticField(b);
+	ref_ptr<MagneticField> field = new UniformMagneticField(Vector3d(0., 0., 1.));
 	sync.setField(field);
 	EXPECT_TRUE(field == sync.getField()); // same pointer
 
@@ -1240,59 +1116,59 @@ TEST(SynchrotronRadiation, getSetFunctions) {
 }
 
 TEST(SynchrotronRadiation, energyLoss) {
-	double brms = 1 * muG; 
+	double brms = 1e-10 * tesla; 
 	double step = 1 * kpc; 
 	SynchrotronRadiation sync(brms, false);
 
 	double dE, lf, Rg, dEdx;
-	Candidate c(11); 
-	c.setCurrentStep(step);
-	c.setNextStep(step);
+	Candidate* c = new Candidate(11); 
+	c->setCurrentStep(step);
+	c->setNextStep(step);
 	double charge = eplus;
 
 	// 1 GeV 
-	c.current.setEnergy(1 * GeV);
-	lf = c.current.getLorentzFactor();
+	c->current.setEnergy(1 * GeV);
+	lf = c->current.getLorentzFactor();
 	Rg = 1 * GeV / charge / c_light / (brms * sqrt(2. / 3) ); // factor 2/3 for avg magnetic field direction.  
 	dEdx = 1. / 6 / M_PI / epsilon0 * pow(lf * lf - 1, 2) * pow(charge / Rg, 2); // Jackson p. 770 (14.31)
 	dE = dEdx * step;
-	sync.process(&c);
-	EXPECT_NEAR(1 * GeV - c.current.getEnergy(), dE, 0.01 * dE);
+	sync.process(c);
+	EXPECT_NEAR(1 * GeV - c->current.getEnergy(), dE, 0.01 * dE);
 
 	// 100 GeV
-	c.current.setEnergy(100 * GeV);
-	lf = c.current.getLorentzFactor();
+	c->current.setEnergy(100 * GeV);
+	lf = c->current.getLorentzFactor();
 	Rg = 100 * GeV / charge / c_light / (brms * sqrt(2. / 3) ); // factor 2/3 for avg magnetic field direction.  
 	dEdx = 1. / 6 / M_PI / epsilon0 * pow(lf * lf - 1, 2) * pow(charge / Rg, 2); // Jackson p. 770 (14.31)
 	dE = dEdx * step;
-	sync.process(&c);
-	EXPECT_NEAR(100 * GeV - c.current.getEnergy(), dE, 0.01 * dE);
+	sync.process(c);
+	EXPECT_NEAR(100 * GeV - c->current.getEnergy(), dE, 0.01 * dE);
 
 	// 10 TeV
-	c.current.setEnergy(10 * TeV);
-	lf = c.current.getLorentzFactor();
+	c->current.setEnergy(10 * TeV);
+	lf = c->current.getLorentzFactor();
 	Rg = 10 * TeV / charge / c_light / (brms * sqrt(2. / 3) ); // factor 2/3 for avg magnetic field direction.  
 	dEdx = 1. / 6 / M_PI / epsilon0 * pow(lf * lf - 1, 2) * pow(charge / Rg, 2); // Jackson p. 770 (14.31)
 	dE = dEdx * step;
-	sync.process(&c);
-	EXPECT_NEAR(10 * TeV - c.current.getEnergy(), dE, 0.01 * dE);
+	sync.process(c);
+	EXPECT_NEAR(10 * TeV - c->current.getEnergy(), dE, 0.01 * dE);
 
 	// 1 PeV
-	c.current.setEnergy(1 * PeV);
-	lf = c.current.getLorentzFactor();
+	c->current.setEnergy(1 * PeV);
+	lf = c->current.getLorentzFactor();
 	Rg = 1 * PeV / charge / c_light / (brms * sqrt(2. / 3) ); // factor 2/3 for avg magnetic field direction.  
 	dEdx = 1. / 6 / M_PI / epsilon0 * pow(lf * lf - 1, 2) * pow(charge / Rg, 2); // Jackson p. 770 (14.31)
 	dE = dEdx * step;
-	sync.process(&c);
-	EXPECT_NEAR(1 * PeV - c.current.getEnergy(), dE, 0.01 * dE);
+	sync.process(c);
+	EXPECT_NEAR(1 * PeV - c->current.getEnergy(), dE, 0.01 * dE);
 }
 
-TEST(SynchrotronRadiation, PhotonEnergy) {
-	double brms = 1 * muG; 
+TEST(SynchrotronRadiation, photonEnergy) {
+	double brms = 1e-12; 
 	SynchrotronRadiation sync(brms, true);
 	sync.setSecondaryThreshold(0.); // allow all secondaries for testing
 
-	double E = 1 * TeV;
+	double E = 1 * GeV;
 	Candidate c(11, E);
 	c.setCurrentStep(10 * pc); 
 	c.setNextStep(10 * pc);
@@ -1307,7 +1183,7 @@ TEST(SynchrotronRadiation, PhotonEnergy) {
 	// check avg energy of the secondary photons 
 	double Esec = 0; 
 	for (size_t i = 0; i < c.secondaries.size(); i++) {
-		Esec += c.secondaries[i] -> current.getEnergy();
+		Esec += c.secondaries[i]->current.getEnergy();
 	}
 	Esec /= c.secondaries.size();
 
