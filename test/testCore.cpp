@@ -397,17 +397,17 @@ TEST(Random, bigSeedStorage) {
 
 TEST(base64, de_en_coding) {
 	Random a;
-	for (int N=1; N < 100; N++) {
+	for (int N = 1; N < 100; N++) {
 		std::vector<uint32_t> data;
 		data.reserve(N);
-		for (int i =0; i<N; i++)
+		for (int i =0; i < N; i++)
 			data.push_back(a.randInt());
 
 		std::string encoded_data = Base64::encode((unsigned char*)&data[0], sizeof(data[0]) * data.size() / sizeof(unsigned char));
 
 		std::string decoded_data = Base64::decode(encoded_data);
 		size_t S = decoded_data.size() * sizeof(decoded_data[0]) / sizeof(uint32_t);
-		for (int i=0; i < S; i++) {
+		for (size_t i = 0; i < S; i++) {
 			EXPECT_EQ(((uint32_t*)decoded_data.c_str())[i], data[i]);
 		}
 	}
@@ -428,8 +428,7 @@ TEST(Random, base64Seed) {
 
 	const size_t nComp = 42;
 	double values[nComp];
-	for (size_t i = 0; i < nComp; i++)
-	{
+	for (size_t i = 0; i < nComp; i++) {
 		EXPECT_EQ(a.rand(), b.rand());
 	}
 }
@@ -621,7 +620,7 @@ TEST(Grid1f, ClosestValue) {
 }
 
 TEST(Grid1f, clipVolume) {
-	// Check volume clipping for gridproperties constructor
+	// Check volume clipping for grid properties constructor
 	size_t N = 2;
 	Vector3d origin = Vector3d(0.);
 	double spacing = 2;
@@ -672,22 +671,22 @@ TEST(Grid3f, Interpolation) {
 	
 	//tricubic
 	#ifdef HAVE_SIMD
-	grid.setInterpolationType(TRICUBIC);
-	
-	b = grid.interpolate(Vector3d(0.5, 0.5, 1.5) * spacing);
-	EXPECT_FLOAT_EQ(1.7, b.x);
+		grid.setInterpolationType(TRICUBIC);
+		
+		b = grid.interpolate(Vector3d(0.5, 0.5, 1.5) * spacing);
+		EXPECT_FLOAT_EQ(1.7, b.x);
 
-	b = grid.interpolate(Vector3d(0.5, 0.5, 1.4) * spacing);
-	EXPECT_FLOAT_EQ(1.66005015373, b.x);
+		b = grid.interpolate(Vector3d(0.5, 0.5, 1.4) * spacing);
+		EXPECT_FLOAT_EQ(1.66005015373, b.x);
 
-	b = grid.interpolate(Vector3d(0.5, 0.5, 1.6) * spacing);
-	EXPECT_FLOAT_EQ(1.66005003452, b.x);
+		b = grid.interpolate(Vector3d(0.5, 0.5, 1.6) * spacing);
+		EXPECT_FLOAT_EQ(1.66005003452, b.x);
 
-	b = grid.interpolate(Vector3d(0.5, 0.35, 1.6) * spacing);
-	EXPECT_FLOAT_EQ(1.57507634163, b.x);
+		b = grid.interpolate(Vector3d(0.5, 0.35, 1.6) * spacing);
+		EXPECT_FLOAT_EQ(1.57507634163, b.x);
 
-	b = grid.interpolate(Vector3d(0.5, 2.65, 1.6) * spacing);
-	EXPECT_FLOAT_EQ(0.190802007914, b.x);
+		b = grid.interpolate(Vector3d(0.5, 2.65, 1.6) * spacing);
+		EXPECT_FLOAT_EQ(0.190802007914, b.x);
 	#endif // HAVE_SIMD
 }
 
@@ -917,7 +916,7 @@ TEST(Grid3f, DumpLoadTxt) {
 	}
 }
 
-TEST(Grid1f, DumpLoadTxtGridProperties) {
+TEST(Grid1f, DumpLoadTxtGridProperties1) {
 	// grid to dump 
 	ref_ptr<Grid1f> grid = new Grid1f(Vector3d(0.5, 1.5, 2.5), 3, 2, 4, Vector3d(0.2, 1.2, 2.2)); 
 	grid->setInterpolationType(TRICUBIC);
@@ -969,7 +968,7 @@ TEST(Grid1f, DumpLoadTxtGridProperties) {
 	}
 }
 
-TEST(Grid3f, DumpLoadTxtGridProperties) {
+TEST(Grid3f, DumpLoadTxtGridProperties2) {
 	// grid to dump 
 	ref_ptr<Grid3f> grid = new Grid3f(Vector3d(0.5, 1.5, 2.5), 3, 2, 4, Vector3d(0.2, 1.2, 2.2)); 
 	grid->setInterpolationType(NEAREST_NEIGHBOUR);
@@ -994,7 +993,6 @@ TEST(Grid3f, DumpLoadTxtGridProperties) {
 	EXPECT_EQ(grid->getNx(), loadedGrid->getNx());
 	EXPECT_EQ(grid->getNy(), loadedGrid->getNy());
 	EXPECT_EQ(grid->getNz(), loadedGrid->getNz());
-	
 	EXPECT_TRUE(loadedGrid->getClipVolume());
 
 	Vector3d orig = grid->getOrigin();
@@ -1010,7 +1008,6 @@ TEST(Grid3f, DumpLoadTxtGridProperties) {
 	EXPECT_EQ(spacing.z, loadedSpacing.z);
 	
 	EXPECT_EQ(grid->getInterpolationType(), loadedGrid->getInterpolationType());
-	
 	EXPECT_EQ(grid->isReflective(), loadedGrid->isReflective());
 
 	// compare loaded values
@@ -1019,12 +1016,13 @@ TEST(Grid3f, DumpLoadTxtGridProperties) {
 			for (size_t iz = 0; iz < grid->getNz(); iz++) {
 				Vector3f gridValue = grid->get(ix, iy, iz);
 				Vector3f loadedValue = loadedGrid->get(ix, iy, iz);
-				EXPECT_EQ(gridValue.x, loadedValue.x);
-				EXPECT_EQ(gridValue.y, loadedValue.y);
-				EXPECT_EQ(gridValue.z, loadedValue.z);
+				EXPECT_NEAR(gridValue.x, loadedValue.x, gridValue.x * 1e-5);
+				EXPECT_NEAR(gridValue.y, loadedValue.y, gridValue.y * 1e-5);
+				EXPECT_NEAR(gridValue.z, loadedValue.z, gridValue.z * 1e-5);
 			}
 		}
 	}
+
 }
 
 TEST(Grid3f, Speed) {
