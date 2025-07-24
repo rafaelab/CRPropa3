@@ -694,15 +694,15 @@ TEST(Grid3f, Interpolation) {
 TEST(VectordGrid, Scale) {
 	// Test scaling a field
 	ref_ptr<Grid3f> grid = new Grid3f(Vector3d(0.), 3, 1);
-	for (int ix = 0; ix < 3; ix++)
-		for (int iy = 0; iy < 3; iy++)
-			for (int iz = 0; iz < 3; iz++)
+	for (size_t ix = 0; ix < 3; ix++)
+		for (size_t iy = 0; iy < 3; iy++)
+			for (size_t iz = 0; iz < 3; iz++)
 				grid->get(ix, iy, iz) = Vector3f(1, 0, 0);
 
 	scaleGrid(grid, 5);
-	for (int ix = 0; ix < 3; ix++)
-		for (int iy = 0; iy < 3; iy++)
-			for (int iz = 0; iz < 3; iz++)
+	for (size_t ix = 0; ix < 3; ix++)
+		for (size_t iy = 0; iy < 3; iy++)
+			for (size_t iz = 0; iz < 3; iz++)
 				EXPECT_FLOAT_EQ(5, grid->interpolate(Vector3d(0.7, 0, 0.1)).x);
 }
 
@@ -712,9 +712,9 @@ TEST(Grid3f, Periodicity) {
 	double spacing = 3;
 	double size = n * spacing;
 	Grid3f grid(Vector3d(0.), n, spacing);
-	for (int ix = 0; ix < 3; ix++)
-		for (int iy = 0; iy < 3; iy++)
-			for (int iz = 0; iz < 3; iz++)
+	for (size_t ix = 0; ix < 3; ix++)
+		for (size_t iy = 0; iy < 3; iy++)
+			for (size_t iz = 0; iz < 3; iz++)
 				grid.get(ix, iy, iz) = Vector3f(iz + ix, iy * iz, ix - iz * iy);
 
 	Vector3d pos(1.2, 2.3, 0.7);
@@ -738,22 +738,22 @@ TEST(Grid3f, Periodicity) {
 	
 	//tricubic interpolated
 	#ifdef HAVE_SIMD
-	grid.setInterpolationType(TRICUBIC);
-	b = grid.interpolate(pos);
-	b2 = grid.interpolate(pos + Vector3d(1, 0, 0) * size);
-	EXPECT_FLOAT_EQ(b.x, b2.x);
-	EXPECT_FLOAT_EQ(b.y, b2.y);
-	EXPECT_FLOAT_EQ(b.z, b2.z);
+		grid.setInterpolationType(TRICUBIC);
+		b = grid.interpolate(pos);
+		b2 = grid.interpolate(pos + Vector3d(1, 0, 0) * size);
+		EXPECT_FLOAT_EQ(b.x, b2.x);
+		EXPECT_FLOAT_EQ(b.y, b2.y);
+		EXPECT_FLOAT_EQ(b.z, b2.z);
 
-	b2 = grid.interpolate(pos + Vector3d(0, 5, 0) * size);
-	EXPECT_FLOAT_EQ(b.x, b2.x);
-	EXPECT_FLOAT_EQ(b.y, b2.y);
-	EXPECT_FLOAT_EQ(b.z, b2.z);
+		b2 = grid.interpolate(pos + Vector3d(0, 5, 0) * size);
+		EXPECT_FLOAT_EQ(b.x, b2.x);
+		EXPECT_FLOAT_EQ(b.y, b2.y);
+		EXPECT_FLOAT_EQ(b.z, b2.z);
 
-	b2 = grid.interpolate(pos + Vector3d(0, 0, -2) * size);
-	EXPECT_FLOAT_EQ(b.x, b2.x);
-	EXPECT_FLOAT_EQ(b.y, b2.y);
-	EXPECT_FLOAT_EQ(b.z, b2.z);
+		b2 = grid.interpolate(pos + Vector3d(0, 0, -2) * size);
+		EXPECT_FLOAT_EQ(b.x, b2.x);
+		EXPECT_FLOAT_EQ(b.y, b2.y);
+		EXPECT_FLOAT_EQ(b.z, b2.z);
 	#endif // HAVE_SIMD
 	
 	//nearest neighbour interpolated
@@ -789,9 +789,9 @@ TEST(Grid3f, Reflectivity) {
 	double size = n * spacing;
 	Grid3f grid(Vector3d(0.), n, spacing);
 	grid.setReflective(true); //set reflective boundary
-	for (int ix = 0; ix < 3; ix++)
-		for (int iy = 0; iy < 3; iy++)
-			for (int iz = 0; iz < 3; iz++)
+	for (size_t ix = 0; ix < 3; ix++)
+		for (size_t iy = 0; iy < 3; iy++)
+			for (size_t iz = 0; iz < 3; iz++)
 				grid.get(ix, iy, iz) = Vector3f(iz + ix, iy * iz, ix - iz * iy);
 
 	Vector3d pos(1.2, 2.3, 0.7);
@@ -817,24 +817,24 @@ TEST(Grid3f, Reflectivity) {
 	
 	//tricubic interpolated
 	#ifdef HAVE_SIMD
-	grid.setInterpolationType(TRICUBIC);
-	b = grid.interpolate(pos + Vector3d(1,0,0) * spacing);
-	b2 = grid.interpolate(pos *(-1) - Vector3d(1,0,0) * spacing);
-	EXPECT_FLOAT_EQ(b.x, b2.x);
-	EXPECT_FLOAT_EQ(b.y, b2.y);
-	EXPECT_FLOAT_EQ(b.z, b2.z);
-	
-	b = grid.interpolate(pos + Vector3d(0,5,0) * spacing);
-	b2 = grid.interpolate(pos *(-1) - Vector3d(0,5,0) * spacing);
-	EXPECT_FLOAT_EQ(b.x, b2.x);
-	EXPECT_FLOAT_EQ(b.y, b2.y);
-	EXPECT_FLOAT_EQ(b.z, b2.z);
-	
-	b = grid.interpolate(pos + Vector3d(0,0,-2) * spacing);
-	b2 = grid.interpolate(pos *(-1) - Vector3d(0,0,-2) * spacing);
-	EXPECT_FLOAT_EQ(b.x, b2.x);
-	EXPECT_FLOAT_EQ(b.y, b2.y);
-	EXPECT_FLOAT_EQ(b.z, b2.z);
+		grid.setInterpolationType(TRICUBIC);
+		b = grid.interpolate(pos + Vector3d(1,0,0) * spacing);
+		b2 = grid.interpolate(pos *(-1) - Vector3d(1,0,0) * spacing);
+		EXPECT_FLOAT_EQ(b.x, b2.x);
+		EXPECT_FLOAT_EQ(b.y, b2.y);
+		EXPECT_FLOAT_EQ(b.z, b2.z);
+		
+		b = grid.interpolate(pos + Vector3d(0,5,0) * spacing);
+		b2 = grid.interpolate(pos *(-1) - Vector3d(0,5,0) * spacing);
+		EXPECT_FLOAT_EQ(b.x, b2.x);
+		EXPECT_FLOAT_EQ(b.y, b2.y);
+		EXPECT_FLOAT_EQ(b.z, b2.z);
+		
+		b = grid.interpolate(pos + Vector3d(0,0,-2) * spacing);
+		b2 = grid.interpolate(pos *(-1) - Vector3d(0,0,-2) * spacing);
+		EXPECT_FLOAT_EQ(b.x, b2.x);
+		EXPECT_FLOAT_EQ(b.y, b2.y);
+		EXPECT_FLOAT_EQ(b.z, b2.z);
 	#endif //HAVE_SIMD
 	
 	//nearest neighbour interpolated
@@ -870,17 +870,17 @@ TEST(Grid3f, DumpLoad) {
 	ref_ptr<Grid3f> grid1 = new Grid3f(Vector3d(0.), 3, 1);
 	ref_ptr<Grid3f> grid2 = new Grid3f(Vector3d(0.), 3, 1);
 
-	for (int ix = 0; ix < 3; ix++)
-		for (int iy = 0; iy < 3; iy++)
-			for (int iz = 0; iz < 3; iz++)
+	for (size_t ix = 0; ix < 3; ix++)
+		for (size_t iy = 0; iy < 3; iy++)
+			for (size_t iz = 0; iz < 3; iz++)
 				grid1->get(ix, iy, iz) = Vector3f(1, 2, 3);
 
 	dumpGrid(grid1, "testDump.raw");
 	loadGrid(grid2, "testDump.raw");
 
-	for (int ix = 0; ix < 3; ix++) {
-		for (int iy = 0; iy < 3; iy++) {
-			for (int iz = 0; iz < 3; iz++) {
+	for (size_t ix = 0; ix < 3; ix++) {
+		for (size_t iy = 0; iy < 3; iy++) {
+			for (size_t iz = 0; iz < 3; iz++) {
 				Vector3f b1 = grid1->get(ix, iy, iz);
 				Vector3f b2 = grid2->get(ix, iy, iz);
 				EXPECT_FLOAT_EQ(b1.x, b2.x);
@@ -896,17 +896,17 @@ TEST(Grid3f, DumpLoadTxt) {
 	ref_ptr<Grid3f> grid1 = new Grid3f(Vector3d(0.), 3, 1);
 	ref_ptr<Grid3f> grid2 = new Grid3f(Vector3d(0.), 3, 1);
 
-	for (int ix = 0; ix < 3; ix++)
-		for (int iy = 0; iy < 3; iy++)
-			for (int iz = 0; iz < 3; iz++)
+	for (size_t ix = 0; ix < 3; ix++)
+		for (size_t iy = 0; iy < 3; iy++)
+			for (size_t iz = 0; iz < 3; iz++)
 				grid1->get(ix, iy, iz) = Vector3f(ix, iy, iz);
 
 	dumpGridToTxt(grid1, "testDump.txt", 1e4);
 	loadGridFromTxt(grid2, "testDump.txt", 1e-4);
 
-	for (int ix = 0; ix < 3; ix++) {
-		for (int iy = 0; iy < 3; iy++) {
-			for (int iz = 0; iz < 3; iz++) {
+	for (size_t ix = 0; ix < 3; ix++) {
+		for (size_t iy = 0; iy < 3; iy++) {
+			for (size_t iz = 0; iz < 3; iz++) {
 				Vector3f b1 = grid1->get(ix, iy, iz);
 				Vector3f b2 = grid2->get(ix, iy, iz);
 				EXPECT_FLOAT_EQ(b1.x, b2.x);
@@ -920,15 +920,15 @@ TEST(Grid3f, DumpLoadTxt) {
 TEST(Grid1f, DumpLoadTxtGridProperties) {
 	// grid to dump 
 	ref_ptr<Grid1f> grid = new Grid1f(Vector3d(0.5, 1.5, 2.5), 3, 2, 4, Vector3d(0.2, 1.2, 2.2)); 
-	grid -> setInterpolationType(TRICUBIC);
-	grid -> setReflective(true);
-	grid -> setClipVolume(true);
+	grid->setInterpolationType(TRICUBIC);
+	grid->setReflective(true);
+	grid->setClipVolume(true);
 
 	// set some values for the grid 
-	for (int ix = 0; ix < grid -> getNx(); ix++) {
-		for (int iy = 0; iy < grid -> getNy(); iy++) {
-			for (int iz = 0; iz < grid -> getNz(); iz++) 
-				grid -> get(ix, iy, iz) = ix + iy + iz;
+	for (size_t ix = 0; ix < grid->getNx(); ix++) {
+		for (size_t iy = 0; iy < grid->getNy(); iy++) {
+			for (size_t iz = 0; iz < grid->getNz(); iz++) 
+				grid->get(ix, iy, iz) = ix + iy + iz;
 		}
 	}
 
@@ -939,33 +939,32 @@ TEST(Grid1f, DumpLoadTxtGridProperties) {
 	ref_ptr<Grid1f> loadedGrid = loadGrid1fFromTxt("testDump.txt"); 
 
 	// check grid properties 
-	EXPECT_EQ(grid -> getNx(), loadedGrid -> getNx());
-	EXPECT_EQ(grid -> getNy(), loadedGrid -> getNy());
-	EXPECT_EQ(grid -> getNz(), loadedGrid -> getNz());
+	EXPECT_EQ(grid->getNx(), loadedGrid->getNx());
+	EXPECT_EQ(grid->getNy(), loadedGrid->getNy());
+	EXPECT_EQ(grid->getNz(), loadedGrid->getNz());
 
-	EXPECT_TRUE(loadedGrid -> getClipVolume());
+	EXPECT_TRUE(loadedGrid->getClipVolume());
 
-	Vector3d orig = grid -> getOrigin();
-	Vector3d loadedOrigin = loadedGrid -> getOrigin();
+	Vector3d orig = grid->getOrigin();
+	Vector3d loadedOrigin = loadedGrid->getOrigin();
 	EXPECT_EQ(orig.x, loadedOrigin.x);
 	EXPECT_EQ(orig.y, loadedOrigin.y);
 	EXPECT_EQ(orig.z, loadedOrigin.z);
 
-	Vector3d spacing = grid -> getSpacing();
-	Vector3d loadedSpacing = loadedGrid -> getSpacing();
+	Vector3d spacing = grid->getSpacing();
+	Vector3d loadedSpacing = loadedGrid->getSpacing();
 	EXPECT_EQ(spacing.x, loadedSpacing.x);
 	EXPECT_EQ(spacing.y, loadedSpacing.y);
 	EXPECT_EQ(spacing.z, loadedSpacing.z);
-	
-	EXPECT_EQ(grid -> getInterpolationType(), loadedGrid -> getInterpolationType());
-	
-	EXPECT_EQ(grid -> isReflective(), loadedGrid -> isReflective());
+
+	EXPECT_EQ(grid->getInterpolationType(), loadedGrid->getInterpolationType());
+	EXPECT_EQ(grid->isReflective(), loadedGrid->isReflective());
 
 	// compare loaded values
-	for (int ix = 0; ix < grid -> getNx(); ix++) {
-		for (int iy = 0; iy < grid -> getNy(); iy++) {
-			for (int iz = 0; iz < grid -> getNz(); iz++) 
-				EXPECT_EQ(grid -> get(ix, iy, iz), loadedGrid -> get(ix, iy, iz));
+	for (size_t ix = 0; ix < grid->getNx(); ix++) {
+		for (size_t iy = 0; iy < grid->getNy(); iy++) {
+			for (size_t iz = 0; iz < grid->getNz(); iz++)
+				EXPECT_EQ(grid->get(ix, iy, iz), loadedGrid->get(ix, iy, iz));
 		}
 	}
 }
@@ -973,15 +972,15 @@ TEST(Grid1f, DumpLoadTxtGridProperties) {
 TEST(Grid3f, DumpLoadTxtGridProperties) {
 	// grid to dump 
 	ref_ptr<Grid3f> grid = new Grid3f(Vector3d(0.5, 1.5, 2.5), 3, 2, 4, Vector3d(0.2, 1.2, 2.2)); 
-	grid -> setInterpolationType(NEAREST_NEIGHBOUR);
-	grid -> setReflective(true);
-	grid -> setClipVolume(true);
+	grid->setInterpolationType(NEAREST_NEIGHBOUR);
+	grid->setReflective(true);
+	grid->setClipVolume(true);
 
 	// set some values for the grid 
-	for (int ix = 0; ix < grid -> getNx(); ix++) {
-		for (int iy = 0; iy < grid -> getNy(); iy++) {
-			for (int iz = 0; iz < grid -> getNz(); iz++) 
-				grid -> get(ix, iy, iz) = Vector3f(-iy, ix, 2 * iz);
+	for (size_t ix = 0; ix < grid->getNx(); ix++) {
+		for (size_t iy = 0; iy < grid->getNy(); iy++) {
+			for (size_t iz = 0; iz < grid->getNz(); iz++) 
+				grid->get(ix, iy, iz) = Vector3f(-iy, ix, 2 * iz);
 		}
 	}
 
@@ -992,34 +991,34 @@ TEST(Grid3f, DumpLoadTxtGridProperties) {
 	ref_ptr<Grid3f> loadedGrid = loadGrid3fFromTxt("testDump.txt"); 
 
 	// check grid properties 
-	EXPECT_EQ(grid -> getNx(), loadedGrid -> getNx());
-	EXPECT_EQ(grid -> getNy(), loadedGrid -> getNy());
-	EXPECT_EQ(grid -> getNz(), loadedGrid -> getNz());
+	EXPECT_EQ(grid->getNx(), loadedGrid->getNx());
+	EXPECT_EQ(grid->getNy(), loadedGrid->getNy());
+	EXPECT_EQ(grid->getNz(), loadedGrid->getNz());
 	
-	EXPECT_TRUE(loadedGrid -> getClipVolume());
+	EXPECT_TRUE(loadedGrid->getClipVolume());
 
-	Vector3d orig = grid -> getOrigin();
-	Vector3d loadedOrigin = loadedGrid -> getOrigin();
+	Vector3d orig = grid->getOrigin();
+	Vector3d loadedOrigin = loadedGrid->getOrigin();
 	EXPECT_EQ(orig.x, loadedOrigin.x);
 	EXPECT_EQ(orig.y, loadedOrigin.y);
 	EXPECT_EQ(orig.z, loadedOrigin.z);
 
-	Vector3d spacing = grid -> getSpacing();
-	Vector3d loadedSpacing = loadedGrid -> getSpacing();
+	Vector3d spacing = grid->getSpacing();
+	Vector3d loadedSpacing = loadedGrid->getSpacing();
 	EXPECT_EQ(spacing.x, loadedSpacing.x);
 	EXPECT_EQ(spacing.y, loadedSpacing.y);
 	EXPECT_EQ(spacing.z, loadedSpacing.z);
 	
-	EXPECT_EQ(grid -> getInterpolationType(), loadedGrid -> getInterpolationType());
+	EXPECT_EQ(grid->getInterpolationType(), loadedGrid->getInterpolationType());
 	
-	EXPECT_EQ(grid -> isReflective(), loadedGrid -> isReflective());
+	EXPECT_EQ(grid->isReflective(), loadedGrid->isReflective());
 
 	// compare loaded values
-	for (int ix = 0; ix < grid -> getNx(); ix++) {
-		for (int iy = 0; iy < grid -> getNy(); iy++) {
-			for (int iz = 0; iz < grid -> getNz(); iz++) {
-				Vector3f gridValue = grid -> get(ix, iy, iz);
-				Vector3f loadedValue = loadedGrid -> get(ix, iy, iz);
+	for (size_t ix = 0; ix < grid->getNx(); ix++) {
+		for (size_t iy = 0; iy < grid->getNy(); iy++) {
+			for (size_t iz = 0; iz < grid->getNz(); iz++) {
+				Vector3f gridValue = grid->get(ix, iy, iz);
+				Vector3f loadedValue = loadedGrid->get(ix, iy, iz);
 				EXPECT_EQ(gridValue.x, loadedValue.x);
 				EXPECT_EQ(gridValue.y, loadedValue.y);
 				EXPECT_EQ(gridValue.z, loadedValue.z);
@@ -1031,13 +1030,13 @@ TEST(Grid3f, DumpLoadTxtGridProperties) {
 TEST(Grid3f, Speed) {
 	// Dump and load a field grid
 	Grid3f grid(Vector3d(0.), 3, 3);
-	for (int ix = 0; ix < 3; ix++)
-		for (int iy = 0; iy < 3; iy++)
-			for (int iz = 0; iz < 3; iz++)
+	for (size_t ix = 0; ix < 3; ix++)
+		for (size_t iy = 0; iy < 3; iy++)
+			for (size_t iz = 0; iz < 3; iz++)
 				grid.get(ix, iy, iz) = Vector3f(1, 2, 3);
 
 	Vector3d b;
-	for (int i = 0; i < 100000; i++)
+	for (size_t i = 0; i < 100000; i++)
 		b = grid.interpolate(Vector3d(i));
 }
 
