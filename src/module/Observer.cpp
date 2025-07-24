@@ -1,12 +1,4 @@
 #include "crpropa/module/Observer.h"
-#include "crpropa/Units.h"
-#include "crpropa/ParticleID.h"
-#include "crpropa/Cosmology.h"
-
-#include "kiss/logger.h"
-
-#include <iostream>
-#include <cmath>
 
 namespace crpropa {
 
@@ -19,12 +11,12 @@ void Observer::add(ObserverFeature *feature) {
 	features.push_back(feature);
 }
 
-void Observer::onDetection(Module *action, bool clone_) {
+void Observer::onDetection(Module* action, bool clone_) {
 	detectionAction = action;
 	clone = clone_;
 }
 
-void Observer::process(Candidate *candidate) const {
+void Observer::process(Candidate* candidate) const {
 	// loop over all features and have them check the particle
 	DetectionState state = NOTHING;
 	for (int i = 0; i < features.size(); i++) {
@@ -78,11 +70,11 @@ void Observer::setDeactivateOnDetection(bool deactivate) {
 }
 
 // ObserverFeature ------------------------------------------------------------
-DetectionState ObserverFeature::checkDetection(Candidate *candidate) const {
+DetectionState ObserverFeature::checkDetection(Candidate* candidate) const {
 	return NOTHING;
 }
 
-void ObserverFeature::onDetection(Candidate *candidate) const {
+void ObserverFeature::onDetection(Candidate* candidate) const {
 }
 
 std::string ObserverFeature::getDescription() const {
@@ -90,7 +82,7 @@ std::string ObserverFeature::getDescription() const {
 }
 
 // ObserverDetectAll ----------------------------------------------------------
-DetectionState ObserverDetectAll::checkDetection(Candidate *candidate) const {
+DetectionState ObserverDetectAll::checkDetection(Candidate* candidate) const {
 	return DETECTED;
 }
 
@@ -106,7 +98,7 @@ ObserverTracking::ObserverTracking(Vector3d center, double radius, double stepSi
 	}
 }
 
-DetectionState ObserverTracking::checkDetection(Candidate *candidate) const {
+DetectionState ObserverTracking::checkDetection(Candidate* candidate) const {
 	// current distance to observer sphere center
 	double d = (candidate->current.getPosition() - center).getR();
 
@@ -134,7 +126,7 @@ std::string ObserverTracking::getDescription() const {
 }
 
 // Observer1D --------------------------------------------------------------
-DetectionState Observer1D::checkDetection(Candidate *candidate) const {
+DetectionState Observer1D::checkDetection(Candidate* candidate) const {
 	double x = candidate->current.getPosition().x;
 	if (x > 0) {
 		// Limits the next step size to prevent candidates from overshooting in case of non-detection
@@ -155,7 +147,7 @@ ObserverRedshiftWindow::ObserverRedshiftWindow(double zmin, double zmax) :
 }
 
 DetectionState ObserverRedshiftWindow::checkDetection(
-		Candidate *candidate) const {
+		Candidate* candidate) const {
 	double z = candidate->getRedshift();
 	if (z > zmax)
 		return VETO;
@@ -171,7 +163,7 @@ std::string ObserverRedshiftWindow::getDescription() const {
 }
 
 // ObserverInactiveVeto -------------------------------------------------------
-DetectionState ObserverInactiveVeto::checkDetection(Candidate *c) const {
+DetectionState ObserverInactiveVeto::checkDetection(Candidate* c) const {
 	if (not(c->isActive()))
 		return VETO;
 	return NOTHING;
@@ -182,7 +174,7 @@ std::string ObserverInactiveVeto::getDescription() const {
 }
 
 // ObserverNucleusVeto --------------------------------------------------------
-DetectionState ObserverNucleusVeto::checkDetection(Candidate *c) const {
+DetectionState ObserverNucleusVeto::checkDetection(Candidate* c) const {
 	if (isNucleus(c->current.getId()))
 		return VETO;
 	return NOTHING;
@@ -193,7 +185,7 @@ std::string ObserverNucleusVeto::getDescription() const {
 }
 
 // ObserverNeutrinoVeto -------------------------------------------------------
-DetectionState ObserverNeutrinoVeto::checkDetection(Candidate *c) const {
+DetectionState ObserverNeutrinoVeto::checkDetection(Candidate* c) const {
 	int id = abs(c->current.getId());
 	if ((id == 12) or (id == 14) or (id == 16))
 		return VETO;
@@ -205,7 +197,7 @@ std::string ObserverNeutrinoVeto::getDescription() const {
 }
 
 // ObserverPhotonVeto ---------------------------------------------------------
-DetectionState ObserverPhotonVeto::checkDetection(Candidate *c) const {
+DetectionState ObserverPhotonVeto::checkDetection(Candidate* c) const {
 	if (c->current.getId() == 22)
 		return VETO;
 	return NOTHING;
@@ -216,7 +208,7 @@ std::string ObserverPhotonVeto::getDescription() const {
 }
 
 // ObserverElectronVeto ---------------------------------------------------------
-DetectionState ObserverElectronVeto::checkDetection(Candidate *c) const {
+DetectionState ObserverElectronVeto::checkDetection(Candidate* c) const {
 	if (abs(c->current.getId()) == 11)
 		return VETO;
 	return NOTHING;
@@ -231,7 +223,7 @@ ObserverParticleIdVeto::ObserverParticleIdVeto(int pId) {
 	vetoParticleId = pId;
 }
 
-DetectionState ObserverParticleIdVeto::checkDetection(Candidate *c) const {
+DetectionState ObserverParticleIdVeto::checkDetection(Candidate* c) const {
 	if (c->current.getId() == vetoParticleId)
 		return VETO;
 	return NOTHING;
@@ -259,11 +251,11 @@ ObserverTimeEvolution::ObserverTimeEvolution(double min, double max, double numb
 	setNIntervals(numb);
 }
 
-ObserverTimeEvolution::ObserverTimeEvolution(const std::vector<double> &detList){
+ObserverTimeEvolution::ObserverTimeEvolution(const std::vector<double>& detList){
 	setTimes(detList);
 }
 
-DetectionState ObserverTimeEvolution::checkDetection(Candidate *c) const {
+DetectionState ObserverTimeEvolution::checkDetection(Candidate* c) const {
 
 	if (nIntervals) {
 		double length = c->getTrajectoryLength();
@@ -291,13 +283,12 @@ DetectionState ObserverTimeEvolution::checkDetection(Candidate *c) const {
 		if (distance < 0.) {
 			c->limitNextStep(-distance);
 			return NOTHING;
-		}
-		else {
+		} else {
 
-			if (index < nIntervals-2) {
-				c->limitNextStep(getTime(index+1)-length);
+			if (index < nIntervals - 2) {
+				c->limitNextStep(getTime(index + 1) - length);
 			}
-			c->setProperty(DI, Variant::fromUInt64(index+1));
+			c->setProperty(DI, Variant::fromUInt64(index + 1));
 
 			return DETECTED;
 		}
@@ -313,7 +304,7 @@ void ObserverTimeEvolution::clear(){
 }
 
 void ObserverTimeEvolution::constructDetListIfEmpty(){
-	if (detList.empty() && doDetListConstruction) {
+	if (detList.empty() and doDetListConstruction) {
 		std::vector<double> detListTemp;
 		size_t counter = 0;
 		while (getTime(counter)<=maximum) {
@@ -324,7 +315,7 @@ void ObserverTimeEvolution::constructDetListIfEmpty(){
 	}
 }
 
-void ObserverTimeEvolution::addTime(const double &time){
+void ObserverTimeEvolution::addTime(const double& time){
 	constructDetListIfEmpty();
 	detList.push_back(time);
 	setNIntervals(nIntervals + 1);  // increase number of entries by one
@@ -346,7 +337,7 @@ void ObserverTimeEvolution::addTimeRange(double min, double max, double numb, bo
 	setNIntervals(detList.size());
 }
 
-void ObserverTimeEvolution::setTimes(const std::vector<double> &detList){
+void ObserverTimeEvolution::setTimes(const std::vector<double>& detList){
 	this->detList.assign(detList.begin(), detList.end());
 	setNIntervals(detList.size());
 	setMinimum(detList.front());
@@ -355,7 +346,7 @@ void ObserverTimeEvolution::setTimes(const std::vector<double> &detList){
 }
 
 void ObserverTimeEvolution::setMinimum(double min){
-	if ( (min <= 0) && isLogarithmicScaling){
+	if (min <= 0 and isLogarithmicScaling){
 		std::cout << "minimum can not be <= 0 if isLogarithmicScaling=true" << std::endl;
 		throw new std::runtime_error("minimum can not be <= 0 if isLogarithmicScaling=true");
 	}
@@ -363,7 +354,7 @@ void ObserverTimeEvolution::setMinimum(double min){
 }
 
 double ObserverTimeEvolution::getTime(size_t index) const {
-	if (!detList.empty()) {
+	if (not detList.empty()) {
 		return detList.at(index);
 	} else if (isLogarithmicScaling) {
 		return minimum * pow(maximum / minimum, index / (nIntervals - 1.0));
@@ -384,30 +375,30 @@ std::string ObserverTimeEvolution::getDescription() const {
 	std::stringstream s;
 	s << "List of Detection lengths in kpc";
 	for (size_t i = 0; i < nIntervals; i++)
-	  s << "  - " << getTime(i) / kpc;
+		s << "  - " << getTime(i) / kpc;
 	return s.str();
 }
 
 // ObserverSurface--------------------------------------------------------------
-ObserverSurface::ObserverSurface(Surface* _surface) : surface(_surface) { }
+ObserverSurface::ObserverSurface(Surface* surface) : surface(surface) { 
+}
 
-DetectionState ObserverSurface::checkDetection(Candidate *candidate) const
-{
-		double currentDistance = surface->distance(candidate->current.getPosition());
-		double previousDistance = surface->distance(candidate->previous.getPosition());
-		candidate->limitNextStep(fabs(currentDistance));
+DetectionState ObserverSurface::checkDetection(Candidate* candidate) const {
+	double currentDistance = surface->distance(candidate->current.getPosition());
+	double previousDistance = surface->distance(candidate->previous.getPosition());
+	candidate->limitNextStep(fabs(currentDistance));
 
-		if (currentDistance * previousDistance > 0)
-			return NOTHING;
-		else if (previousDistance == 0)
-			return NOTHING;
-		else
-			return DETECTED;
+	if (currentDistance * previousDistance > 0)
+		return NOTHING;
+	else if (previousDistance == 0)
+		return NOTHING;
+	else
+		return DETECTED;
 }
 
 std::string ObserverSurface::getDescription() const {
 	std::stringstream ss;
-	ss << "ObserverSurface: << " << surface->getDescription();
+	ss << "ObserverSurface: " << surface->getDescription();
 	return ss.str();
 }
 
