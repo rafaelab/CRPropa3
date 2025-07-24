@@ -24,6 +24,9 @@ namespace crpropa {
  * This class serves as an interface for different types of medium compositions, such as elementary particles, atomic nuclei, and molecular compositions.
  */
 class MediumComposition: public Referenced {
+	protected:
+		std::string label;
+
 	public:
 		virtual ~MediumComposition() = default;
 		virtual bool isAdmixed() const = 0;
@@ -38,6 +41,12 @@ class MediumComposition: public Referenced {
 		virtual unsigned int numberOfComponents() const {
 			return 1;
 		};
+		void setLabel(const std::string& label) {
+			this->label = label;
+		};
+		std::string getLabel() const {
+			return label;
+		}
 };
 
 
@@ -52,8 +61,8 @@ class MediumCompositionElementary : public MediumComposition {
 		int particleId;
 
 	public:
-		MediumCompositionElementary();
-		MediumCompositionElementary(int id);
+		MediumCompositionElementary(std::string label = "elementary");
+		MediumCompositionElementary(int id, std::string label = "elementary");
 		void setParticleId(int id);
 		int getParticleId() const;
 		bool isAdmixed() const override;
@@ -74,15 +83,15 @@ class MediumCompositionElementary : public MediumComposition {
  */
 class MediumCompositionAtomic : public MediumComposition {
 	protected:
-		int nucleusId;
+		int atomId;
 		int nElectrons;
 
 	public:
-		MediumCompositionAtomic();
-		MediumCompositionAtomic(int id, int nElectrons = 0);
-		void setNucleusId(int id);
+		MediumCompositionAtomic(std::string label = "atomic");
+		MediumCompositionAtomic(int id, int nElectrons = 0, std::string label = "atomic");
+		void setAtomId(int id);
 		void setNumberOfElectrons(int n);
-		int getNucleusId() const;
+		int getAtomId() const;
 		int getNumberOfElectrons() const;
 		bool isAdmixed() const override;
 		bool isIonized() const override;
@@ -94,6 +103,21 @@ class MediumCompositionAtomic : public MediumComposition {
 };
 
 
+// class MediumCompositionHI : public MediumCompositionAtomic {
+// 	public:
+// 		MediumCompositionHI() {
+// 			setNucleusId(1000010010); // default to hydrogen
+// 			setNumberOfElectrons(1);
+// 		}
+// };
+
+// class MediumCompositionHII : public MediumCompositionAtomic {
+// 	public:
+// 		MediumCompositionHII() {
+// 			setNucleusId(1000010010); // default to hydrogen
+// 			setNumberOfElectrons(1);
+// 		}
+// };
 
 /**
  * @class MediumCompositionMolecular
@@ -103,18 +127,18 @@ class MediumCompositionAtomic : public MediumComposition {
  */
 class MediumCompositionMolecular : public MediumComposition {
 	protected:
-		std::vector<int> nucleiIds;
+		std::vector<int> atomIds;
 		int nElectrons;
 
 	public:
-		MediumCompositionMolecular();
-		MediumCompositionMolecular(int nElectrons);
-		MediumCompositionMolecular(const std::vector<int>& ids, int nElectrons = 0);
+		MediumCompositionMolecular(std::string label = "molecular");
+		MediumCompositionMolecular(int nElectrons, std::string label = "molecular");
+		MediumCompositionMolecular(const std::vector<int>& ids, int nElectrons = 0, std::string label = "molecular");
 		void add(int id);
-		void setNucleiIds(const std::vector<int>& ids);
+		void setAtomIds(const std::vector<int>& ids);
 		void setNumberOfElectrons(int n);
 		int getNumberOfElectrons() const;
-		const std::vector<int>& getNucleiIds() const;
+		const std::vector<int>& getAtomIds() const;
 		bool isAdmixed() const override;
 		bool isIonized() const override;
 		bool isNeutral() const override;
@@ -135,8 +159,8 @@ class MediumCompositionList : public MediumComposition {
 		std::vector<double> weights;
 
 	public:
-		MediumCompositionList();
-		MediumCompositionList(const std::vector<ref_ptr<MediumComposition>>& comps, const std::vector<double>& weights = {});
+		MediumCompositionList(std::string label = "list");
+		MediumCompositionList(const std::vector<ref_ptr<MediumComposition>>& comps, const std::vector<double>& weights = {}, std::string label = "list");
 		void add(ref_ptr<MediumComposition> composition, double weight = 1.0);
 		const std::vector<ref_ptr<MediumComposition>>& getCompositions() const;
 		const std::vector<double>& getWeights() const;

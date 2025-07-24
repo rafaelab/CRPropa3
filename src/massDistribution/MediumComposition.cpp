@@ -4,10 +4,10 @@
 namespace crpropa {
 
 
-MediumCompositionElementary::MediumCompositionElementary() {
+MediumCompositionElementary::MediumCompositionElementary(std::string label) {
 }
 
-MediumCompositionElementary::MediumCompositionElementary(int id) {
+MediumCompositionElementary::MediumCompositionElementary(int id, std::string label) {
 	setParticleId(id);
 }
 
@@ -61,28 +61,28 @@ std::string MediumCompositionElementary::getDescription() const {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-MediumCompositionAtomic::MediumCompositionAtomic() {
+MediumCompositionAtomic::MediumCompositionAtomic(std::string label) {
 }
 
-MediumCompositionAtomic::MediumCompositionAtomic(int id, int nElectrons) {
-	setNucleusId(id);
+MediumCompositionAtomic::MediumCompositionAtomic(int id, int nElectrons, std::string label) {
+	setAtomId(id);
 	setNumberOfElectrons(nElectrons);
 }
 
-void MediumCompositionAtomic::setNucleusId(int id) {
-	if (! isNucleus(id)) {
+void MediumCompositionAtomic::setAtomId(int id) {
+	if (not isNucleus(id)) {
 		KISS_LOG_WARNING << "MediumCompositionAtomic works for atomic nuclei only. You provided a particle that is not a nucleus." << std::endl;
 		throw std::invalid_argument("MediumCompositionAtomic works for atomic nuclei only. You provided a particle that is not a nucleus.");
 	}
-	nucleusId = id;
+	atomId = id;
 }
 
 void MediumCompositionAtomic::setNumberOfElectrons(int n) {
 	nElectrons = n;
 }
 
-int MediumCompositionAtomic::getNucleusId() const {
-	return nucleusId;
+int MediumCompositionAtomic::getAtomId() const {
+	return atomId;
 }
 
 int MediumCompositionAtomic::getNumberOfElectrons() const {
@@ -98,19 +98,19 @@ bool MediumCompositionAtomic::isMolecular() const {
 }
 
 bool MediumCompositionAtomic::isIonized() const {
-	return  nElectrons != chargeNumber(nucleusId);
+	return  nElectrons != chargeNumber(atomId);
 }
 
 bool MediumCompositionAtomic::isNeutral() const {
-	return nElectrons == chargeNumber(nucleusId);
+	return nElectrons == chargeNumber(atomId);
 }
 
 unsigned int MediumCompositionAtomic::getNumberOfNucleons() const {
-	if (nucleusId == 2212 or nucleusId == 2112) { // p or n
+	if (atomId == 2212 or atomId == 2112) { // p or n
 		return 1;
 	}
-	if (isNucleus(nucleusId)) {
-		return massNumber(nucleusId);
+	if (isNucleus(atomId)) {
+		return massNumber(atomId);
 	}
 	return 0; // no nucleons
 }
@@ -121,22 +121,22 @@ double MediumCompositionAtomic::getCompositionWeight() const {
 
 std::string MediumCompositionAtomic::getDescription() const {
 	std::stringstream ss;
-	ss << "MediumCompositionAtomic with nucleus ID: " << nucleusId << " and number of electrons: " << nElectrons << std::endl;
+	ss << "MediumCompositionAtomic with atom ID: " << atomId << " and number of electrons: " << nElectrons << std::endl;
 	return ss.str();
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 
-MediumCompositionMolecular::MediumCompositionMolecular() {
+MediumCompositionMolecular::MediumCompositionMolecular(std::string label) {
 }
 
-MediumCompositionMolecular::MediumCompositionMolecular(int nElectrons) {
-	nucleiIds.clear();
+MediumCompositionMolecular::MediumCompositionMolecular(int nElectrons, std::string label) {
+	atomIds.clear();
 	setNumberOfElectrons(nElectrons);
 }
 
-MediumCompositionMolecular::MediumCompositionMolecular(const std::vector<int>& ids, int nElectrons) {
+MediumCompositionMolecular::MediumCompositionMolecular(const std::vector<int>& ids, int nElectrons, std::string label) {
 	for (const auto& id : ids) {
 		add(id);
 	}
@@ -148,11 +148,11 @@ void MediumCompositionMolecular::add(int id) {
 		KISS_LOG_WARNING << "MediumCompositionMolecular works for atomic nuclei only. You provided a particle that is not a nucleus." << std::endl;
 		throw std::invalid_argument("MediumCompositionMolecular works for atomic nuclei only. You provided a particle that is not a nucleus.");
 	}
-	nucleiIds.push_back(id);
+	atomIds.push_back(id);
 }
 
-void MediumCompositionMolecular::setNucleiIds(const std::vector<int>& ids) {
-	nucleiIds = ids;
+void MediumCompositionMolecular::setAtomIds(const std::vector<int>& ids) {
+	atomIds = ids;
 }
 
 void MediumCompositionMolecular::setNumberOfElectrons(int n) {
@@ -163,8 +163,8 @@ int MediumCompositionMolecular::getNumberOfElectrons() const {
 	return nElectrons;
 }
 
-const std::vector<int>& MediumCompositionMolecular::getNucleiIds() const {
-	return nucleiIds;
+const std::vector<int>& MediumCompositionMolecular::getAtomIds() const {
+	return atomIds;
 }
 
 bool MediumCompositionMolecular::isAdmixed() const {
@@ -185,8 +185,8 @@ bool MediumCompositionMolecular::isNeutral() const {
 
 unsigned int MediumCompositionMolecular::getNumberOfNucleons() const {
 	int nNucleons = 0;
-	for (const auto& nucleusId : nucleiIds)
-		nNucleons += massNumber(nucleusId);
+	for (const auto& atom : atomIds)
+		nNucleons += massNumber(atom);
 	return nNucleons;
 }
 
@@ -196,8 +196,8 @@ double MediumCompositionMolecular::getCompositionWeight() const {
 
 std::string MediumCompositionMolecular::getDescription() const {
 	std::stringstream ss;
-	ss << "MediumCompositionMolecular with nuclei IDs: ";
-	for (const auto& id : nucleiIds) {
+	ss << "MediumCompositionMolecular with atom IDs: ";
+	for (const auto& id : atomIds) {
 		ss << id << " ";
 	}
 	ss << "and number of electrons: " << nElectrons << std::endl;
@@ -207,10 +207,10 @@ std::string MediumCompositionMolecular::getDescription() const {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-MediumCompositionList::MediumCompositionList() {
+MediumCompositionList::MediumCompositionList(std::string label) {
 }
 
-MediumCompositionList::MediumCompositionList(const std::vector<ref_ptr<MediumComposition>>& comps, const std::vector<double>& weights) {
+MediumCompositionList::MediumCompositionList(const std::vector<ref_ptr<MediumComposition>>& comps, const std::vector<double>& weights, std::string label) {
 	if (comps.size() != weights.size()) {
 		KISS_LOG_WARNING << "MediumCompositionList: Compositions and weights must have the same size." << std::endl;
 		throw std::invalid_argument("MediumCompositionList: Compositions and weights must have the same size.");
