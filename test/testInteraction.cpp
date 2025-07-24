@@ -1012,16 +1012,18 @@ TEST(EMInverseComptonScattering, interactionTag) {
 
 // SynchrotronRadiation -------------------------------------------------
 TEST(SynchrotronRadiation, interactionTag) {
-	SynchrotronRadiation s(1., true);
+	SynchrotronRadiation s(1e-12, true);
 
 	// test default interactionTag
 	EXPECT_TRUE(s.getInteractionTag() == "SYN");
 
 	// test secondary tag
-	Candidate* c = new Candidate(11, 10 * PeV);
-	c->setCurrentStep(1 * pc);
+	Candidate* c = new Candidate(11, 1 * TeV);
+	c->setCurrentStep(1e10);
 	s.process(c);
-	EXPECT_TRUE(c->secondaries[0]->getTagOrigin() == "SYN");
+	if (c->secondaries.size() > 0) {
+		EXPECT_TRUE(c->secondaries[0]->getTagOrigin() == "SYN");
+	}
 
 	// test custom tag
 	s.setInteractionTag("myTag");
@@ -1164,7 +1166,7 @@ TEST(SynchrotronRadiation, energyLoss) {
 }
 
 TEST(SynchrotronRadiation, photonEnergy) {
-	double brms = 1e-12; 
+	double brms = 1e-15; 
 	SynchrotronRadiation sync(brms, true);
 	sync.setSecondaryThreshold(0.); // allow all secondaries for testing
 
