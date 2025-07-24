@@ -175,6 +175,9 @@ void ElectronPairProduction::process(Candidate* c) const {
 				samplerDistribution->push(Epair / 2.);
 			}
 
+			if (maximumSamples > 0 and counter > maximumSamples)
+				break;
+
 			counter++;
 		}
 
