@@ -49,18 +49,18 @@ class Histogram1D : public Referenced {
 			if (scale == "log10") {
 				vmin = log10(vmin);
 				vmax = log10(vmax);
-				for (size_t i = 0; i <= nBins; ++i) {
+				for (int i = 0; i <= nBins; ++i) {
 					edges[i] = pow(10, vmin + i * (vmax - vmin) / nBins);
 				}
-				for (size_t i = 0; i < nBins; ++i) {
+				for (int i = 0; i < nBins; ++i) {
 					centres[i] = pow(10, (log10(edges[i + 1]) + log10(edges[i])) / 2.);
 					widths[i] = edges[i + 1] - edges[i];
 				}
 			} else {
-				for (size_t i = 0; i <= nBins; ++i) {
+				for (int i = 0; i <= nBins; ++i) {
 					edges[i] = vmin + i * (vmax - vmin) / nBins;
 				}
-				for (size_t i = 0; i < nBins; ++i) {
+				for (int i = 0; i < nBins; ++i) {
 					centres[i] = (edges[i + 1] + edges[i]) / 2.;
 					widths[i] = edges[i + 1] - edges[i];
 				}
