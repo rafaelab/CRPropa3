@@ -97,7 +97,7 @@ template<typename Integrand>
 	const double XR = 0.5 * (B - A);
 	double SS = 0.;
 
-	for (int i = 0; i < X.size(); ++i) {
+	for (size_t i = 0; i < X.size(); ++i) {
 		double DX = XR * X[i];
 		SS += W[i] * (integrand(XM + DX) + integrand(XM - DX));
 	}
