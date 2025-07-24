@@ -6,7 +6,7 @@ namespace crpropa {
 
 
 	EMInverseComptonScattering::EMInverseComptonScattering(ref_ptr<PhotonField> photonField, bool havePhotons, ref_ptr<SamplerEvents> sampling, double limit) {
-	setInteractionTag("EMICS");
+	setInteractionTag("EMIC");
 	setPhotonField(photonField);
 	setHavePhotons(havePhotons);
 	setLimit(limit);
