@@ -216,6 +216,14 @@ void EMPairProduction::performInteraction(Candidate* candidate) const {
 	// add secondaries
 	double we = sampler->computeWeight( 11, Ee / (1 + z), f);
 	double wp = sampler->computeWeight(-11, Ep / (1 + z), 1 - f);
+	
+	#ifdef DEBUG
+		if (we < 0 or wp < 0) {
+			KISS_LOG_ERROR << "EMPairProduction: negative weight for secondary particle. Ee = " << Ee << ", Ep = " << Ep
+				<< ", we = " << we << ", wp = " << wp << std::endl;
+		}	
+	#endif
+	
 	if (we > 0)
 		candidate->addSecondary( 11, Ee / (1 + z), pos, we, interactionTag);
 	if (wp > 0)
