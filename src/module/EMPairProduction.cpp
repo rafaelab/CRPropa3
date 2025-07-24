@@ -44,7 +44,7 @@ std::string EMPairProduction::getInteractionTag() const {
 void EMPairProduction::initRate(std::string filename) {
 	std::ifstream infile(filename.c_str());
 
-	if (! infile.good())
+	if (not infile.good())
 		throw std::runtime_error("EMPairProduction: could not open file " + filename);
 
 	// clear previously loaded interaction rates
@@ -60,7 +60,7 @@ void EMPairProduction::initRate(std::string filename) {
 				tabRate.push_back(b / Mpc);
 			}
 		}
-		infile.ignore(std::numeric_limits < std::streamsize > ::max(), '\n');
+		infile.ignore(std::numeric_limits <std::streamsize> ::max(), '\n');
 	}
 	infile.close();
 }
