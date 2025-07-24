@@ -42,7 +42,7 @@ enum DetectionState {
 class ObserverFeature: public Referenced {
 	protected:
 		std::string description;
-		
+
 	public:
 		virtual DetectionState checkDetection(Candidate* candidate) const;
 		virtual void onDetection(Candidate* candidate) const;
@@ -160,9 +160,8 @@ class Observer1D: public ObserverFeature {
  * @brief Detects particles in a given redshift window
  *
  * When added to an observer, this feature generalizes it to four dimensions.
- * The fourth dimension is the redshift, a proxy for time. This is particularly
- * useful in "4D" studies, including either time-dependence (e.g. flaring objects),
- * or in 3D studies including cosmological evolution.
+ * The fourth dimension is the redshift, a proxy for time.
+ * This is particularly useful in "4D" studies, including either time-dependence (e.g. flaring objects), or in 3D studies including cosmological evolution.
  * Note that redshifts should be assigned to sources when using this feature.
  * This can be done with: SourceRedshift, SourceRedshift1D, SourceUniformRedshift, and SourceRedshiftEvolution.
  */
@@ -356,9 +355,9 @@ class ObserverTimeEvolution: public ObserverFeature {
 
 		/** Function
 		 * @param min		minimum time
-		 * @param max	    maximum time
-		 * @param numb	number of time intervals
-		 * @param log     log (input: true) or lin (input: false) scaling between min and max with numb steps
+		 * @param max		maximum time
+		 * @param numb		number of time intervals
+		 * @param log     	log (input: true) or lin (input: false) scaling between min and max with numb steps
 		 *
 		 * Appends a linear or logarithmic time range to detList via repeatedly calling addTime
 		*/
@@ -397,6 +396,25 @@ class ObserverTimeEvolution: public ObserverFeature {
 		 */
 		std::string getDescription() const;
 };
+
+
+/**
+ * @class ObserverTrajectoryLength
+ * @brief Observer for the trajectory length of a candidate
+ */
+class ObserverTrajectoryLength: public ObserverFeature {
+	protected:
+		double trajLength;
+
+	public:
+		ObserverTrajectoryLength(double l);
+		void setTrajectoryLength(double length);
+		double getTrajectoryLength() const;
+		DetectionState checkDetection(Candidate* candidate) const;
+		std::string getDescription() const;
+	};
+
+
 
 /** @} */
 
