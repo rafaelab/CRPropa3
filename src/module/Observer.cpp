@@ -251,7 +251,7 @@ ObserverTimeEvolution::ObserverTimeEvolution(double min, double max, double numb
 	setNIntervals(numb);
 }
 
-ObserverTimeEvolution::ObserverTimeEvolution(const std::vector<double>& detList){
+ObserverTimeEvolution::ObserverTimeEvolution(const std::vector<double>& detList) {
 	setTimes(detList);
 }
 
@@ -296,18 +296,18 @@ DetectionState ObserverTimeEvolution::checkDetection(Candidate* c) const {
 	return NOTHING;
 }
 
-void ObserverTimeEvolution::clear(){
+void ObserverTimeEvolution::clear() {
 	doDetListConstruction = false;
 	detList.clear();
 	detList.resize(0);
 	setNIntervals(0);
 }
 
-void ObserverTimeEvolution::constructDetListIfEmpty(){
+void ObserverTimeEvolution::constructDetListIfEmpty() {
 	if (detList.empty() and doDetListConstruction) {
 		std::vector<double> detListTemp;
 		size_t counter = 0;
-		while (getTime(counter)<=maximum) {
+		while (getTime(counter) <= maximum) {
 			detListTemp.push_back(getTime(counter));
 			counter++;
 		}
@@ -315,7 +315,7 @@ void ObserverTimeEvolution::constructDetListIfEmpty(){
 	}
 }
 
-void ObserverTimeEvolution::addTime(const double& time){
+void ObserverTimeEvolution::addTime(const double& time) {
 	constructDetListIfEmpty();
 	detList.push_back(time);
 	setNIntervals(nIntervals + 1);  // increase number of entries by one
@@ -324,7 +324,7 @@ void ObserverTimeEvolution::addTime(const double& time){
 void ObserverTimeEvolution::addTimeRange(double min, double max, double numb, bool log) {
 	for (size_t i = 0; i < numb; i++) {
 		if (log) {
-			if ( min <= 0 ){
+			if ( min <= 0 ) {
 				std::cout << "min can not be <= 0 if log=true" << std::endl;
 				throw new std::runtime_error("min can not be <= 0 if log=true");
 			}
@@ -337,7 +337,7 @@ void ObserverTimeEvolution::addTimeRange(double min, double max, double numb, bo
 	setNIntervals(detList.size());
 }
 
-void ObserverTimeEvolution::setTimes(const std::vector<double>& detList){
+void ObserverTimeEvolution::setTimes(const std::vector<double>& detList) {
 	this->detList.assign(detList.begin(), detList.end());
 	setNIntervals(detList.size());
 	setMinimum(detList.front());
@@ -345,8 +345,8 @@ void ObserverTimeEvolution::setTimes(const std::vector<double>& detList){
 	doDetListConstruction = false;
 }
 
-void ObserverTimeEvolution::setMinimum(double min){
-	if (min <= 0 and isLogarithmicScaling){
+void ObserverTimeEvolution::setMinimum(double min) {
+	if (min <= 0 and isLogarithmicScaling) {
 		std::cout << "minimum can not be <= 0 if isLogarithmicScaling=true" << std::endl;
 		throw new std::runtime_error("minimum can not be <= 0 if isLogarithmicScaling=true");
 	}
@@ -365,7 +365,7 @@ double ObserverTimeEvolution::getTime(size_t index) const {
 
 const std::vector<double>& ObserverTimeEvolution::getTimes() const {
 	tempDetList.resize(nIntervals);
-	for (size_t i = 0; i < nIntervals; i++){
+	for (size_t i = 0; i < nIntervals; i++) {
 		tempDetList[i] = getTime(i);
 	}
 	return tempDetList;
