@@ -145,6 +145,7 @@ void ElectronPairProduction::process(Candidate* c) const {
 		double dE0 = dE;
 
 		// draw pairs as long as their energy is smaller than the pair production energy loss
+		int counter = 0;
 		while (dE > 0) {
 			// randomly draw an energy of the electron
 			size_t j = random.randBin(tabSpectrum[i]);
@@ -163,8 +164,8 @@ void ElectronPairProduction::process(Candidate* c) const {
 
 			if (samplerDistribution == nullptr or maximumSamples <= 0) {
 				double Es = Epair / 2;
-				double wp = samplerEvents->computeWeight(-11, Es, Es / E0, i);
-				double we = samplerEvents->computeWeight( 11, Es, Es / E0, i);
+				double wp = samplerEvents->computeWeight(-11, Es, Es / E0, counter);
+				double we = samplerEvents->computeWeight( 11, Es, Es / E0, counter);
 				Vector3d pos = random.randomInterpolatedPosition(c->previous.getPosition(), c->current.getPosition());
 				if (wp > 0)
 					c->addSecondary(-11, Es, pos, wp, interactionTag);
@@ -173,6 +174,8 @@ void ElectronPairProduction::process(Candidate* c) const {
 			} else {
 				samplerDistribution->push(Epair / 2.);
 			}
+
+			counter++;
 		}
 
 		if (samplerDistribution != nullptr and maximumSamples > 0) {
@@ -201,6 +204,7 @@ void ElectronPairProduction::process(Candidate* c) const {
 				samplerDistribution->clear();
 			}
 		}
+	
 	}
 
 
