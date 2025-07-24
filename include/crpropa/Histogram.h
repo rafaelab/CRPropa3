@@ -3,7 +3,12 @@
 
 
 #include <string>
+#include <string_view>
 #include <vector>
+#include <algorithm>
+#include <numeric>
+#include <stdexcept>
+#include <cmath>
 
 #include <crpropa/Random.h>
 #include <crpropa/Referenced.h>
@@ -14,11 +19,11 @@
 namespace crpropa {
 
 /**
- @class Histogram1D
- @brief Builds a one-dimensional histogram.
- @details The histogram is defined by its edges, centres, widths and contents.
- The scale can be set to "lin" for linear or "log10" for logarithmic scale. 
- The histogram can be sampled, normalised, integrated, transformed to PDF or CDF
+ * @class Histogram1D
+ * @brief Builds a one-dimensional histogram.
+ * @details The histogram is defined by its edges, centres, widths and contents.
+ * The scale can be set to "lin" for linear or "log10" for logarithmic scale. 
+ * The histogram can be sampled, normalised, integrated, transformed to PDF or CDF
  */
 class Histogram1D : public Referenced {
 	protected:
@@ -28,79 +33,76 @@ class Histogram1D : public Referenced {
 		std::vector<double> contents;
 		std::string scale;
 	public:
-		Histogram1D(double vmin, double vmax, int nBins, std::string scale = "lin") {
+		Histogram1D(double vmin, double vmax, int nBins, std::string_view scale = "lin") {
 			setScale(scale);
 			initBins(vmin, vmax, nBins);
 		}
 
-		~Histogram1D(){
-		}
+		~Histogram1D() = default;
 
 		void initBins(double vmin, double vmax, int nBins) {
-			// create empty histogram
+			edges.resize(nBins + 1);
+			centres.resize(nBins);
+			widths.resize(nBins);
+			contents.resize(nBins, 0);
+
 			if (scale == "log10") {
 				vmin = log10(vmin);
 				vmax = log10(vmax);
-				for (size_t i = 0; i < nBins + 1; i++) {
-					double v = vmin + i * (vmax - vmin) / (nBins);
-					edges.push_back(pow(10, v));
+				for (size_t i = 0; i <= nBins; ++i) {
+					edges[i] = pow(10, vmin + i * (vmax - vmin) / nBins);
 				}
-				for (size_t i = 0; i < nBins; i++) {
-					centres.push_back(pow(10, (log10(edges[i + 1]) + log10(edges[i])) / 2.));
+				for (size_t i = 0; i < nBins; ++i) {
+					centres[i] = pow(10, (log10(edges[i + 1]) + log10(edges[i])) / 2.);
+					widths[i] = edges[i + 1] - edges[i];
 				}
 			} else {
-				for (size_t i = 0; i < nBins + 1; i++) {
-					double v = vmin + i * (vmax - vmin) / (nBins);
-					edges.push_back(v);
+				for (size_t i = 0; i <= nBins; ++i) {
+					edges[i] = vmin + i * (vmax - vmin) / nBins;
 				}
-				for (size_t i = 0; i < nBins; i++) {
-					centres.push_back((edges[i + 1] + edges[i]) / 2.);
+				for (size_t i = 0; i < nBins; ++i) {
+					centres[i] = (edges[i + 1] + edges[i]) / 2.;
+					widths[i] = edges[i + 1] - edges[i];
 				}
-			}
-
-			// bins start with no content
-			for (size_t i = 0; i < nBins; i++) {
-				widths.push_back(edges[i + 1] - edges[i]);
-				contents.push_back(0);
 			}
 		}
 
-		void setScale(std::string s) {
-			if (s == "log")
+		constexpr void setScale(std::string_view s) {
+			if (s == "log") {
 				scale = "log10";
-
-			if (s != "log" && s != "log10" && s != "lin")
-				throw std::runtime_error("Unknown scale " + s + ".");
-
-			scale = s;
+			} else if (s == "log10" || s == "lin") {
+				scale = s;
+			} else {
+				throw std::runtime_error("Unknown scale " + std::string(s) + ".");
+			}
 		}
 
-		std::string getScale() const {
+		[[nodiscard]] std::string getScale() const {
 			return scale;
 		}
 
-		std::vector<double> getBinEdges() const {
+		[[nodiscard]] std::vector<double> getBinEdges() const {
 			return edges;
 		}
 
-		std::vector<double> getBinWidths() const {
+		[[nodiscard]] std::vector<double> getBinWidths() const {
 			return widths;
 		}
 
-		std::vector<double> getBinCentres() const {
+		[[nodiscard]] std::vector<double> getBinCentres() const {
 			return centres;
 		}
 
-		std::vector<double> getBinContents() const {
+		[[nodiscard]] std::vector<double> getBinContents() const {
 			return contents;
 		}
 
-		int getNumberOfBins() const {
-			return contents.size();
+		[[nodiscard]] int getNumberOfBins() const {
+			return static_cast<int>(contents.size());
 		}
 
 		double getSample() const {
-			Random &random = Random::instance();
+			Random& random = Random::instance();
 			size_t bin = random.randBin(contents);
 			if (scale == "log") {
 				return pow(10, log10(edges[bin]) + random.rand() * log10(widths[bin]));
@@ -110,17 +112,17 @@ class Histogram1D : public Referenced {
 		}
 
 		void push(double v, double w = 1) {
-			std::vector<double>::const_iterator it = std::lower_bound(edges.begin(), edges.end(), v);
+			auto it = std::ranges::lower_bound(edges, v);
 			if (it == edges.begin() || it == edges.end())
 				return;
 
-			size_t idx = it - edges.begin();
-			contents[idx] += w; 
+			size_t idx = std::distance(edges.begin(), it) - 1;
+			contents[idx] += w;
 		}
 
 		void normalise(double norm) {
-			for (size_t i = 0; i < getNumberOfBins(); i++) {
-				contents[i] /= norm;
+			for (auto& content : contents) {
+				content /= norm;
 			}
 		}
 
@@ -128,51 +130,34 @@ class Histogram1D : public Referenced {
 			normalise(norm);
 		}
 
-		double sum() {
-			double sum = 0;
-			for (size_t i = 0; i < getNumberOfBins(); i++) {
-				sum += contents[i];
-			}
-
-			return sum;
+		[[nodiscard]] double sum() const {
+			return std::accumulate(contents.begin(), contents.end(), 0.0);
 		}
 
-		double integrate() {
-			double integral = 0;
+		[[nodiscard]] double integrate() const {
 			if (scale == "log") {
-				for (size_t i = 0; i < getNumberOfBins(); i++) {
-					integral +=  (contents[i] / (edges[i + 1] - edges[i]) * log(10) * centres[i]);
-				}
+				return std::transform_reduce(contents.begin(), contents.end(), widths.begin(), 0.0, std::plus<>(), [](double c, double w) {
+					return c / w * log(10);
+				});
 			} else {
-				for (size_t i = 0; i < getNumberOfBins(); i++) {
-					// integral += contents[i] / (edges[i] - edges[i - 1]);
-					integral += contents[i];
-				}
+				return sum();
 			}
-
-			return integral;
 		}
 
 		void transformToPDF() {
 			double integral = integrate();
-			for (size_t i = 1; i < getNumberOfBins(); i++) {
-				// contents[i] /= (edges[i] - edges[i - 1]);
-				contents[i] /= integral;
+			for (auto& content : contents) {
+				content /= integral;
 			}
 		}
 
 		void transformToCDF() {
-			for (size_t i = 1; i < getNumberOfBins(); i++) {
-				contents[i] += contents[i - 1];
-			}
+			std::partial_sum(contents.begin(), contents.end(), contents.begin());
 		}
 
 		void clear() {
-			for (size_t i = 0; i < getNumberOfBins(); i++) {
-				contents[i] = 0;
-			}
+			std::fill(contents.begin(), contents.end(), 0);
 		}
-
 };
 
 

@@ -42,9 +42,11 @@ std::string getDataPath(std::string filename) {
 
 std::string getInstallPrefix() {
 	std::string _path;
+
 	#ifdef CRPROPA_INSTALL_PREFIX
 		_path += CRPROPA_INSTALL_PREFIX;
 	#endif
+
 	return _path;
 }
 
@@ -89,6 +91,7 @@ double interpolateEquidistant(double x, double lo, double hi, const  std::span<c
 	double dx = (hi - lo) / (Y.size() - 1);
 	double p = (x - lo) / dx;
 	size_t i = static_cast<size_t>(p);
+	
 	return Y[i] + (p - i) * (Y[i + 1] - Y[i]);
 }
 
