@@ -9,34 +9,34 @@ void AdvectionFieldList::addField(ref_ptr<AdvectionField> field) {
 	fields.push_back(field);
 }
 
-Vector3d AdvectionFieldList::getField(const Vector3d &position) const {
+Vector3d AdvectionFieldList::getField(const Vector3d& position) const {
 	Vector3d b(0.);
-	for (int i = 0; i < fields.size(); i++)
+	for (size_t i = 0; i < fields.size(); i++)
 		b += fields[i]->getField(position);
 	return b;
 }
 
-double AdvectionFieldList::getDivergence(const Vector3d &position) const {
-	double D=0.;
+double AdvectionFieldList::getDivergence(const Vector3d& position) const {
+	double D = 0.;
 	// Work on default values for divergence or an error handling
-	for (int i = 0; i < fields.size(); i++)
+	for (size_t i = 0; i < fields.size(); i++)
 		D += fields[i]->getDivergence(position);
 	return D;
 }
 
 
 //----------------------------------------------------------------
-UniformAdvectionField::UniformAdvectionField(const Vector3d &value) :
-			value(value) {
-	}
+UniformAdvectionField::UniformAdvectionField(const Vector3d& value) : 
+		value(value) {
+}
 
-Vector3d UniformAdvectionField::getField(const Vector3d &position) const {
+Vector3d UniformAdvectionField::getField(const Vector3d& position) const {
 	return value;
-	}
+}
 
-double UniformAdvectionField::getDivergence(const Vector3d &position) const {
+double UniformAdvectionField::getDivergence(const Vector3d& position) const {
 	return 0.;
-	}
+}
 
 std::string UniformAdvectionField::getDescription() const {
 	std::stringstream s;
@@ -51,18 +51,18 @@ ConstantSphericalAdvectionField::ConstantSphericalAdvectionField(const Vector3d 
 	setVWind(vWind);
 }
 
-Vector3d ConstantSphericalAdvectionField::getField(const Vector3d &position) const {
+Vector3d ConstantSphericalAdvectionField::getField(const Vector3d& position) const {
 	Vector3d Pos = position-origin;
 	return vWind * Pos.getUnitVector();
 }
 
-double ConstantSphericalAdvectionField::getDivergence(const Vector3d &position) const {
-	double R = (position-origin).getR();	
-	return 2*vWind/R;
+double ConstantSphericalAdvectionField::getDivergence(const Vector3d& position) const {
+	double R = (position - origin).getR();
+	return 2 * vWind / R;
 }
 
 void ConstantSphericalAdvectionField::setOrigin(const Vector3d o) {
-	origin=o;
+	origin = o;
 	return;
 }
 
@@ -98,23 +98,22 @@ SphericalAdvectionField::SphericalAdvectionField(const Vector3d origin, double r
 	setAlpha(alpha);
 }
 
-Vector3d SphericalAdvectionField::getField(const Vector3d &position) const {
-	Vector3d Pos = position-origin;
-	double R = Pos.getR();
-	if (R>radius) {
+Vector3d SphericalAdvectionField::getField(const Vector3d& position) const {
+	Vector3d pos = position - origin;
+	double R = pos.getR();
+	if (R > radius) {
 		return Vector3d(0.);
 	}
 	double v_R = getV(R);
-	return v_R * Pos.getUnitVector();
+	return v_R * pos.getUnitVector();
 }
 
-double SphericalAdvectionField::getDivergence(const Vector3d &position) const {
-	double R = (position-origin).getR();
-	if (R>radius) {
+double SphericalAdvectionField::getDivergence(const Vector3d& position) const {
+	double R = (position - origin).getR();
+	if (R > radius) {
 		return 0.;
 	}
-	double D = 2*vMax/R * ( 1-( 1-alpha*(pow(R, alpha)/(2*tau)) )*exp(-( pow(R, alpha)/tau )) );
-	return D;
+	return 2 * vMax / R * (1 - (1 - alpha * (pow(R, alpha) / (2 * tau))) * exp(-(pow(R, alpha) / tau)));
 }
 
 double SphericalAdvectionField::getV(const double &r) const {
@@ -179,13 +178,13 @@ std::string SphericalAdvectionField::getDescription() const {
 
 //----------------------------------------------------------------
 
-OneDimensionalCartesianShock::OneDimensionalCartesianShock(double compressionRatio, double vUp, double lShock){
+OneDimensionalCartesianShock::OneDimensionalCartesianShock(double compressionRatio, double vUp, double lShock) {
 	setComp(compressionRatio);
 	setVup(vUp);
-	setShockwidth(lShock);
-	}
+	setShockWidth(lShock);
+}
 
-Vector3d OneDimensionalCartesianShock::getField(const Vector3d &position) const {
+Vector3d OneDimensionalCartesianShock::getField(const Vector3d& position) const {
 	double x = position.x;
 	double vDown = vUp / compressionRatio;
 
@@ -198,7 +197,7 @@ Vector3d OneDimensionalCartesianShock::getField(const Vector3d &position) const 
 
 }
 
-double OneDimensionalCartesianShock::getDivergence(const Vector3d &position) const {
+double OneDimensionalCartesianShock::getDivergence(const Vector3d& position) const {
 	double x = position.x;
 	double vDown = vUp / compressionRatio;
 
@@ -216,7 +215,7 @@ void OneDimensionalCartesianShock::setVup(double v) {
 	vUp = v;
 	return;
 }
-void OneDimensionalCartesianShock::setShockwidth(double w) {
+void OneDimensionalCartesianShock::setShockWidth(double w) {
 	lShock = w;
 	return;
 }
@@ -229,7 +228,7 @@ double OneDimensionalCartesianShock::getVup() const {
 	return vUp;
 }
 
-double OneDimensionalCartesianShock::getShockwidth() const {
+double OneDimensionalCartesianShock::getShockWidth() const {
 	return lShock;
 }
 
@@ -243,15 +242,15 @@ std::string OneDimensionalCartesianShock::getDescription() const {
 
 //----------------------------------------------------------------
 
-OneDimensionalSphericalShock::OneDimensionalSphericalShock(double rShock, double vUp, double compressionRatio, double lShock, bool coolUpstream ){
+OneDimensionalSphericalShock::OneDimensionalSphericalShock(double rShock, double vUp, double compressionRatio, double lShock, bool coolUpstream) {
 	setComp(compressionRatio);
 	setVup(vUp);
-	setShockwidth(lShock);
+	setShockWidth(lShock);
 	setShockRadius(rShock);
 	setCooling(coolUpstream);
 	}
 
-Vector3d OneDimensionalSphericalShock::getField(const Vector3d &position) const {
+Vector3d OneDimensionalSphericalShock::getField(const Vector3d& position) const {
 	double r = position.getR();
 	Vector3d e_r = position.getUnitVector();
 
@@ -260,21 +259,19 @@ Vector3d OneDimensionalSphericalShock::getField(const Vector3d &position) const 
 	double b = (vUp - vDown) * 0.5;
 
 	double v;
-	if (coolUpstream == true){
-	
+	if (coolUpstream == true) {
 		if (r <= rShock)
-    		v = a - b * tanh((r-rShock) / lShock);
+			v = a - b * tanh((r - rShock) / lShock);
 		else
-			v = (a - b * tanh((r-rShock) / lShock)) * (rShock / r) * (rShock / r);
-
+			v = (a - b * tanh((r - rShock) / lShock)) * (rShock / r) * (rShock / r);
+	} else {
+		v = (a - b * tanh((r - rShock) / lShock)) * (rShock / r) * (rShock / r);
 	}
-	else
-		v = (a - b * tanh((r-rShock) / lShock)) * (rShock / r) * (rShock / r);
 
 	return v * e_r;
-	}
+}
 
-double OneDimensionalSphericalShock::getDivergence(const Vector3d &position) const {
+double OneDimensionalSphericalShock::getDivergence(const Vector3d& position) const {
 	double r = position.getR();
 	
 	double vDown = vUp / compressionRatio;
@@ -288,9 +285,9 @@ double OneDimensionalSphericalShock::getDivergence(const Vector3d &position) con
 			return 2 * a / r - 2 * b / r * c - b / lShock * (1 - c * c);
 		else
 			return -(rShock / r) * (rShock / r) * b / lShock * (1 - c * c);
-	}
-	else 
+	} else {
 		return -(rShock / r) * (rShock / r) *  b / lShock * (1 - c * c);
+	}
 
 }
 
@@ -303,7 +300,8 @@ void OneDimensionalSphericalShock::setVup(double v) {
 	vUp = v;
 	return;
 }
-void OneDimensionalSphericalShock::setShockwidth(double w) {
+
+void OneDimensionalSphericalShock::setShockWidth(double w) {
 	lShock = w;
 	return;
 }
@@ -326,7 +324,7 @@ double OneDimensionalSphericalShock::getVup() const {
 	return vUp;
 }
 
-double OneDimensionalSphericalShock::getShockwidth() const {
+double OneDimensionalSphericalShock::getShockWidth() const {
 	return lShock;
 }
 
@@ -354,10 +352,10 @@ ObliqueAdvectionShock::ObliqueAdvectionShock(double compressionRatio, double vXU
 	setComp(compressionRatio);
 	setVup(vXUp);
 	setVy(vY);
-	setShockwidth(lShock);
+	setShockWidth(lShock);
 	}
 
-Vector3d ObliqueAdvectionShock::getField(const Vector3d &position) const {
+Vector3d ObliqueAdvectionShock::getField(const Vector3d& position) const {
 	double x = position.x;
 	double vXDown = vXUp / compressionRatio;
 
@@ -371,7 +369,7 @@ Vector3d ObliqueAdvectionShock::getField(const Vector3d &position) const {
 	return v;
 	}
 
-double ObliqueAdvectionShock::getDivergence(const Vector3d &position) const {
+double ObliqueAdvectionShock::getDivergence(const Vector3d& position) const {
 	double x = position.x;
 	double vXDown = vXUp / compressionRatio;
 	// vy = const
@@ -395,8 +393,8 @@ void ObliqueAdvectionShock::setVup(double v) {
 void ObliqueAdvectionShock::setVy(double v) {
 	vY = v;
 	return;
-} 
-void ObliqueAdvectionShock::setShockwidth(double w) {
+}
+void ObliqueAdvectionShock::setShockWidth(double w) {
 	lShock = w;
 	return;
 }
@@ -413,7 +411,7 @@ double ObliqueAdvectionShock::getVy() const {
 	return vY;
 }
 
-double ObliqueAdvectionShock::getShockwidth() const {
+double ObliqueAdvectionShock::getShockWidth() const {
 	return lShock;
 }
 
@@ -429,7 +427,7 @@ std::string ObliqueAdvectionShock::getDescription() const {
 
 //-----------------------------------------------------------------
 
-SphericalAdvectionShock::SphericalAdvectionShock(const Vector3d origin, double r_0, double v_0, double l) {
+SphericalAdvectionShock::SphericalAdvectionShock(const Vector3d& origin, double r_0, double v_0, double l) {
 	setOrigin(origin);
 	setR0(r_0);
 	setV0(v_0);
@@ -439,7 +437,7 @@ SphericalAdvectionShock::SphericalAdvectionShock(const Vector3d origin, double r
 }
 
 
-Vector3d SphericalAdvectionShock::getField(const Vector3d &pos) const {
+Vector3d SphericalAdvectionShock::getField(const Vector3d& pos) const {
 	Vector3d R = pos-origin;
 	Vector3d e_r = R.getUnitVector();
 	Vector3d e_phi = R.getUnitVectorPhi();
@@ -452,25 +450,25 @@ Vector3d SphericalAdvectionShock::getField(const Vector3d &pos) const {
 }
 
 
-double SphericalAdvectionShock::getDivergence(const Vector3d &pos) const {
-	double r = (pos-origin).getR();
+double SphericalAdvectionShock::getDivergence(const Vector3d& pos) const {
+	double r = (pos - origin).getR();
 
-	double d1 = 2./r*(1-g(r));
-	double d2 = (pow(r_0/(2*r), 2.)-1)*g_prime(r);
+	double d1 = 2. / r * (1 - g(r));
+	double d2 = (pow_integer<2>(r_0 / (2 * r)) - 1) * g_prime(r);
 
-	return v_0 * (d1+d2);
+	return v_0 * (d1 + d2);
 }
 
 
 double SphericalAdvectionShock::g(double r) const {
-	double a = (r-r_0)/lambda;
-	return 1. / (1+exp(-a));
+	double a = (r - r_0) / lambda;
+	return 1. / (1 + exp(-a));
 }
 
 double SphericalAdvectionShock::g_prime(double r) const {
-	double a = (r-r_0)/lambda;
-	return 1. / (2*lambda*(1+cosh(-a)));
-}	
+	double a = (r - r_0) / lambda;
+	return 1. / (2 * lambda * (1 + cosh(-a)));
+}
 
 void SphericalAdvectionShock::setOrigin(const Vector3d o) {
 	origin = o;
