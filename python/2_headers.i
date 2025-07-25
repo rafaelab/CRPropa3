@@ -319,10 +319,10 @@
 %feature("director") crpropa::Density;
 %include "crpropa/massDistribution/Density.h"
 
-%implicitconv crpropa::ref_ptr<crpropa::MediumComposition>;
-%template(MediumCompositionRefPtr) crpropa::ref_ptr<crpropa::MediumComposition>;
-%feature("director") crpropa::MediumComposition;
-%include "crpropa/massDistribution/MediumComposition.h"
+// %implicitconv crpropa::ref_ptr<crpropa::MediumComposition>;
+// %template(MediumCompositionRefPtr) crpropa::ref_ptr<crpropa::MediumComposition>;
+// %feature("director") crpropa::MediumComposition;
+%include "crpropa/massDistribution/TargetMedium.h"
 
 
 %include "crpropa/Grid.h"
