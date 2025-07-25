@@ -409,7 +409,7 @@ add_library(crpropa SHARED
   src/magneticField/KST24Field.cpp
   src/magneticField/CMZField.cpp
   src/advectionField/AdvectionField.cpp
-  src/massDistribution/MediumComposition.cpp
+  src/massDistribution/TargetMedium.cpp
   src/massDistribution/Density.cpp
   src/massDistribution/ConstantDensity.cpp
   src/massDistribution/Cordes.cpp

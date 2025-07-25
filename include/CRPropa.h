@@ -77,7 +77,7 @@
 
 #include "crpropa/advectionField/AdvectionField.h"
 
-#include "crpropa/massDistribution/MediumComposition.h"
+#include "crpropa/massDistribution/TargetMedium.h"
 #include "crpropa/massDistribution/Density.h"
 #include "crpropa/massDistribution/ConstantDensity.h"
 #include "crpropa/massDistribution/Nakanishi.h"
