@@ -48,7 +48,7 @@ std::string EMTripletPairProduction::getInteractionTag() const {
 void EMTripletPairProduction::initRate(std::string filename) {
 	std::ifstream infile(filename.c_str());
 
-	if (! infile.good())
+	if (not infile.good())
 		throw std::runtime_error("EMTripletPairProduction: could not open file " + filename);
 
 	// clear previously loaded interaction rates
@@ -64,7 +64,7 @@ void EMTripletPairProduction::initRate(std::string filename) {
 				tabRate.push_back(b / Mpc);
 			}
 		}
-		infile.ignore(std::numeric_limits < std::streamsize > ::max(), '\n');
+		infile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 	}
 	infile.close();
 }
@@ -72,9 +72,8 @@ void EMTripletPairProduction::initRate(std::string filename) {
 void EMTripletPairProduction::initCumulativeRate(std::string filename) {
 	std::ifstream infile(filename.c_str());
 
-	if (! infile.good())
-		throw std::runtime_error(
-				"EMTripletPairProduction: could not open file " + filename);
+	if (not infile.good())
+		throw std::runtime_error("EMTripletPairProduction: could not open file " + filename);
 
 	// clear previously loaded tables
 	tabE.clear();
@@ -83,7 +82,7 @@ void EMTripletPairProduction::initCumulativeRate(std::string filename) {
 	
 	// skip header
 	while (infile.peek() == '#')
-		infile.ignore(std::numeric_limits < std::streamsize > ::max(), '\n');
+		infile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
 	// read s values in first line
 	double a;
@@ -96,11 +95,11 @@ void EMTripletPairProduction::initCumulativeRate(std::string filename) {
 	// read all following lines: E, cdf values
 	while (infile.good()) {
 		infile >> a;
-		if (!infile)
+		if (not infile)
 			break;  // end of file
 		tabE.push_back(pow(10, a) * eV);
 		std::vector<double> cdf;
-		for (int i = 0; i < tabs.size(); i++) {
+		for (size_t i = 0; i < tabs.size(); i++) {
 			infile >> a;
 			cdf.push_back(a / Mpc);
 		}

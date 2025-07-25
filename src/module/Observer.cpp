@@ -19,16 +19,16 @@ void Observer::onDetection(Module* action, bool clone_) {
 void Observer::process(Candidate* candidate) const {
 	// loop over all features and have them check the particle
 	DetectionState state = NOTHING;
-	for (int i = 0; i < features.size(); i++) {
+	for (size_t i = 0; i < features.size(); i++) {
 		DetectionState s = features[i]->checkDetection(candidate);
 		if (s == VETO)
 			state = VETO;
-		else if ((s == DETECTED) && (state != VETO))
+		else if ((s == DETECTED) and (state != VETO))
 			state = DETECTED;
 	}
 
 	if (state == DETECTED) {
-		for (int i = 0; i < features.size(); i++) {
+		for (size_t i = 0; i < features.size(); i++) {
 			features[i]->onDetection(candidate);
 		}
 
@@ -39,7 +39,7 @@ void Observer::process(Candidate* candidate) const {
 				detectionAction->process(candidate);
 		}
 
-		if (!flagKey.empty())
+		if (not flagKey.empty())
 			candidate->setProperty(flagKey, flagValue);
 
 		if (makeInactive)
@@ -55,7 +55,7 @@ void Observer::setFlag(std::string key, std::string value) {
 std::string Observer::getDescription() const {
 	std::stringstream ss;
 	ss << "Observer";
-	for (int i = 0; i < features.size(); i++)
+	for (size_t i = 0; i < features.size(); i++)
 		ss << "\n    " << features[i]->getDescription() << "\n";
 	ss << "    Flag: '" << flagKey << "' -> '" << flagValue << "'\n";
 	ss << "    MakeInactive: " << (makeInactive ? "yes\n" : "no\n");
@@ -164,7 +164,7 @@ std::string ObserverRedshiftWindow::getDescription() const {
 
 // ObserverInactiveVeto -------------------------------------------------------
 DetectionState ObserverInactiveVeto::checkDetection(Candidate* c) const {
-	if (not(c->isActive()))
+	if (not c->isActive())
 		return VETO;
 	return NOTHING;
 }
@@ -265,8 +265,7 @@ DetectionState ObserverTimeEvolution::checkDetection(Candidate* c) const {
 		// Load the last detection index
 		if (c->hasProperty(DI)) {
 			index = c->getProperty(DI).asUInt64();
-		}
-		else {
+		} else {
 			index = 0;
 		}
 
@@ -284,7 +283,6 @@ DetectionState ObserverTimeEvolution::checkDetection(Candidate* c) const {
 			c->limitNextStep(-distance);
 			return NOTHING;
 		} else {
-
 			if (index < nIntervals - 2) {
 				c->limitNextStep(getTime(index + 1) - length);
 			}
@@ -365,7 +363,7 @@ double ObserverTimeEvolution::getTime(size_t index) const {
 
 const std::vector<double>& ObserverTimeEvolution::getTimes() const {
 	tempDetList.resize(nIntervals);
-	for (size_t i = 0; i < nIntervals; i++) {
+	for (int i = 0; i < nIntervals; i++) {
 		tempDetList[i] = getTime(i);
 	}
 	return tempDetList;
@@ -374,7 +372,7 @@ const std::vector<double>& ObserverTimeEvolution::getTimes() const {
 std::string ObserverTimeEvolution::getDescription() const {
 	std::stringstream s;
 	s << "List of Detection lengths in kpc";
-	for (size_t i = 0; i < nIntervals; i++)
+	for (int i = 0; i < nIntervals; i++)
 		s << "  - " << getTime(i) / kpc;
 	return s.str();
 }
