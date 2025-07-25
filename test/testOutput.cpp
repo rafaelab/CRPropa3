@@ -1,30 +1,29 @@
 /** Unit tests for Output modules of CRPropa
-    Output
-    TextOutput
-    ParticleCollector
+ *  Output
+ *  TextOutput
+ *  ParticleCollector
  */
 
-#include "CRPropa.h"
 
-#include "gtest/gtest.h"
 #include <iostream>
 #include <string>
 
+#include "gtest/gtest.h"
+
+#include "CRPropa.h"
+
 
 #ifdef CRPROPA_HAVE_HDF5
-#include <hdf5.h>
+	#include <hdf5.h>
 #endif
 
 // compare two arrays (intead of using Google Mock)
 // https://stackoverflow.com/a/10062016/6819103
 template <typename T, size_t size>
-::testing::AssertionResult ArraysMatch(const T (&expected)[size],
-                                       const T (&actual)[size]) {
+::testing::AssertionResult ArraysMatch(const T (&expected)[size], const T (&actual)[size]) {
 	for (size_t i(0); i < size; ++i) {
 		if (expected[i] != actual[i]) {
-			return ::testing::AssertionFailure()
-			       << "array[" << i << "] (" << actual[i] << ") != expected["
-			       << i << "] (" << expected[i] << ")";
+			return ::testing::AssertionFailure() << "array[" << i << "] (" << actual[i] << ") != expected[" << i << "] (" << expected[i] << ")";
 		}
 	}
 
@@ -73,8 +72,7 @@ TEST(TextOutput, printHeader_Trajectory3D) {
 	output.process(&c);
 	std::string captured = testing::internal::GetCapturedStdout();
 
-	EXPECT_EQ(captured.substr(0, captured.find("\n")),
-	          "#\tD\tID\tE\tX\tY\tZ\tPx\tPy\tPz");
+	EXPECT_EQ(captured.substr(0, captured.find("\n")), "#\tD\tID\tE\tX\tY\tZ\tPx\tPy\tPz");
 }
 
 TEST(TextOutput, printHeader_Event3D) {
@@ -85,9 +83,7 @@ TEST(TextOutput, printHeader_Event3D) {
 	output.process(&c);
 	std::string captured = testing::internal::GetCapturedStdout();
 
-	EXPECT_EQ(
-	    captured.substr(0, captured.find("\n")),
-	    "#\tD\tID\tE\tX\tY\tZ\tPx\tPy\tPz\tID0\tE0\tX0\tY0\tZ0\tP0x\tP0y\tP0z");
+	EXPECT_EQ(captured.substr(0, captured.find("\n")), "#\tD\tID\tE\tX\tY\tZ\tPx\tPy\tPz\tID0\tE0\tX0\tY0\tZ0\tP0x\tP0y\tP0z");
 }
 
 TEST(TextOutput, printHeader_Custom) {
@@ -103,8 +99,7 @@ TEST(TextOutput, printHeader_Custom) {
 	output.process(&c);
 	std::string captured = testing::internal::GetCapturedStdout();
 
-	EXPECT_EQ(captured.substr(0, captured.find("\n")),
-	          "#\tSN\tID\tE\tSN0\tID0\tE0\tSN1\ttag");
+	EXPECT_EQ(captured.substr(0, captured.find("\n")), "#\tSN\tID\tE\tSN0\tID0\tE0\tSN1\ttag");
 }
 
 TEST(TextOutput, printProperty) {
@@ -132,29 +127,24 @@ TEST(TextOutput, printHeader_Version) {
 	// length of the prefix is 19 chars
 	size_t version_pos = captured.find("# CRPropa version: ") + 19;
 
-	EXPECT_EQ(captured.substr(version_pos,
-	                          captured.find("\n", version_pos) - version_pos),
-	          g_GIT_DESC);
+	EXPECT_EQ(captured.substr(version_pos, captured.find("\n", version_pos) - version_pos), g_GIT_DESC);
 }
 
 #ifndef CRPROPA_TESTS_SKIP_EXCEPTIONS
-TEST(TextOutput, failOnIllegalOutputFile) {
-	EXPECT_THROW(
-	    TextOutput output("THIS_FOLDER_MUST_NOT_EXISTS_12345+/FILE.txt"),
-	    std::runtime_error);
-}
+	TEST(TextOutput, failOnIllegalOutputFile) {
+		EXPECT_THROW(TextOutput output("THIS_FOLDER_MUST_NOT_EXISTS_12345+/FILE.txt"), std::runtime_error);
+	}
 #endif
 
 #ifdef CRPROPA_HAVE_HDF5
-#ifndef CRPROPA_TESTS_SKIP_EXCEPTIONS
-TEST(HDF5Output, failOnIllegalOutputFile) {
-	HDF5Output out;
-	// disable default error output of HDF5
-	H5Eset_auto2(H5E_DEFAULT, NULL, NULL);
-	EXPECT_THROW(out.open("THIS_FOLDER_MUST_NOT_EXISTS_12345+/FILE.h5"),
-	             std::runtime_error);
-}
-#endif
+	#ifndef CRPROPA_TESTS_SKIP_EXCEPTIONS
+		TEST(HDF5Output, failOnIllegalOutputFile) {
+			HDF5Output out;
+			// disable default error output of HDF5
+			H5Eset_auto2(H5E_DEFAULT, NULL, NULL);
+			EXPECT_THROW(out.open("THIS_FOLDER_MUST_NOT_EXISTS_12345+/FILE.h5"), std::runtime_error);
+		}
+	#endif
 #endif
 
 //-- ParticleCollector
@@ -189,7 +179,7 @@ TEST(ParticleCollector, reprocess) {
 }
 
 TEST(ParticleCollector, dumpload) {
-	ref_ptr<Candidate> c = new Candidate(nucleusId(1, 1), 1.234 * EeV);
+	ref_ptr<Candidate> c = new Candidate(nucleusId(1, 1), 1.234 * PeV);
 	c->current.setPosition(Vector3d(1, 2, 3));
 	c->current.setDirection(Vector3d(-1, -1, -1));
 	c->setTrajectoryLength(1 * Mpc);
@@ -197,20 +187,18 @@ TEST(ParticleCollector, dumpload) {
 
 	ParticleCollector input;
 	ParticleCollector output;
-
-	for (int i = 0; i <= 10; ++i) {
+	for (int i = 0; i <= 10; ++i)
 		input.process(c);
-	}
 
-	// Well, it would be nicer if we don't need to receate any file
+	// Well, it would be nicer if we don't need to recreate any file
 	input.dump("ParticleCollector_DumpTest.txt");
 	output.load("ParticleCollector_DumpTest.txt");
 
 	EXPECT_EQ(input.size(), output.size());
-	EXPECT_EQ(output[0]->current.getEnergy(), c->current.getEnergy());
 	EXPECT_EQ(output[1]->getTrajectoryLength(), c->getTrajectoryLength());
 	EXPECT_EQ(output[2]->current.getId(), c->current.getId());
 	EXPECT_EQ(output[3]->getRedshift(), c->getRedshift());
+	EXPECT_NEAR(output[0]->current.getEnergy() - c->current.getEnergy(), 0., 1e-5);
 }
 
 // Just test if the trajectory is on a line for rectilinear propagation
@@ -242,8 +230,7 @@ TEST(ParticleCollector, getTrajectory) {
 	Vector3d pos;
 	int i = 0;
 
-	for (ParticleCollector::iterator itr = trajectory->begin();
-	     itr != trajectory->end(); ++itr) {
+	for (ParticleCollector::iterator itr = trajectory->begin(); itr != trajectory->end(); ++itr) {
 		pos = (*(itr->get())).current.getPosition();
 		pos_x[i] = pos.getX();
 		++i;
