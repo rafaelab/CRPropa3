@@ -17,21 +17,19 @@ void DensityEvolution::setEvolutionIndex(double m) {
 	index = m;
 }
 
-double DensityEvolution::getDensity(const Vector3d& position, const double& z) const {
+[[nodiscard]] double DensityEvolution::getDensity(const Vector3d& position, const double& z) const {
 	return density->getDensity(position, z) * std::pow(1 + z, index);
 }
 
-std::string DensityEvolution::getDescription() const {
-	std::stringstream ss;
-	ss << "Density evolution with index " << index << " for density: " << density->getDescription();
-	return ss.str();
+[[nodiscard]] std::string DensityEvolution::getDescription() const {
+	return std::format("Density evolution with index {} for density: \n{}", index, density->getDescription());
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 
-DensityGrid::DensityGrid(ref_ptr<MediumComposition> field, ref_ptr<Grid1f> densityGrid) {
-	Density::setTargetMedium(field);
+DensityGrid::DensityGrid(TargetMedium target, ref_ptr<Grid1f> densityGrid) {
+	Density::setTargetMedium(target);
 	setGrid(densityGrid);
 }
 
@@ -39,15 +37,12 @@ void DensityGrid::setGrid(ref_ptr<Grid1f> g) {
 	grid = g;
 }
 
-double DensityGrid::getDensity(const Vector3d& position, const double& z) const {
+[[nodiscard]] double DensityGrid::getDensity(const Vector3d& position, const double& z) const {
 	return grid->interpolate(position);
 }
 
-
-std::string DensityGrid::getDescription() const {
-	std::stringstream ss;
-	ss << "Target field density distribution in a uniform grid" << std::endl; 
-	return ss.str();
+[[nodiscard]] std::string DensityGrid::getDescription() const {
+	return std::format("Density field density distribution in a uniform grid\n Target medium: {} (Weight: {})", getTargetMedium().getName(), getTargetMedium().getWeight());
 }
 
 

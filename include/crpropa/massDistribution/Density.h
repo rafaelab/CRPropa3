@@ -2,13 +2,14 @@
 #define CRPROPA_DENSITY_H
 
 #include <sstream>
+#include <vector>
 
 #include "crpropa/Grid.h"
 #include "crpropa/ParticleID.h"
 #include "crpropa/Referenced.h"
 #include "crpropa/Units.h"
 #include "crpropa/Vector3.h"
-#include "crpropa/massDistribution/MediumComposition.h"
+#include "crpropa/massDistribution/TargetMedium.h"
 #include "HepPID/ParticleIDMethods.hh"
 #include "kiss/logger.h"
 
@@ -22,28 +23,31 @@ namespace crpropa {
  */
 class Density: public Referenced {
 	protected:
-		ref_ptr<MediumComposition> target;  ///< target medium composition for the density
+		TargetMedium target;  ///< Target medium composition for the density
 
 	public:
+		Density() = default;
 		virtual ~Density() = default;
-
-		virtual double getDensity(const Vector3d& position, const double& z = 0) const = 0;
-
-		virtual std::string getDescription() const {
-			return "Density (abstract base class)";
+		[[nodiscard]] virtual double getDensity(const Vector3d& position, const double& z = 0) const = 0;
+		[[nodiscard]] virtual std::string getDescription() const {
+			std::stringstream ss;
+			ss << "Density (abstract base class)\n";
+			ss << "Target Medium: " << target.getName() << " (Weight: " << target.getWeight() << ")";
+			return ss.str();
 		}
 
-		void setTargetMedium(ref_ptr<MediumComposition> t) {
-			target = t;
+		void setTargetMedium(TargetMedium t) {
+			target = std::move(t);
 		}
 
-		ref_ptr<MediumComposition> getTargetMedium() const {
+		TargetMedium getTargetMedium() const {
 			return target;
 		}
 
-		bool isAdmixed() const {
-			return target->isAdmixed();
-		}
+		Density(const Density&) = default;
+		Density& operator=(const Density&) = default;
+		Density(Density&&) = default;
+		Density& operator=(Density&&) = default;
 };
 
 
@@ -63,8 +67,8 @@ class DensityEvolution : public Density {
 		DensityEvolution(ref_ptr<Density> density, double index);
 		void setDensity(ref_ptr<Density> density);
 		void setEvolutionIndex(double index);
-		double getDensity(const Vector3d& position, const double& z = 0) const;
-		std::string getDescription() const;
+		[[nodiscard]] double getDensity(const Vector3d& position, const double& z = 0) const override;
+		std::string getDescription() const override;
 };
 
 /**
@@ -79,10 +83,10 @@ class DensityGrid: public Density {
 		ref_ptr<Grid1f> grid; 
 
 	public:
-		DensityGrid(ref_ptr<MediumComposition> target, ref_ptr<Grid1f> grid);
+		DensityGrid(TargetMedium target, ref_ptr<Grid1f> grid);
 		void setGrid(ref_ptr<Grid1f> grid);
-		double getDensity(const Vector3d& position, const double& z = 0) const;
-		std::string getDescription() const;
+		[[nodiscard]] double getDensity(const Vector3d& position, const double& z = 0) const override;
+		std::string getDescription() const override;
 };
 
 
