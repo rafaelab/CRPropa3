@@ -51,7 +51,7 @@ void DensityGrid::setGrid(ref_ptr<Grid1f> g) {
 DensityList::DensityList() {
 }
 
-void DensityList::addDensity(ref_ptr<Density> density) {
+void DensityList::add(ref_ptr<Density> density) {
     densities.push_back(density);
 }
 

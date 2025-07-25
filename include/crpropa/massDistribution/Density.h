@@ -100,7 +100,7 @@ class DensityList : public Density {
 
 	public:
 		DensityList();
-		void addDensity(ref_ptr<Density> density);
+		void add(ref_ptr<Density> density);
 		[[nodiscard]] double getDensity(const Vector3d& position, const double& z = 0) const override;
 		std::string getDescription() const override;
 };
