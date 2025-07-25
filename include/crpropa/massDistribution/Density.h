@@ -45,8 +45,8 @@ class Density: public Referenced {
 		}
 
 		Density(const Density&) = default;
-		Density& operator=(const Density&) = default;
 		Density(Density&&) = default;
+		Density& operator=(const Density&) = default;
 		Density& operator=(Density&&) = default;
 };
 
@@ -89,6 +89,21 @@ class DensityGrid: public Density {
 		std::string getDescription() const override;
 };
 
+
+/**
+ * @class DensityList
+ * @brief Represents a collection of Density objects and computes their combined density.
+ */
+class DensityList : public Density {
+	protected:
+		std::vector<ref_ptr<Density>> densities; 
+
+	public:
+		DensityList();
+		void addDensity(ref_ptr<Density> density);
+		[[nodiscard]] double getDensity(const Vector3d& position, const double& z = 0) const override;
+		std::string getDescription() const override;
+};
 
 
 }  // namespace crpropa

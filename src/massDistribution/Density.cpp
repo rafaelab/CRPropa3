@@ -46,5 +46,31 @@ void DensityGrid::setGrid(ref_ptr<Grid1f> g) {
 }
 
 
+///////////////////////////////////////////////////////////////////////////////
+
+DensityList::DensityList() {
+}
+
+void DensityList::addDensity(ref_ptr<Density> density) {
+    densities.push_back(density);
+}
+
+[[nodiscard]] double DensityList::getDensity(const Vector3d& position, const double& z) const {
+    double totalDensity = 0;
+    for (const auto& density : densities) {
+        totalDensity += density->getDensity(position, z);
+    }
+    return totalDensity;
+}
+
+[[nodiscard]] std::string DensityList::getDescription() const {
+    std::stringstream ss;
+    ss << "DensityList containing " << densities.size() << " densities:\n";
+    for (const auto& density : densities) {
+        ss << density->getDescription() << "\n";
+    }
+    return ss.str();
+}
+
 }  // namespace crpropa
 
