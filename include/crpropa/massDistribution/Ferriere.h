@@ -1,77 +1,68 @@
-#ifndef CRPROPA_FERRIERE_H
-#define CRPROPA_FERRIERE_H
-
-#include "crpropa/massDistribution/Density.h"
+#pragma once
 
 #include <cmath>
+#include <numbers>
 #include <string>
+#include <sstream>
+
+#include "crpropa/Common.h"
+#include "crpropa/massDistribution/Density.h"
+#include "crpropa/massDistribution/TargetMedium.h"
+#include "kiss/logger.h"
+
 
 namespace crpropa {
+
+
 /**
- @class Ferriere
- @brief model of the distribution of hydrogen in the Milky Way
-  Here in model Ferriere 2007
-  seperated in 2 regions (inner, outer). The border is for R=3 kpc in galactocentric radius.
-  model is discribed in
-outer: ApJ, 497, 759
-inner:	arxiv:	astro-ph/0702532
-*/
-class Ferriere: public Density {
-private:
-	// standard for all types of distribution
-	bool isforHI = true;
-	bool isforHII = true;
-	bool isforH2 = true;
-	double Rsun = 8.5 * kpc;  // distance sun-galactic center
+ * @addtogroup MassDistribution
+ * @{
+ */
 
-public:
-	/** Coordinate transformation for the CentralMolecularZone region. Rotation arround z-axis such that X is the major axis and Y is the minor axis
-	@param position position in galactic coordinates with Earth at (-8.5kpc, 0, 0)
-	@return position in local coordinates for the CMZ region
-	*/
-	Vector3d CMZTransformation(const Vector3d &position) const;
-	
-	/** Coordinate transformation for the galactic bulge disk region in galactic center. Rotation arround the x-axis, the y'-axis and the x''-axis. Difened with X along the major axis, Y along the minor axis and Z along the northern normal
-	@param position position in galactic coordinates with Earth at (-8.5kpc, 0, 0)
-	@return position in local coordinates for the GB disk region
-	*/
-	Vector3d DiskTransformation(const Vector3d &position) const;
+/**
+ * @class Ferriere
+ * @brief model of the distribution of hydrogen in the Milky Way
+ * The model for the outer galaxy (R > 3 kpc) is based on:
+ * 	 "Global model of the interstellar medium in our Galaxy with new constraints on the hot gas component"
+ *   K. Ferriere. 
+ *   Astrophys. J. 497 (1998) 759.
+ * The model for the inner galaxy (R < 3 kpc) is based on:
+ *   "Spatial distribution of interstellar gas in the innermost 3 kpc of our galaxy"
+ *   K. Ferriere, W. Gillard, P. Jean.
+ *   Astron. Astrophys. 467 (2007) 611. 
+ */
+class Ferriere : public Density {
+	private:
+		static constexpr double Rsun = 8.5 * kpc;  // distance Solar System -- Galactic Centre
+		bool containsHI;
+		bool containsHII;
+		bool containsH2;
+		TargetMedium densityHI;
+		TargetMedium densityHII;
+		TargetMedium densityH2;
 
-	/** @param position position in galactic coordinates with Earth at (-8.5kpc, 0, 0)
-	 @return density in parts/m^3, only acitvated parts are summed up */
-	double getDensity(const Vector3d &position) const;
-	/** @param position position in galactic coordinates with Earth at (-8.5kpc, 0, 0)
-	 @return density of atomic hydrogen in parts/m^3 */
-	double getHIDensity(const Vector3d &position) const;
-	/** @param position position in galactic coordinates with Earth at (-8.5kpc, 0, 0)
-	 @return density of ionised hydrogen in parts/m^3 */
-	double getHIIDensity(const Vector3d &position) const;
-	/** @param position position in galactic coordinates with Earth at (-8.5kpc, 0, 0)
-	 @return density of molecular hydrogen in parts/m^3 */
-	double getH2Density(const Vector3d &position) const;
-	/** @param position position in galactic coordinates with Earth at (-8.5kpc, 0, 0)
-	 @return nucleon density in parts/m^3, only activated parts are summed up and H2 is weighted twice */
-	double getNucleonDensity(const Vector3d &position) const;
+	public:
+		Ferriere(bool HI = true, bool HII = true, bool H2 = true);
+		void setContainsHI(bool HI);
+		void setContainsHII(bool HII);
+		void setContainsH2(bool H2);
+		bool getContainsHI() const noexcept;
+		bool getContainsHII() const noexcept;
+		bool getContainsH2() const noexcept;
+		[[nodiscard]] double getDensity(const Vector3d& position, const double& z = 0) const override;
+		[[nodiscard]] double getNucleonDensity(const Vector3d& position, const double& z = 0) const;
+		[[nodiscard]] std::string getDescription() const override;
 
-	/** changes activation status for atomic hydrogen */
-	void setIsForHI(bool HI);
-	/** changes activation status for ionised hydrogen */
-	void setIsForHII(bool HII);
-	/** changes activation status for molecular hydrogen */
-	void setIsForH2(bool H2);
-
-	/** @return activation status for atomic hydrogen */
-	bool getIsForHI();
-	/** @return activation status for ionised hydrogen */
-	bool getIsForHII();
-	/** @return activation status for molecular hydrogen */
-	bool getIsForH2();
-
-	std::string getDescription();
+		[[nodiscard]] static double getDensityHI(const Vector3d& position);
+		[[nodiscard]] static double getDensityHII(const Vector3d& position);
+		[[nodiscard]] static double getDensityH2(const Vector3d& position);
+		[[nodiscard]] static Vector3d transformCoordinatesCMZ(const Vector3d& position);
+		[[nodiscard]] static Vector3d transformCoordinatesDisk(const Vector3d& position);
 };
 
-}  // namespace crpropa
+/** @} 
+ */
 
-#endif  // CRPROPA_FERRIERE_H
+}  // namespace crpropa
 
 
