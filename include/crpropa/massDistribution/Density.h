@@ -1,5 +1,5 @@
-#ifndef CRPROPA_DENSITY_H
-#define CRPROPA_DENSITY_H
+#pragma once
+
 
 #include <sstream>
 #include <vector>
@@ -9,7 +9,6 @@
 #include "crpropa/Referenced.h"
 #include "crpropa/Units.h"
 #include "crpropa/Vector3.h"
-#include "crpropa/massDistribution/TargetMedium.h"
 #include "HepPID/ParticleIDMethods.hh"
 #include "kiss/logger.h"
 
@@ -22,24 +21,17 @@ namespace crpropa {
  *
  */
 class Density: public Referenced {
-	protected:
-		// TargetMedium target;  ///< Target medium composition for the density
-		TargetMediumPtrS target;
-
 	public:
-		Density() = default;
-		Density(const Density&) = default;
-		Density(Density&&) = default;
-		Density& operator=(const Density&) = default;
-		Density& operator=(Density&&) = default;
+		// Density() = default;
+		// Density(const Density&) = default;
+		// Density(Density&&) = default;
+		// Density& operator=(const Density&) = default;
+		// Density& operator=(Density&&) = default;
 		virtual ~Density() = default;
 		[[nodiscard]] virtual double getDensity(const Vector3d& position, const double& z = 0) const = 0;
-		void setTargetMedium(const TargetMediumPtrS& t);
-		const TargetMediumPtrS& getTargetMedium() const;
 		[[nodiscard]] virtual std::string getDescription() const {
 			std::stringstream ss;
 			ss << "Density (abstract base class)\n";
-			ss << "Target Medium: " << target->getName() << " (Weight: " << target->getWeight() << ")";
 			return ss.str();
 		}
 
@@ -79,29 +71,13 @@ class DensityGrid: public Density {
 
 	public:
 		DensityGrid() = default;
-		DensityGrid(TargetMediumPtrS target, ref_ptr<Grid1f> grid);
+		DensityGrid(ref_ptr<Grid1f> grid);
 		void setGrid(ref_ptr<Grid1f> grid);
 		[[nodiscard]] double getDensity(const Vector3d& position, const double& z = 0) const override;
 		std::string getDescription() const override;
 };
 
 
-/**
- * @class DensityList
- * @brief Represents a collection of Density objects and computes their combined density.
- */
-class DensityList : public Density {
-	protected:
-		std::vector<ref_ptr<Density>> densities; 
-
-	public:
-		DensityList();
-		void add(ref_ptr<Density> density);
-		[[nodiscard]] double getDensity(const Vector3d& position, const double& z = 0) const override;
-		std::string getDescription() const override;
-};
-
 
 }  // namespace crpropa
 
-#endif  // CRPROPA_DENSITY_H

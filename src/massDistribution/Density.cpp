@@ -4,15 +4,6 @@
 namespace crpropa {
 
 
-void Density::setTargetMedium(const TargetMediumPtrS& t) {
-	target = t;
-}
-
-const TargetMediumPtrS& Density::getTargetMedium() const {
-	return target;
-}
-
-
 ///////////////////////////////////////////////////////////////////////////////
 
 DensityEvolution::DensityEvolution(ref_ptr<Density> density, double index) 
@@ -38,9 +29,8 @@ void DensityEvolution::setEvolutionIndex(double m) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-DensityGrid::DensityGrid(TargetMediumPtrS target, ref_ptr<Grid1f> densityGrid)
+DensityGrid::DensityGrid( ref_ptr<Grid1f> densityGrid)
 	: grid(densityGrid) {
-	Density::setTargetMedium(target);
 }
 
 void DensityGrid::setGrid(ref_ptr<Grid1f> g) {
@@ -52,40 +42,11 @@ void DensityGrid::setGrid(ref_ptr<Grid1f> g) {
 }
 
 [[nodiscard]] std::string DensityGrid::getDescription() const {
-	return std::format("Density field density distribution in a uniform grid\n Target medium: {} (Weight: {})", getTargetMedium()->getName(), getTargetMedium()->getWeight());
-	std::stringstream ss;
-	ss << "Density distribution on a uniformly-spaced grid\n";
-	ss << "Target Medium: " << target->getName() << " (pointing to: " << target->getTag();
-	ss << ") ; Weight = " << target->getWeight() << "\n";
-	return ss.str();
+	// return std::format("Density field density distribution in a uniform grid: \n{}", grid->getDescription());
+	return "Density field density distribution in a uniform grid";
 }
 
 
-///////////////////////////////////////////////////////////////////////////////
-
-DensityList::DensityList() {
-}
-
-void DensityList::add(ref_ptr<Density> density) {
-	densities.push_back(density);
-}
-
-[[nodiscard]] double DensityList::getDensity(const Vector3d& position, const double& z) const {
-	double totalDensity = 0;
-	for (const auto& density : densities) {
-		totalDensity += density->getDensity(position, z);
-	}
-	return totalDensity;
-}
-
-[[nodiscard]] std::string DensityList::getDescription() const {
-	std::stringstream ss;
-	ss << "DensityList containing " << densities.size() << " densities:\n";
-	for (const auto& density : densities) {
-		ss << density->getDescription() << "\n";
-	}
-	return ss.str();
-}
 
 }  // namespace crpropa
 
