@@ -23,31 +23,26 @@ namespace crpropa {
  */
 class Density: public Referenced {
 	protected:
-		TargetMedium target;  ///< Target medium composition for the density
+		// TargetMedium target;  ///< Target medium composition for the density
+		TargetMediumPtrS target;
 
 	public:
 		Density() = default;
-		virtual ~Density() = default;
-		[[nodiscard]] virtual double getDensity(const Vector3d& position, const double& z = 0) const = 0;
-		[[nodiscard]] virtual std::string getDescription() const {
-			std::stringstream ss;
-			ss << "Density (abstract base class)\n";
-			ss << "Target Medium: " << target.getName() << " (Weight: " << target.getWeight() << ")";
-			return ss.str();
-		}
-
-		void setTargetMedium(TargetMedium t) {
-			target = std::move(t);
-		}
-
-		TargetMedium getTargetMedium() const {
-			return target;
-		}
-
 		Density(const Density&) = default;
 		Density(Density&&) = default;
 		Density& operator=(const Density&) = default;
 		Density& operator=(Density&&) = default;
+		virtual ~Density() = default;
+		[[nodiscard]] virtual double getDensity(const Vector3d& position, const double& z = 0) const = 0;
+		void setTargetMedium(const TargetMediumPtrS& t);
+		const TargetMediumPtrS& getTargetMedium() const;
+		[[nodiscard]] virtual std::string getDescription() const {
+			std::stringstream ss;
+			ss << "Density (abstract base class)\n";
+			ss << "Target Medium: " << target->getName() << " (Weight: " << target->getWeight() << ")";
+			return ss.str();
+		}
+
 };
 
 
@@ -83,7 +78,8 @@ class DensityGrid: public Density {
 		ref_ptr<Grid1f> grid; 
 
 	public:
-		DensityGrid(TargetMedium target, ref_ptr<Grid1f> grid);
+		DensityGrid() = default;
+		DensityGrid(TargetMediumPtrS target, ref_ptr<Grid1f> grid);
 		void setGrid(ref_ptr<Grid1f> grid);
 		[[nodiscard]] double getDensity(const Vector3d& position, const double& z = 0) const override;
 		std::string getDescription() const override;

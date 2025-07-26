@@ -4,15 +4,24 @@
 namespace crpropa {
 
 TargetMedium::TargetMedium(double weight) noexcept 
-	: weight(weight) {
+		: weight(weight) {
 }
 
 TargetMedium::TargetMedium(std::string_view name, double weight) noexcept 
-	: name(name), weight(weight) {
+		: name(name), tag(name), weight(weight) {
 }
+
+TargetMedium::TargetMedium(std::string_view name, std::string_view tag, double weight) noexcept 
+		: name(name), tag(tag), weight(weight) {
+}
+
 
 void TargetMedium::setName(std::string n) noexcept {
 	name = std::move(n);
+}
+
+void TargetMedium::setTag(std::string t) noexcept {
+	tag = std::move(t);
 }
 
 void TargetMedium::setWeight(double w) noexcept {
@@ -23,13 +32,17 @@ void TargetMedium::setWeight(double w) noexcept {
 	return name;
 }
 
+[[nodiscard]] std::string TargetMedium::getTag() const noexcept {
+	return tag;
+}
+
 [[nodiscard]] double TargetMedium::getWeight() const noexcept {
 	return weight;
 }
 
 [[nodiscard]] std::string TargetMedium::getDescription() const noexcept {
 	std::ostringstream oss;
-	oss << "Target " << name << " (w = " << weight << ")";
+	oss << "Target " << name << "; tag: " << tag << " (w = " << weight << ")";
 	return oss.str();
 }
 

@@ -9,7 +9,7 @@
 #include "crpropa/Units.h"
 #include "crpropa/Vector3.h"
 #include "crpropa/massDistribution/Density.h"
-#include "crpropa/massDistribution/MediumComposition.h"
+#include "crpropa/massDistribution/TargetMedium.h"
 #include "kiss/logger.h"
 
 
@@ -22,13 +22,14 @@ namespace crpropa {
 class ConstantDensity: public Density {
 	protected:
 		double densityValue;
+		TargetMediumPtrS targetMedium;
 
 	public:
-		ConstantDensity(double value, ref_ptr<MediumComposition> target);
-		void setDensityValue(double density);
-		double getDensityValue() const;
-		double getDensity(const Vector3d& position, const double& z = 0) const;
-		std::string getDescription() const;
+		ConstantDensity(double value, TargetMediumPtrS target);
+		void setDensityValue(double density) noexcept;
+		double getDensityValue() const noexcept;
+		[[nodiscard]] double getDensity(const Vector3d& position, const double& z = 0) const override;
+		[[nodiscard]] std::string getDescription() const override;
 };
 
 }  // namespace crpropa
