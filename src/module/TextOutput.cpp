@@ -141,7 +141,7 @@ void TextOutput::process(Candidate* c) const {
 	if (fields.test(RedshiftColumn))
 		p += std::snprintf(buffer + p, sizeof(buffer) - p, "%1.5E\t", c->getRedshift());
 	if (fields.test(SerialNumberColumn))
-		p += std::snprintf(buffer + p, sizeof(buffer) - p, "%10lu\t", c->getSerialNumber());
+		p += std::snprintf(buffer + p, sizeof(buffer) - p, "%10llu\t", static_cast<unsigned long long>(c->getSerialNumber()));
 	if (fields.test(CurrentIdColumn))
 		p += std::snprintf(buffer + p, sizeof(buffer) - p, "%10i\t", c->current.getId());
 	if (fields.test(CurrentEnergyColumn))
@@ -162,7 +162,7 @@ void TextOutput::process(Candidate* c) const {
 	}
 
 	if (fields.test(SerialNumberColumn))
-		p += std::snprintf(buffer + p, sizeof(buffer) - p, "%10lu\t", c->getSourceSerialNumber());
+		p += std::snprintf(buffer + p, sizeof(buffer) - p, "%10llu\t", static_cast<unsigned long long>(c->getSourceSerialNumber()));
 	if (fields.test(SourceIdColumn))
 		p += std::snprintf(buffer + p, sizeof(buffer) - p, "%10i\t", c->source.getId());
 	if (fields.test(SourceEnergyColumn))
@@ -184,7 +184,7 @@ void TextOutput::process(Candidate* c) const {
 	}
 
 	if (fields.test(SerialNumberColumn))
-		p += std::snprintf(buffer + p, sizeof(buffer) - p, "%10lu\t", c->getCreatedSerialNumber());
+		p += std::snprintf(buffer + p, sizeof(buffer) - p, "%10llu\t", static_cast<unsigned long long>(c->getCreatedSerialNumber()));
 	if (fields.test(CreatedIdColumn))
 		p += std::snprintf(buffer + p, sizeof(buffer) - p, "%10i\t", c->created.getId());
 	if (fields.test(CreatedEnergyColumn))
@@ -336,7 +336,7 @@ void TextOutput::dumpIndexList(std::vector<int> indices) {
 	{
 		std::stringstream ss;
 		ss << "#" << "\t";
-		for (int i = 0; i < indices.size(); i++)
+		for (size_t i = 0; i < indices.size(); i++)
 			ss << indices[i] << "\t";
 
 		const std::string cstr = ss.str();
