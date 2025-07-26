@@ -4,16 +4,16 @@
 namespace crpropa {
 
 void scaleGrid(ref_ptr<Grid1f> grid, double a) {
-	for (int ix = 0; ix < grid->getNx(); ix++)
-		for (int iy = 0; iy < grid->getNy(); iy++)
-			for (int iz = 0; iz < grid->getNz(); iz++)
+	for (size_t ix = 0; ix < grid->getNx(); ix++)
+		for (size_t iy = 0; iy < grid->getNy(); iy++)
+			for (size_t iz = 0; iz < grid->getNz(); iz++)
 				grid->get(ix, iy, iz) *= a;
 }
 
 void scaleGrid(ref_ptr<Grid3f> grid, double a) {
-	for (int ix = 0; ix < grid->getNx(); ix++)
-		for (int iy = 0; iy < grid->getNy(); iy++)
-			for (int iz = 0; iz < grid->getNz(); iz++)
+	for (size_t ix = 0; ix < grid->getNx(); ix++)
+		for (size_t iy = 0; iy < grid->getNy(); iy++)
+			for (size_t iz = 0; iz < grid->getNz(); iz++)
 				grid->get(ix, iy, iz) *= a;
 }
 
@@ -22,9 +22,9 @@ Vector3f meanFieldVector(ref_ptr<Grid3f> grid) {
 	size_t Ny = grid->getNy();
 	size_t Nz = grid->getNz();
 	Vector3f mean(0.);
-	for (int ix = 0; ix < Nx; ix++)
-		for (int iy = 0; iy < Ny; iy++)
-			for (int iz = 0; iz < Nz; iz++)
+	for (size_t ix = 0; ix < Nx; ix++)
+		for (size_t iy = 0; iy < Ny; iy++)
+			for (size_t iz = 0; iz < Nz; iz++)
 				mean += grid->get(ix, iy, iz);
 	return mean / Nx / Ny / Nz;
 }
@@ -34,9 +34,9 @@ double meanFieldStrength(ref_ptr<Grid3f> grid) {
 	size_t Ny = grid->getNy();
 	size_t Nz = grid->getNz();
 	double mean = 0;
-	for (int ix = 0; ix < Nx; ix++)
-		for (int iy = 0; iy < Ny; iy++)
-			for (int iz = 0; iz < Nz; iz++)
+	for (size_t ix = 0; ix < Nx; ix++)
+		for (size_t iy = 0; iy < Ny; iy++)
+			for (size_t iz = 0; iz < Nz; iz++)
 				mean += grid->get(ix, iy, iz).getR();
 	return mean / Nx / Ny / Nz;
 }
@@ -46,9 +46,9 @@ double meanFieldStrength(ref_ptr<Grid1f> grid) {
 	size_t Ny = grid->getNy();
 	size_t Nz = grid->getNz();
 	double mean = 0;
-	for (int ix = 0; ix < Nx; ix++)
-		for (int iy = 0; iy < Ny; iy++)
-			for (int iz = 0; iz < Nz; iz++)
+	for (size_t ix = 0; ix < Nx; ix++)
+		for (size_t iy = 0; iy < Ny; iy++)
+			for (size_t iz = 0; iz < Nz; iz++)
 				mean += grid->get(ix, iy, iz);
 	return mean / Nx / Ny / Nz;
 }
@@ -58,9 +58,9 @@ double rmsFieldStrength(ref_ptr<Grid3f> grid) {
 	size_t Ny = grid->getNy();
 	size_t Nz = grid->getNz();
 	double sumV2 = 0;
-	for (int ix = 0; ix < Nx; ix++)
-		for (int iy = 0; iy < Ny; iy++)
-			for (int iz = 0; iz < Nz; iz++)
+	for (size_t ix = 0; ix < Nx; ix++)
+		for (size_t iy = 0; iy < Ny; iy++)
+			for (size_t iz = 0; iz < Nz; iz++)
 				sumV2 += grid->get(ix, iy, iz).getR2();
 	return std::sqrt(sumV2 / Nx / Ny / Nz);
 }
@@ -70,9 +70,9 @@ double rmsFieldStrength(ref_ptr<Grid1f> grid) {
 	size_t Ny = grid->getNy();
 	size_t Nz = grid->getNz();
 	double sumV2 = 0;
-	for (int ix = 0; ix < Nx; ix++)
-		for (int iy = 0; iy < Ny; iy++)
-			for (int iz = 0; iz < Nz; iz++)
+	for (size_t ix = 0; ix < Nx; ix++)
+		for (size_t iy = 0; iy < Ny; iy++)
+			for (size_t iz = 0; iz < Nz; iz++)
 				sumV2 += pow(grid->get(ix, iy, iz), 2);
 	return std::sqrt(sumV2 / Nx / Ny / Nz);
 }
@@ -84,9 +84,9 @@ std::array<float, 3> rmsFieldStrengthPerAxis(ref_ptr<Grid3f> grid) {
     float sumV2_x = 0;
     float sumV2_y = 0;
     float sumV2_z = 0;
-    for (int ix = 0; ix < Nx; ix++)
-        for (int iy = 0; iy < Ny; iy++)
-            for (int iz = 0; iz < Nz; iz++) {
+    for (size_t ix = 0; ix < Nx; ix++)
+        for (size_t iy = 0; iy < Ny; iy++)
+            for (size_t iz = 0; iz < Nz; iz++) {
                 sumV2_x += pow(grid->get(ix, iy, iz).x, 2);
                 sumV2_y += pow(grid->get(ix, iy, iz).y, 2);
                 sumV2_z += pow(grid->get(ix, iy, iz).z, 2);
@@ -146,9 +146,9 @@ void loadGrid(ref_ptr<Grid3f> grid, std::string filename, double c) {
 	if (length != (3 * nx * ny * nz))
 		throw std::runtime_error("loadGrid: file and grid size do not match");
 
-	for (int ix = 0; ix < grid->getNx(); ix++) {
-		for (int iy = 0; iy < grid->getNy(); iy++) {
-			for (int iz = 0; iz < grid->getNz(); iz++) {
+	for (size_t ix = 0; ix < grid->getNx(); ix++) {
+		for (size_t iy = 0; iy < grid->getNy(); iy++) {
+			for (size_t iz = 0; iz < grid->getNz(); iz++) {
 				Vector3f &b = grid->get(ix, iy, iz);
 				fin.read((char*) &(b.x), sizeof(float));
 				fin.read((char*) &(b.y), sizeof(float));
@@ -161,7 +161,7 @@ void loadGrid(ref_ptr<Grid3f> grid, std::string filename, double c) {
 }
 
 void loadGrid(ref_ptr<Grid1f> grid, std::string filename, double c) {
-	if (! std::filesystem::exists(filename))
+	if (not std::filesystem::exists(filename))
 		throw std::runtime_error("load Grid1f: " + filename + " not found.");
 	std::ifstream fin(filename.c_str(), std::ios::binary);
 
@@ -177,10 +177,10 @@ void loadGrid(ref_ptr<Grid1f> grid, std::string filename, double c) {
 	if (length != (nx * ny * nz))
 		throw std::runtime_error("loadGrid: file and grid size do not match");
 
-	for (int ix = 0; ix < nx; ix++) {
-		for (int iy = 0; iy < ny; iy++) {
-			for (int iz = 0; iz < nz; iz++) {
-				float &b = grid->get(ix, iy, iz);
+	for (size_t ix = 0; ix < nx; ix++) {
+		for (size_t iy = 0; iy < ny; iy++) {
+			for (size_t iz = 0; iz < nz; iz++) {
+				float& b = grid->get(ix, iy, iz);
 				fin.read((char*) &b, sizeof(float));
 				b *= c;
 			}
@@ -190,14 +190,14 @@ void loadGrid(ref_ptr<Grid1f> grid, std::string filename, double c) {
 }
 
 void dumpGrid(ref_ptr<Grid3f> grid, std::string filename, double c) {
-	if (! std::filesystem::exists(filename)) {
+	if (not std::filesystem::exists(filename)) {
 		throw std::runtime_error("load Grid3f: " + filename + " not found.");
 	}
 	std::ofstream fout(filename.c_str(), std::ios::binary);
 
-	for (int ix = 0; ix < grid->getNx(); ix++) {
-		for (int iy = 0; iy < grid->getNy(); iy++) {
-			for (int iz = 0; iz < grid->getNz(); iz++) {
+	for (size_t ix = 0; ix < grid->getNx(); ix++) {
+		for (size_t iy = 0; iy < grid->getNy(); iy++) {
+			for (size_t iz = 0; iz < grid->getNz(); iz++) {
 				Vector3f b = grid->get(ix, iy, iz) * c;
 				fout.write((char*) &(b.x), sizeof(float));
 				fout.write((char*) &(b.y), sizeof(float));
@@ -209,14 +209,14 @@ void dumpGrid(ref_ptr<Grid3f> grid, std::string filename, double c) {
 }
 
 void dumpGrid(ref_ptr<Grid1f> grid, std::string filename, double c) {
-	if (! std::filesystem::exists(filename)) {
+	if (not std::filesystem::exists(filename)) {
 		throw std::runtime_error("load Grid1f: " + filename + " not found.");
 	}
 	std::ofstream fout(filename.c_str(), std::ios::binary);
 
-	for (int ix = 0; ix < grid->getNx(); ix++) {
-		for (int iy = 0; iy < grid->getNy(); iy++) {
-			for (int iz = 0; iz < grid->getNz(); iz++) {
+	for (size_t ix = 0; ix < grid->getNx(); ix++) {
+		for (size_t iy = 0; iy < grid->getNy(); iy++) {
+			for (size_t iz = 0; iz < grid->getNz(); iz++) {
 				float b = grid->get(ix, iy, iz) * c;
 				fout.write((char*) &b, sizeof(float));
 			}
@@ -226,7 +226,7 @@ void dumpGrid(ref_ptr<Grid1f> grid, std::string filename, double c) {
 }
 
 void loadGridFromTxt(ref_ptr<Grid3f> grid, std::string filename, double c) {
-	if (! std::filesystem::exists(filename)) {
+	if (not std::filesystem::exists(filename)) {
 		throw std::runtime_error("load Grid3f: " + filename + " not found.");
 	}
 	std::ifstream fin(filename.c_str(), std::ios::binary);
@@ -235,9 +235,9 @@ void loadGridFromTxt(ref_ptr<Grid3f> grid, std::string filename, double c) {
 	while (fin.peek() == '#')
 		fin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
-	for (int ix = 0; ix < grid->getNx(); ix++) {
-		for (int iy = 0; iy < grid->getNy(); iy++) {
-			for (int iz = 0; iz < grid->getNz(); iz++) {
+	for (size_t ix = 0; ix < grid->getNx(); ix++) {
+		for (size_t iy = 0; iy < grid->getNy(); iy++) {
+			for (size_t iz = 0; iz < grid->getNz(); iz++) {
 				Vector3f &b = grid->get(ix, iy, iz);
 				fin >> b.x >> b.y >> b.z;
 				b *= c;
@@ -250,7 +250,7 @@ void loadGridFromTxt(ref_ptr<Grid3f> grid, std::string filename, double c) {
 }
 
 ref_ptr<Grid3f> loadGrid3fFromTxt(std::string filename, double c) {
-	if (! std::filesystem::exists(filename)) {
+	if (not std::filesystem::exists(filename)) {
 		throw std::runtime_error("load Grid3f: " + filename + " not found.");
 	}
 	std::ifstream fin(filename.c_str(), std::ios::binary);
@@ -317,7 +317,7 @@ ref_ptr<Grid3f> loadGrid3fFromTxt(std::string filename, double c) {
 
 void loadGridFromTxt(ref_ptr<Grid1f> grid, std::string filename, double c) {
 	std::ifstream fin(filename.c_str());
-	if (!fin) {
+	if (not fin) {
 		std::stringstream ss;
 		ss << "load Grid1f: " << filename << " not found";
 		throw std::runtime_error(ss.str());
@@ -327,9 +327,9 @@ void loadGridFromTxt(ref_ptr<Grid1f> grid, std::string filename, double c) {
 	while (fin.peek() == '#') 
 		fin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
-	for (int ix = 0; ix < grid->getNx(); ix++) {
-		for (int iy = 0; iy < grid->getNy(); iy++) {
-			for (int iz = 0; iz < grid->getNz(); iz++) {
+	for (size_t ix = 0; ix < grid->getNx(); ix++) {
+		for (size_t iy = 0; iy < grid->getNy(); iy++) {
+			for (size_t iz = 0; iz < grid->getNz(); iz++) {
 				float &b = grid->get(ix, iy, iz);
 				fin >> b;
 				b *= c;
@@ -343,7 +343,7 @@ void loadGridFromTxt(ref_ptr<Grid1f> grid, std::string filename, double c) {
 
 ref_ptr<Grid1f> loadGrid1fFromTxt(std::string filename, double c) {
 	std::ifstream fin(filename.c_str());
-	if (!fin) {
+	if (not fin) {
 		std::stringstream ss;
 		ss << "load Grid1f: " << filename << " not found";
 		throw std::runtime_error(ss.str());
@@ -410,7 +410,7 @@ ref_ptr<Grid1f> loadGrid1fFromTxt(std::string filename, double c) {
 
 void dumpGridToTxt(ref_ptr<Grid3f> grid, std::string filename, double c, bool saveProp) {
 	std::ofstream fout(filename.c_str());
-	if (!fout) {
+	if (not fout) {
 		std::stringstream ss;
 		ss << "dump Grid3f: " << filename << " not found";
 		throw std::runtime_error(ss.str());
@@ -427,9 +427,9 @@ void dumpGridToTxt(ref_ptr<Grid3f> grid, std::string filename, double c, bool sa
 			<< "\t" << "interpolation: " << grid -> getInterpolationTypeName() << "\n";
 	}
 
-	for (int ix = 0; ix < grid->getNx(); ix++) {
-		for (int iy = 0; iy < grid->getNy(); iy++) {
-			for (int iz = 0; iz < grid->getNz(); iz++) {
+	for (size_t ix = 0; ix < grid->getNx(); ix++) {
+		for (size_t iy = 0; iy < grid->getNy(); iy++) {
+			for (size_t iz = 0; iz < grid->getNz(); iz++) {
 				Vector3f b = grid->get(ix, iy, iz) * c;
 				fout << b << "\n";
 			}
@@ -440,7 +440,7 @@ void dumpGridToTxt(ref_ptr<Grid3f> grid, std::string filename, double c, bool sa
 
 void dumpGridToTxt(ref_ptr<Grid1f> grid, std::string filename, double c, bool saveProp) {
 	std::ofstream fout(filename.c_str());
-	if (!fout) {
+	if (not fout) {
 		std::stringstream ss;
 		ss << "dump Grid1f: " << filename << " not found";
 		throw std::runtime_error(ss.str());
@@ -457,9 +457,9 @@ void dumpGridToTxt(ref_ptr<Grid1f> grid, std::string filename, double c, bool sa
 			<< "\t" << "interpolation: " << grid -> getInterpolationTypeName() << "\n";
 	}
 
-	for (int ix = 0; ix < grid->getNx(); ix++) {
-		for (int iy = 0; iy < grid->getNy(); iy++) {
-			for (int iz = 0; iz < grid->getNz(); iz++) {
+	for (size_t ix = 0; ix < grid->getNx(); ix++) {
+		for (size_t iy = 0; iy < grid->getNy(); iy++) {
+			for (size_t iz = 0; iz < grid->getNz(); iz++) {
 				float b = grid->get(ix, iy, iz) * c;
 				fout << b << "\n";
 			}
@@ -470,91 +470,84 @@ void dumpGridToTxt(ref_ptr<Grid1f> grid, std::string filename, double c, bool sa
 
 #ifdef CRPROPA_HAVE_FFTW3F
 
-std::vector<std::pair<int, float>> gridPowerSpectrum(ref_ptr<Grid3f> grid) {
+	std::vector<std::pair<int, float>> gridPowerSpectrum(ref_ptr<Grid3f> grid) {
+		double rms = rmsFieldStrength(grid);
+		size_t n = grid->getNx(); // size of array
 
-  double rms = rmsFieldStrength(grid);
-  size_t n = grid->getNx(); // size of array
+		// arrays to hold the complex vector components of the B(k)-field
+		fftwf_complex* Bkx; 
+		fftwf_complex* Bky; 
+		fftwf_complex* Bkz;
+		Bkx = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * n * n * n);
+		Bky = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * n * n * n);
+		Bkz = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * n * n * n);
 
-  // arrays to hold the complex vector components of the B(k)-field
-  fftwf_complex *Bkx, *Bky, *Bkz;
-  Bkx = (fftwf_complex *)fftwf_malloc(sizeof(fftwf_complex) * n * n * n);
-  Bky = (fftwf_complex *)fftwf_malloc(sizeof(fftwf_complex) * n * n * n);
-  Bkz = (fftwf_complex *)fftwf_malloc(sizeof(fftwf_complex) * n * n * n);
+		fftwf_complex* Bx = (fftwf_complex*) Bkx;
+		fftwf_complex* By = (fftwf_complex*) Bky;
+		fftwf_complex* Bz = (fftwf_complex*) Bkz;
 
-  fftwf_complex *Bx = (fftwf_complex *)Bkx;
-  fftwf_complex *By = (fftwf_complex *)Bky;
-  fftwf_complex *Bz = (fftwf_complex *)Bkz;
+		// save to temp
+		int i;
+		for (size_t ix = 0; ix < n; ix++) {
+			for (size_t iy = 0; iy < n; iy++) {
+				for (size_t iz = 0; iz < n; iz++) {
+					i = ix * n * n + iy * n + iz;
+					Vector3<float>& b = grid->get(ix, iy, iz);
+					Bx[i][0] = b.x / rms;
+					By[i][0] = b.y / rms;
+					Bz[i][0] = b.z / rms;
+				}
+			}
+		}
 
-  // save to temp
-  int i;
-  for (size_t ix = 0; ix < n; ix++) {
-    for (size_t iy = 0; iy < n; iy++) {
-      for (size_t iz = 0; iz < n; iz++) {
-        i = ix * n * n + iy * n + iz;
-        Vector3<float> &b = grid->get(ix, iy, iz);
-        Bx[i][0] = b.x / rms;
-        By[i][0] = b.y / rms;
-        Bz[i][0] = b.z / rms;
-      }
-    }
-  }
+		// in-place, real to complex, inverse Fourier transformation on each component
+		// note that the last elements of B(x) are unused now
+		fftwf_plan plan_x = fftwf_plan_dft_3d(n, n, n, Bx, Bkx, FFTW_FORWARD, FFTW_ESTIMATE);
+		fftwf_execute(plan_x);
+		fftwf_destroy_plan(plan_x);
 
-  // in-place, real to complex, inverse Fourier transformation on each component
-  // note that the last elements of B(x) are unused now
-  fftwf_plan plan_x =
-      fftwf_plan_dft_3d(n, n, n, Bx, Bkx, FFTW_FORWARD, FFTW_ESTIMATE);
-  fftwf_execute(plan_x);
-  fftwf_destroy_plan(plan_x);
+		fftwf_plan plan_y = fftwf_plan_dft_3d(n, n, n, By, Bky, FFTW_FORWARD, FFTW_ESTIMATE);
+		fftwf_execute(plan_y);
+		fftwf_destroy_plan(plan_y);
 
-  fftwf_plan plan_y =
-      fftwf_plan_dft_3d(n, n, n, By, Bky, FFTW_FORWARD, FFTW_ESTIMATE);
-  fftwf_execute(plan_y);
-  fftwf_destroy_plan(plan_y);
+		fftwf_plan plan_z = fftwf_plan_dft_3d(n, n, n, Bz, Bkz, FFTW_FORWARD, FFTW_ESTIMATE);
+		fftwf_execute(plan_z);
+		fftwf_destroy_plan(plan_z);
 
-  fftwf_plan plan_z =
-      fftwf_plan_dft_3d(n, n, n, Bz, Bkz, FFTW_FORWARD, FFTW_ESTIMATE);
-  fftwf_execute(plan_z);
-  fftwf_destroy_plan(plan_z);
+		float power;
+		std::map<size_t, std::pair<float, int>> spectrum;
+		int k;
 
-  float power;
-  std::map<size_t, std::pair<float, int>> spectrum;
-  int k;
+		for (size_t ix = 0; ix < n; ix++) {
+			for (size_t iy = 0; iy < n; iy++) {
+				for (size_t iz = 0; iz < n; iz++) {
+					i = ix * n * n + iy * n + iz;
+					k = static_cast<int>(std::floor(std::sqrt(ix * ix + iy * iy + iz * iz)));
+					if (k > n / 2. or k == 0)
+						continue;
+					power = ((Bkx[i][0] * Bkx[i][0] + Bkx[i][1] * Bkx[i][1]) + (Bky[i][0] * Bky[i][0] + Bky[i][1] * Bky[i][1]) + (Bkz[i][0] * Bkz[i][0] + Bkz[i][1] * Bkz[i][1]));
+					if (spectrum.find(k) == spectrum.end()) {
+						spectrum[k].first = power;
+						spectrum[k].second = 1;
+					} else {
+						spectrum[k].first += power;
+						spectrum[k].second += 1;
+					}
+				}
+			}
+		}
 
-  for (size_t ix = 0; ix < n; ix++) {
-    for (size_t iy = 0; iy < n; iy++) {
-      for (size_t iz = 0; iz < n; iz++) {
-        i = ix * n * n + iy * n + iz;
-        k = static_cast<int>(
-            std::floor(std::sqrt(ix * ix + iy * iy + iz * iz)));
-        if (k > n / 2. || k == 0)
-          continue;
-        power = ((Bkx[i][0] * Bkx[i][0] + Bkx[i][1] * Bkx[i][1]) +
-                 (Bky[i][0] * Bky[i][0] + Bky[i][1] * Bky[i][1]) +
-                 (Bkz[i][0] * Bkz[i][0] + Bkz[i][1] * Bkz[i][1]));
-        if (spectrum.find(k) == spectrum.end()) {
-          spectrum[k].first = power;
-          spectrum[k].second = 1;
-        } else {
-          spectrum[k].first += power;
-          spectrum[k].second += 1;
-        }
-      }
-    }
-  }
+		fftwf_free(Bkx);
+		fftwf_free(Bky);
+		fftwf_free(Bkz);
 
-  fftwf_free(Bkx);
-  fftwf_free(Bky);
-  fftwf_free(Bkz);
+		std::vector<std::pair<int, float>> points;
+		for (std::map<size_t, std::pair<float, int>>::iterator it = spectrum.begin(); it != spectrum.end(); ++it) {
+			points.push_back(std::make_pair(it->first, (it->second).first / (it->second).second));
+		}
 
-  std::vector<std::pair<int, float>> points;
-  for (std::map<size_t, std::pair<float, int>>::iterator it = spectrum.begin();
-       it != spectrum.end(); ++it) {
-    points.push_back(
-        std::make_pair(it->first, (it->second).first / (it->second).second));
-  }
-
-  return points;
-}
+		return points;
+	}
 
 #endif // CRPROPA_HAVE_FFTW3F
 
