@@ -16,23 +16,35 @@
 namespace crpropa {
 
 /**
+ * @addtogroup MassDistribution
+ * @{
+ */
+
+/**
  * @class ConstantDensity
  * @brief Set a constant density
 */
 class ConstantDensity: public Density {
 	protected:
 		double densityValue;
-		TargetMediumPtrS targetMedium;
+		TargetMedium targetMedium;
 
 	public:
-		ConstantDensity(double value, TargetMediumPtrS target);
+		ConstantDensity(double value, TargetMedium target);
 		void setDensityValue(double density) noexcept;
 		double getDensityValue() const noexcept;
+		void setTargetMedium(const TargetMedium& target);
+		[[nodiscard]] TargetMedium getTargetMedium() const;
 		[[nodiscard]] double getDensity(const Vector3d& position, const double& z = 0) const override;
 		[[nodiscard]] std::string getDescription() const override;
 };
 
 }  // namespace crpropa
+
+
+/** @} 
+ */
+
 
 #endif  // CRPROPA_CONSTANTDENSITY_H
 
