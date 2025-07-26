@@ -1,5 +1,4 @@
-#ifndef CRPROPA_TARGETMEDIUM_H
-#define CRPROPA_TARGETMEDIUM_H
+#pragma once
 
 #include <memory>
 #include <numeric>
@@ -20,6 +19,11 @@ namespace crpropa {
 
 
 /**
+ * @addtogroup MassDistribution
+ * @{
+ */
+
+/**
  * @brief Class defining a given target medium
  *
  * Provides virtual methods for name and weight, allowing runtime polymorphism.
@@ -34,9 +38,9 @@ class TargetMedium {
 
 	public:
 		explicit TargetMedium(double weight = 1) noexcept;
-		TargetMedium(std::string_view name, double weight = 1) noexcept;
-		TargetMedium(std::string_view name, std::string_view tag, double weight = 1) noexcept; 
-		~TargetMedium() = default;
+		TargetMedium(std::string name, double weight = 1) noexcept;
+		TargetMedium(std::string name, std::string tag, double weight = 1) noexcept; 
+		~TargetMedium();
 		void setName(std::string n) noexcept;
 		void setTag(std::string t) noexcept;
 		void setWeight(double w) noexcept;
@@ -47,10 +51,8 @@ class TargetMedium {
 };
 
 
-using TargetMediumPtrS = std::shared_ptr<TargetMedium>;
-using TargetMediumPtrU = std::unique_ptr<TargetMedium>;
+/** @} 
+ */
 
 
 } // namespace crpropa
-
-#endif // CRPROPA_TARGETMEDIUM_H
