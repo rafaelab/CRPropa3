@@ -61,51 +61,49 @@ Vector3d FerriereBase::transformCoordinatesDisk(const Vector3d& position) {
 FerriereHI::FerriereHI() noexcept {
 }
 
-double FerriereHI::getDensity(const Vector3d& position, const double& z) const {
+double FerriereHI::getDensity(const Vector3d& position, const double& redshift) const {
 	double n = 0;
 	double R = hypot(position.x, position.y);
 
-	// transform coordinates to CMZ system
-	Vector3d pos = FerriereBase::transformCoordinatesCMZ(position);
-
 	if (R < 3 * kpc) {   // inner
-		double x = position.x / pc;
-		double y = position.y / pc;
+		// transform coordinates to CMZ system
+		Vector3d pos = FerriereBase::transformCoordinatesCMZ(position); 
+		double x = pos.x / pc;
+		double y = pos.y / pc;
+		double z = pos.z / pc;
+
+		double A = hypot(x, 2.5 * y);
+		double nCMZ = 8.8 / ccm * exp(-pow_integer<4>((A - 125.) / 137)) * exp(-pow_integer<2>(z / 54.));
+
+		pos = FerriereBase::transformCoordinatesDisk(position);
+		x = pos.x / pc;
+		y = pos.y / pc;
+		z = pos.z / pc;
+
+		A = hypot(x, 3.1 * y);
+		double nDisk = 0.34 / cm3 * exp(-pow_integer<4>((A - 1200.) / 438.)) * exp(-pow_integer<2>(z / 120));
+
+		n = nCMZ + nDisk;
+
+		
+	} else { // outer region
 		double z = position.z / pc;
+		double a = R <= Rsun ? 1. : R / Rsun;
 
-		// warm interstellar matter
-		double H = (x * x + pow_integer<2>(y + 10.)) / (145 * 145);
-		double nWIM = exp(-H)* exp(- pow_integer<2>(z + 20.) / (26 * 26));
-		nWIM += 0.009 * exp(-pow_integer<2>((R / pc - 3700) / (0.5 * 3700))) * 1 / pow_integer<2>(cosh(z / 140.));
-		nWIM += 0.005 * cos(std::numbers::pi * R / pc * 0.5 / 17000) * 1 / pow_integer<2>(cosh(z / 950.));
-		nWIM *= 8.0 / cm3;  // rescaling with density at center
+		double nCold = 0.859 * exp(-pow_integer<2>(z / (127 * a))); // cold HI
+		nCold += 0.047 * exp(-pow_integer<2>(z / (318 * a)));
+		nCold += 0.094 * exp(-fabs(z) / (403 * a));
+		nCold *= 0.340 / cm3 / (a * a);
 
-		//very hot interstellar matter
-		double alphaVH = 21. * deg;  // angle for very hot IM in radiant
-		double cosA = cos(alphaVH);
-		double sinA = sin(alphaVH);
-		double etta = y * cosA + z * sinA;  // coordinate transformation for VHIM along major axis
-		double chi = -y * sinA + z * cosA;
+		double nWarm = (1.745 - 1.289 / a) * exp(-pow_integer<2>(z / (127 * a)));  // warm HI
+		nWarm += (0.473 - 0.070 / a) * exp(-pow_integer<2>(z / (318 * a)));
+		nWarm += (0.283 - 0.142 / a) * exp(-fabs(z) / (403 * a));
+		nWarm *= 0.226 / cm3 / a;
 
-		double nVHIM = 0.29 / cm3 * exp(-((x * x + etta * etta) / (162. * 162.) + chi * chi / (90 * 90)));
-
-		n = nWIM + nVHIM;
-	} else {  // outer region
-		double z = position.z;
-
-		double nWarm = 0.0237 / cm3 * exp(-(R * R - Rsun * Rsun) / pow_integer<2>(37 * kpc)) * exp(-fabs(z) / (1 * kpc));
-		nWarm += 0.0013 / cm3 * exp(-(pow_integer<2>(R - 4 * kpc) - pow_integer<2>(Rsun - 4 * kpc)) /pow_integer<2>(2 * kpc)) * exp(-fabs(z) / (150 * pc));
-
-		double nHot = 0.12 * exp(-(R - Rsun) / (4.9 * kpc));
-		nHot += 0.88 * exp(-(pow_integer<2>(R - 4.5 * kpc) - pow_integer<2>(Rsun - 4.5 * kpc)) / pow_integer<2>(2.9 * kpc));
-		nHot *= pow(R / Rsun, -1.65);
-		nHot *= exp(- fabs(z) / ((1500 * pc) * pow(R / Rsun, 1.65)));
-		nHot *= 4.8e-4 / cm3;
-
-		n = nWarm + nHot;
+		n = nWarm + nCold;
 	}
 
-	return n * pow_integer<3>(1 + z);
+	return n * pow_integer<3>(1 + redshift);
 }
 
 std::string FerriereHI::getDescription() const {
@@ -122,54 +120,49 @@ TargetMedium FerriereHI::getTargetMedium() const {
 FerriereHII::FerriereHII() noexcept {
 }
 
-double FerriereHII::getDensity(const Vector3d& position, const double& z) const {
+double FerriereHII::getDensity(const Vector3d& position, const double& redshift) const {
 	double n = 0;
 	double R = hypot(position.x, position.y);
 
-	// transform coordinates to CMZ system
-	Vector3d pos1 = FerriereBase::transformCoordinatesCMZ(position);
-	Vector3d pos2 = FerriereBase::transformCoordinatesDisk(position);
-
+	
 	if(R < 3 * kpc) {
-		double x = pos1.x / pc;
-		double y = pos1.y / pc;
-		double z = pos1.z / pc;
-
-		double A = hypot(x, 2.5 * y);
-		double nCMZ = 8.8 / ccm * exp(-pow_integer<4>((A - 125.) / 137)) * exp(-pow_integer<2>(z / 54.));
-
-		// density in disk
-		x = pos2.x / pc;
-		y = pos2.y / pc;
-		z = pos2.z / pc;
-
-		A = hypot(x, 3.1 * y);
-		double nDisk = 0.34 / cm3 * exp(- pow_integer<4>((A - 1200.) / 438.)) * exp(- pow_integer<2>(z / 120.));
-
-		n = nCMZ + nDisk;
-	} else {  // outer region
+		double x = position.x / pc;
+		double y = position.y / pc;
 		double z = position.z / pc;
-		double a;
-		if (R <= Rsun) {
-			a = 1;
-		} else {
-			a = R / Rsun;
-		}
 
-		double nCold = 0.859 * exp(-pow_integer<2>(z / (127 * a))); // cold HI
-		nCold += 0.047 * exp(-pow_integer<2>(z / (318 * a)));
-		nCold += 0.094 * exp(-fabs(z) / (403 * a));
-		nCold *= 0.340 / cm3 / (a * a);
+		// warm interstellar matter
+		double H = (x * x + pow_integer<2>(y + 10.)) / (145 * 145);
+		double nWIM = exp(-H) * exp(-pow_integer<2>(z + 20.) / (26 * 26));
+		nWIM += 0.009 * exp(-pow_integer<2>((R / pc - 3700) / (0.5 * 3700))) * 1 / pow_integer<2>(cosh(z / 140.));
+		nWIM += 0.005 * cos(M_PI * R / pc * 0.5 / 17000) * 1 / pow_integer<2>(cosh(z / 950.));
+		nWIM *= 8.0 / cm3;  // rescaling with density at center
 
-		double nWarm = (1.745 - 1.289 / a) * exp(- pow_integer<2>(z / (127 * a)));  // warm HI
-		nWarm += (0.473 - 0.070 / a) * exp(- pow_integer<2>(z / (318 * a)));
-		nWarm += (0.283 - 0.142 / a) * exp(- fabs(z) / (403 * a));
-		nWarm *= 0.226 / cm3 / a;
+		// very hot interstellar matter
+		double alphaVH = 21. * deg;  // angle for very hot IM in radiant
+		double cosA = cos(alphaVH);
+		double sinA = sin(alphaVH);
+		double eta = y * cosA + z * sinA;  // coordinate transformation for VHIM along major axis
+		double chi = -y * sinA + z * cosA;
 
-		n = nWarm + nCold;
+		double nVHIM = 0.29 / cm3 * exp(-((x * x + eta * eta) / (162. * 162.) + chi * chi / (90 * 90)));
+		n = nWIM + nVHIM;
+
+	} else {  // outer region
+		double z = position.z;
+
+		double nWarm = 0.0237 / cm3 * exp(-(R * R - Rsun * Rsun) / pow_integer<2>(37 * kpc)) * exp(-fabs(z) / (1 * kpc));
+		nWarm += 0.0013 / cm3 * exp(-(pow_integer<2>(R - 4 * kpc) - pow_integer<2>(Rsun - 4 * kpc)) / pow_integer<2>(2 * kpc)) * exp(-fabs(z) / (150 * pc));
+
+		double nHot = 0.12 * exp(-(R - Rsun) / (4.9 * kpc));
+		nHot += 0.88 * exp(-(pow_integer<2>(R - 4.5 * kpc) - pow_integer<2>(Rsun - 4.5 * kpc)) / pow_integer<2>(2.9 * kpc));
+		nHot *= pow(R / Rsun, -1.65);
+		nHot *= exp(-fabs(z) / ((1500 * pc) * pow(R / Rsun, 1.65)));
+		nHot *= 4.8e-4 / cm3;
+
+		n = nWarm + nHot;
 	}
 
-	return n * pow_integer<3>(1 + z);
+	return n * pow_integer<3>(1 + redshift);
 }
 
 std::string FerriereHII::getDescription() const {
@@ -186,19 +179,19 @@ TargetMedium FerriereHII::getTargetMedium() const {
 FerriereH2::FerriereH2() noexcept {
 }
 
-double FerriereH2::getDensity(const Vector3d& position, const double& z) const {
+double FerriereH2::getDensity(const Vector3d& position, const double& redshift) const {
 	double n = 0;
 	double R = hypot(position.x, position.y);
 
-	if(R < 3 * kpc) {
+	if (R < 3 * kpc) {
 		// density at center
 		Vector3d pos = transformCoordinatesCMZ(position);
 		double x = pos.x / pc;
 		double y = pos.y / pc;
 		double z = pos.z / pc;
 
-		double A = hypot(x, 2.5 * y, 2); // ellipticity
-		double nCMZ = exp(-pow((A - 125.) / 137., 4)) * exp(- pow(z / 18., 2));
+		double A = hypot(x, 2.5 * y); // ellipticity
+		double nCMZ = exp(-pow((A - 125.) / 137., 4)) * exp(- pow_integer<2>(z / 18.));
 		nCMZ *= 150 / cm3;  // rescaling
 
 		// density in disk
@@ -209,19 +202,19 @@ double FerriereH2::getDensity(const Vector3d& position, const double& z) const {
 
 		A = hypot(x, 3.1 * y);
 		double nDisk = exp(- pow_integer<4>((A - 1200) / 438)) * exp(-pow_integer<2>(z / 42));
-		nDisk *= 4.8 / ccm;  // rescaling
+		nDisk *= 4.8 / cm3;  // rescaling
 
 		n = nCMZ + nDisk;
+
 	} else {  // outer region
 		double z = position.z / pc;
 		n = pow(R / Rsun, -0.58);
-		n *= exp(- (pow_integer<2>(R - 4.5*kpc)-pow_integer<2>(Rsun - 4.5 * kpc)) / pow_integer<2>(2.9 * kpc));
+		n *= exp(- (pow_integer<2>(R - 4.5 * kpc)-pow_integer<2>(Rsun - 4.5 * kpc)) / pow_integer<2>(2.9 * kpc));
 		n *= exp(- pow_integer<2>(z / (81 * pow(R / Rsun, 0.58))));
 		n *= 0.58 / cm3;  // rescaling
 	}
 
-
-	return n * pow_integer<3>(1 + z);
+	return n * pow_integer<3>(1 + redshift);
 }
 
 std::string FerriereH2::getDescription() const {
