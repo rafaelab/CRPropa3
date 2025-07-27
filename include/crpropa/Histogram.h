@@ -1,13 +1,12 @@
 #pragma once
 
-
+#include <cmath>
+#include <numeric>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <vector>
 #include <algorithm>
-#include <numeric>
-#include <stdexcept>
-#include <cmath>
 
 #include "crpropa/Random.h"
 #include "crpropa/Referenced.h"
@@ -16,6 +15,14 @@
 
 
 namespace crpropa {
+
+
+/**
+ * \addtogroup Tools
+ * @{
+ */
+
+
 
 /**
  * @class Histogram1D
@@ -160,7 +167,7 @@ class Histogram1D : public Referenced {
 };
 
 
+/** @} 
+ */
 
 } // namespace crpropa
-
-#endif // CRPROPA_HISTOGRAM_H
