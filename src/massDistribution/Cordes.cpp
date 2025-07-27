@@ -18,7 +18,7 @@ double CordesHII::getDensity(const Vector3d& position, const double& z) const {
 	n += 0.025 / cm3 * exp(-fabs(h) / (1 * kpc)) * exp(- pow_integer<2>(R / (20 * kpc)));
 
 	 // anular component
-	n += 0.2 / cm3 * exp(-fabs(z) / (0.15 * kpc)) * exp(- pow_integer<2>((R - 4 * kpc) / (2 * kpc))); 
+	n += 0.2 / cm3 * exp(-fabs(h) / (0.15 * kpc)) * exp(- pow_integer<2>((R - 4 * kpc) / (2 * kpc))); 
 
 	return n * pow_integer<3>(1 + z);
 }
