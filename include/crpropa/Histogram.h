@@ -1,5 +1,4 @@
-#ifndef CRPROPA_HISTOGRAM_H
-#define CRPROPA_HISTOGRAM_H
+#pragma once
 
 
 #include <string>
@@ -10,8 +9,8 @@
 #include <stdexcept>
 #include <cmath>
 
-#include <crpropa/Random.h>
-#include <crpropa/Referenced.h>
+#include "crpropa/Random.h"
+#include "crpropa/Referenced.h"
 
 
 
@@ -33,8 +32,8 @@ class Histogram1D : public Referenced {
 		std::vector<double> contents;
 		std::string scale;
 	public:
-		Histogram1D(double vmin, double vmax, int nBins, std::string_view scale = "lin") {
-			setScale(scale);
+		Histogram1D(double vmin, double vmax, int nBins, std::string_view scale = "lin")
+			: scale(scale) {
 			initBins(vmin, vmax, nBins);
 		}
 
@@ -101,7 +100,7 @@ class Histogram1D : public Referenced {
 			return static_cast<int>(contents.size());
 		}
 
-		double getSample() const {
+		[[nodiscard]] double getSample() const {
 			Random& random = Random::instance();
 			size_t bin = random.randBin(contents);
 			if (scale == "log") {

@@ -1,4 +1,4 @@
-#include <crpropa/Sampler.h>
+#include "crpropa/Sampler.h"
 
 
 namespace crpropa {
@@ -27,7 +27,7 @@ int SamplerEventsEnergy::getParticleId() const {
 	return particleId;
 }
 
-double  SamplerEventsEnergy::computeWeight(int id, double E, double f, int counter) const {
+double  SamplerEventsEnergy::computeWeight(const int& id, const double& E, const double& f, const int& counter) const {
 	if (id != particleId)
 		return 0;
 
@@ -70,7 +70,7 @@ int SamplerEventsUniform::getParticleId() const {
 	return particleId;
 }
 
-double SamplerEventsUniform::computeWeight(int id, double E, double f, int counter) const {
+double SamplerEventsUniform::computeWeight(const int& id, const double& E, const double& f, const int& counter) const {
 	if (id != particleId)
 		return 0;
 
@@ -87,10 +87,16 @@ double SamplerEventsUniform::computeWeight(int id, double E, double f, int count
 	}
 }
 
+/****************************************************************************/
+
+SamplerEventsEnergyFraction::SamplerEventsEnergyFraction(int particleId, double sampling) 
+	: SamplerEventsEnergyFractionPowerLaw(1, particleId, sampling) {
+}
 
 /****************************************************************************/
 
-SamplerEventsEnergyFractionPowerLaw::SamplerEventsEnergyFractionPowerLaw(double idx, int pId, double s) : SamplerEventsEnergy(pId, s) {
+SamplerEventsEnergyFractionPowerLaw::SamplerEventsEnergyFractionPowerLaw(double idx, int pId, double s) 
+	: SamplerEventsEnergy(pId, s) {
 	setIndex(idx);
 }
 
@@ -102,7 +108,7 @@ double SamplerEventsEnergyFractionPowerLaw::getIndex() const {
 	return index;
 }
 
-double SamplerEventsEnergyFractionPowerLaw::weightFunction(int id, double E, double f, int counter) const {
+double SamplerEventsEnergyFractionPowerLaw::weightFunction(const int& id, const double& E, const double& f, const int& counter) const {
 	return pow(f, (1 - sampling) * index);
 }
 
@@ -111,7 +117,7 @@ double SamplerEventsEnergyFractionPowerLaw::weightFunction(int id, double E, dou
 SamplerEventsNull::SamplerEventsNull() {
 }
 
-double SamplerEventsNull::computeWeight(int id, double E, double f, int counter) const {
+double SamplerEventsNull::computeWeight(const int& id, const double& E, const double& f, const int& counter) const {
 	return 1.;
 }
 
@@ -126,24 +132,19 @@ SamplerEventsList::SamplerEventsList(std::vector<ref_ptr<SamplerEvents>> s) {
 	}
 }
 
-void SamplerEventsList::add(SamplerEvents *SamplerEvents) {
+void SamplerEventsList::add(SamplerEvents* SamplerEvents) {
 	samplers.push_back(SamplerEvents);
 }
 
-double SamplerEventsList::computeWeight(int id, double E, double f, int counter) const {
-	if (samplers.size() == 0)
+double SamplerEventsList::computeWeight(const int& id, const double& E, const double& f, const int& counter) const {
+	if (samplers.empty())
 		return 1.;
 
-	double w = 0;
-	int k = 0;
-	for (size_t i = 0; i < samplers.size(); i++) {
-		double w0 = samplers[i]->computeWeight(id, E, f, counter);
-		if (w0 > 0) {
-			if (k == 0)
-				w = 1;
+	double w = 1;
+	for (const auto& sampler : samplers | std::views::filter([](const auto& s) { return s != nullptr; })) {
+		double w0 = sampler->computeWeight(id, E, f, counter);
+		if (w0 > 0)
 			w *= w0;
-			k++;
-		}
 	}
 
 	return w;
