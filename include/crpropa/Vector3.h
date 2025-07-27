@@ -1,11 +1,12 @@
-#ifndef CRPROPA_VECTOR3_H
-#define CRPROPA_VECTOR3_H
+#pragma once 
 
-#include <iostream>
-#include <cmath>
-#include <vector>
-#include <limits>
 #include <algorithm>
+#include <cmath>
+#include <iostream>
+#include <limits>
+#include <vector>
+
+
 
 namespace crpropa {
 
@@ -431,6 +432,5 @@ typedef Vector3<double> Vector3d;
 typedef Vector3<float> Vector3f;
 
 /** @}*/
-}  // namespace crpropa
 
-#endif  // CRPROPA_VECTOR3_H
+}  // namespace crpropa
