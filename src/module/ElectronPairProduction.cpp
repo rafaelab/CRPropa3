@@ -75,7 +75,7 @@ void ElectronPairProduction::initRate(std::string filename) {
 				tabLossRate.push_back(b / Mpc);
 			}
 		}
-		infile.ignore(std::numeric_limits <std::streamsize> ::max(), '\n');
+		infile.ignore(std::numeric_limits <std::streamsize>::max(), '\n');
 	}
 	infile.close();
 }
