@@ -13,7 +13,7 @@
 namespace crpropa {
 
 /**
- * \addtogroup Sampler
+ * \addtogroup Tools
  * @{
  */
 
