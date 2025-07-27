@@ -7,21 +7,22 @@
 
 #include <complex>
 
-#include "crpropa/Candidate.h"
 #include "crpropa/base64.h"
+#include "crpropa/Candidate.h"
 #include "crpropa/Common.h"
-#include "crpropa/Units.h"
+#include "crpropa/Geometry.h"
+#include "crpropa/EmissionMap.h"
+#include "crpropa/Grid.h"
+#include "crpropa/GridTools.h"
+#include "crpropa/Histogram.h"
 #include "crpropa/ParticleID.h"
 #include "crpropa/ParticleMass.h"
 #include "crpropa/Random.h"
-#include "crpropa/Grid.h"
-#include "crpropa/GridTools.h"
-#include "crpropa/Geometry.h"
-#include "crpropa/EmissionMap.h"
+#include "crpropa/Units.h"
 #include "crpropa/Vector3.h"
-
-#include <HepPID/ParticleIDMethods.hh>
+#include "HepPID/ParticleIDMethods.hh"
 #include "gtest/gtest.h"
+
 
 namespace crpropa {
 
@@ -67,9 +68,9 @@ TEST(ParticleState, id) {
 }
 
 #ifndef CRPROPA_TESTS_SKIP_EXCEPTIONS
-TEST(ParticleState, idException) {
-	EXPECT_THROW(nucleusId(5, 6), std::runtime_error);
-}
+	TEST(ParticleState, idException) {
+		EXPECT_THROW(nucleusId(5, 6), std::runtime_error);
+	}
 #endif
 
 TEST(ParticleState, Charge) {
@@ -1182,6 +1183,107 @@ TEST(Geometry, ParaxialBox) {
 	EXPECT_NEAR(7., b.distance(Vector3d(10., 0., 0.)), 1E-10);
 	EXPECT_NEAR(7., b.distance(Vector3d(10., 2., 0.)), 1E-10);
 	EXPECT_NEAR(8., b.distance(Vector3d(-8., 0., 0.)), 1E-10);
+}
+
+TEST(Histogram1D, Initialization) {
+	Histogram1D hist1(0, 10, 5, "lin");
+	auto edges = hist1.getBinEdges();
+	auto centres = hist1.getBinCentres();
+	auto widths = hist1.getBinWidths();
+	auto contents = hist1.getBinContents();
+
+	EXPECT_EQ(edges.size(), 6);
+	EXPECT_EQ(centres.size(), 5);
+	EXPECT_EQ(widths.size(), 5);
+	EXPECT_EQ(contents.size(), 5);
+	EXPECT_EQ(hist1.getScale(), "lin");
+
+	EXPECT_DOUBLE_EQ(edges[0], 0);
+	EXPECT_DOUBLE_EQ(edges[5], 10);
+	EXPECT_DOUBLE_EQ(centres[0], 1);
+	EXPECT_DOUBLE_EQ(widths[0], 2);
+	EXPECT_EQ(contents[0], 0);
+
+	Histogram1D hist2(0.1, 100, 3, "log10");
+	edges = hist2.getBinEdges();
+	centres = hist2.getBinCentres();
+	widths = hist2.getBinWidths();
+
+	EXPECT_EQ(edges.size(), 4);
+	EXPECT_EQ(centres.size(), 3);
+	EXPECT_EQ(widths.size(), 3);
+	EXPECT_EQ(hist2.getScale(), "log10");
+
+	EXPECT_NEAR(edges[0], 0.1, 1e-3);
+	EXPECT_NEAR(edges[2], 10, 1e-3);
+	EXPECT_NEAR(centres[0], pow(10., -0.5), 1e-3);
+	EXPECT_NEAR(widths[0], 0.9, 1e-3);
+
+	EXPECT_THROW(hist1.setScale("invalid"), std::runtime_error);
+}
+
+TEST(Histogram1DTest, PushValues) {
+	Histogram1D hist(0, 10, 5);
+	hist.push(3);
+	hist.push(7, 2);
+
+	auto contents = hist.getBinContents();
+	EXPECT_EQ(contents[1], 1);
+	EXPECT_EQ(contents[3], 2);
+}
+
+TEST(Histogram1DTest, Normalization) {
+	Histogram1D hist(0, 10, 5);
+	hist.push(3);
+	hist.push(7, 2);
+	hist.normalise(3);
+
+	auto contents = hist.getBinContents();
+	EXPECT_DOUBLE_EQ(contents[1], 1.0 / 3);
+	EXPECT_DOUBLE_EQ(contents[3], 2.0 / 3);
+}
+
+TEST(Histogram1DTest, Integration) {
+	Histogram1D hist1(0, 10, 5);
+	hist1.push(3);
+	hist1.push(7, 2);
+	EXPECT_NEAR(hist1.integrate(), 3, 1e-3);
+
+	Histogram1D hist2(1, 100, 2, "log10");
+	hist2.push(10, 2);
+	hist2.push(50, 3);
+	EXPECT_NEAR(hist2.integrate(), 5, 1e-3);
+}
+
+TEST(Histogram1DTest, TransformationsDistributionFunctions) {
+	Histogram1D hist1(0, 10, 5);
+	hist1.push(3);
+	hist1.push(7, 2);
+	hist1.transformToPDF();
+	
+	auto contents = hist1.getBinContents();
+	EXPECT_DOUBLE_EQ(contents[1], 1.0 / 3);
+	EXPECT_DOUBLE_EQ(contents[3], 2.0 / 3);
+
+	Histogram1D hist2(0, 10, 5);
+	hist2.push(3);
+	hist2.push(7, 2);
+	hist2.transformToCDF();
+
+	contents = hist2.getBinContents();
+	EXPECT_DOUBLE_EQ(contents[1], 1);
+	EXPECT_DOUBLE_EQ(contents[3], 3);
+}
+
+TEST(Histogram1DTest, ClearContents) {
+	Histogram1D hist(0, 10, 5);
+	hist.push(3);
+	hist.clear();
+
+	auto contents = hist.getBinContents();
+	for (const auto& content : contents) {
+		EXPECT_EQ(content, 0);
+	}
 }
 
 int main(int argc, char **argv) {
