@@ -588,6 +588,7 @@ endif(BUILD_DOC AND DOXYGEN_FOUND AND SPHINX_EXECUTABLE)
 # ----------------------------------------------------------------------------
 if(ENABLE_TESTING)
   enable_testing()
+  
   add_executable(testCore test/testCore.cpp)
   target_link_libraries(testCore  crpropa gtest_main pthread ${COVERAGE_LIBS})
   add_test(testCore testCore)
@@ -647,6 +648,10 @@ if(ENABLE_TESTING)
   add_executable(testCandidateSplitting test/testCandidateSplitting.cpp)
   target_link_libraries(testCandidateSplitting crpropa gtest_main pthread ${COVERAGE_LIBS})
   add_test(testCandidateSplitting testCandidateSplitting)
+
+  add_executable(testSampler test/testSampler.cpp)
+  target_link_libraries(testSampler  crpropa gtest_main pthread ${COVERAGE_LIBS})
+  add_test(testSampler testSampler)
 
   if(WITH_GALACTIC_LENSES)
     add_executable(testGalacticMagneticLens test/testMagneticLens.cpp)
