@@ -3,11 +3,10 @@
 
 namespace crpropa {
 
-
 HadronicInteraction::CrossSection::CrossSection() { 
 }
 
-HadronicInteraction::CrossSection::CrossSection(int primaryId, int secondaryId, ref_ptr<MediumComposition> target, double weightEnergyLoss) {
+HadronicInteraction::CrossSection::CrossSection(int primaryId, int secondaryId, TargetMedium target, double weightEnergyLoss) {
 	setPrimaryId(primaryId);
 	setSecondaryId(secondaryId);
 	setTargetMedium(target);
@@ -15,10 +14,12 @@ HadronicInteraction::CrossSection::CrossSection(int primaryId, int secondaryId, 
 	loadData();
 }
 
-void HadronicInteraction::CrossSection::loadData() { 
+void HadronicInteraction::CrossSection::loadData() {
+	std::string filename = getDataPath("HadronicInteraction/cumDiffSigma-prim_" + std::to_string(primaryId) + "-sec_" + std::to_string(secondaryId) + "-tgt_" + targetMedium.getTag() + ".txt");
+	loadDataFromFile(filename);
+}
 
-	std::string filename = getDataPath("HadronicInteraction/cumDiffSigma-prim_" + std::to_string(primaryId) + "-sec_" + std::to_string(secondaryId) + "-tgt_" + targetMedium->getLabel() + ".txt");
-
+void HadronicInteraction::CrossSection::loadDataFromFile(const std::string& filename) { 
 	std::filesystem::path filePath = filename;
 	if (not std::filesystem::exists(filePath)) {
 		throw std::runtime_error("CrossSection::loadData could not open file " + filePath.string());
@@ -52,7 +53,7 @@ void HadronicInteraction::CrossSection::loadData() {
 		energyPrimary.push_back(a);
 
 		std::vector<double> cdf;
-		for (int i = 0; i < energySecondary.size(); i++){
+		for (size_t i = 0; i < energySecondary.size(); i++){
 			infile >> a;
 			cdf.push_back(a);
 		}
@@ -71,7 +72,7 @@ void HadronicInteraction::CrossSection::setSecondaryId(int id) {
 	secondaryId = id;
 }
 
-void HadronicInteraction::CrossSection::setTargetMedium(ref_ptr<MediumComposition> target) {
+void HadronicInteraction::CrossSection::setTargetMedium(TargetMedium target) {
 	targetMedium = target;
 }
 
@@ -91,7 +92,7 @@ double HadronicInteraction::CrossSection::getWeightEnergyLoss() const {
 	return weightEnergyLoss;
 }
 
-ref_ptr<MediumComposition> HadronicInteraction::CrossSection::getTargetMedium() const {
+TargetMedium HadronicInteraction::CrossSection::getTargetMedium() const {
 	return targetMedium;
 }
 
@@ -133,10 +134,10 @@ double HadronicInteraction::CrossSection::totalInelasticCrossSection(const doubl
 
 ///////////////////////////////////////////////////////////////////////////////
 
-HadronicInteraction::HadronicInteraction(ref_ptr<Density> density, bool havePhotons, bool haveElectrons, bool haveNeutrinos, bool haveNucleons, bool haveAntiNucleons, bool catastrophic, ref_ptr<SamplerEvents> sampling, double limit) {
+HadronicInteraction::HadronicInteraction(bool havePhotons, bool haveElectrons, bool haveNeutrinos, bool haveNucleons, bool haveAntiNucleons, bool catastrophic, ref_ptr<SamplerEvents> sampling, double limit) {
 	setInteractionTag("HI");
 	setDescription("HadronicInteraction");
-	setDensity(density);
+	setListOfPrimaries(availableNuclei);
 	setCatastrophic(catastrophic);
 	setHavePhotons(havePhotons);
 	setHaveElectrons(haveElectrons);
@@ -148,188 +149,122 @@ HadronicInteraction::HadronicInteraction(ref_ptr<Density> density, bool havePhot
 	initData();
 }
 
-void HadronicInteraction::loadData(std::string file, HadronicInteraction::CrossSection& cs) {
-	// load data for a single cross section
-	std::ifstream infile(file.c_str());
+HadronicInteraction::HadronicInteraction(ref_ptr<Density> density, TargetMedium target, bool havePhotons, bool haveElectrons, bool haveNeutrinos, bool haveNucleons, bool haveAntiNucleons, bool catastrophic, ref_ptr<SamplerEvents> sampling, double limit) {
+	setInteractionTag("HI");
+	setDescription("HadronicInteraction");
+	setListOfPrimaries(availableNuclei);
+	setCatastrophic(catastrophic);
+	setHavePhotons(havePhotons);
+	setHaveElectrons(haveElectrons);
+	setHaveNeutrinos(haveNeutrinos);
+	setHaveNucleons(haveNucleons);
+	setHaveAntiNucleons(haveAntiNucleons);
+	setLimit(limit);
+	setSampler(sampling);
+	addMedium(density, target);
+	initData();
+}
 
-	if (not infile.good()) 
-		throw std::runtime_error("HadronicInteraction: could not open file " + file);
+HadronicInteraction::HadronicInteraction(std::vector<ref_ptr<Density>> densities, std::vector<TargetMedium> targets, bool havePhotons, bool haveElectrons, bool haveNeutrinos, bool haveNucleons, bool haveAntiNucleons, bool catastrophic, ref_ptr<SamplerEvents> sampling, double limit) {
+	setInteractionTag("HI");
+	setDescription("HadronicInteraction");
+	setListOfPrimaries(availableNuclei);
+	setCatastrophic(catastrophic);
+	setHavePhotons(havePhotons);
+	setHaveElectrons(haveElectrons);
+	setHaveNeutrinos(haveNeutrinos);
+	setHaveNucleons(haveNucleons);
+	setHaveAntiNucleons(haveAntiNucleons);
+	setLimit(limit);
+	setSampler(sampling);
 
-	// clear old data 
-	cs.sigma.clear();
+	if (densities.size() != targets.size())
+		throw std::runtime_error("HadronicInteraction: densities and targets vectors must have the same size.");
+	for (size_t i = 0; i < densities.size(); ++i)
+		addMedium(densities[i], targets[i]);
 
-	// skip header
-	while (infile.peek() == '#')
-		infile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-
-	// read secondary energy as the first row
-	double e; 
-	infile >> e; // ignore the first value
-	while (infile.good() and (infile.peek() != '\n')) {
-		infile >> e;
-		try {
-			cs.energySecondary.push_back(e + cs.secondary_mc2.at(cs.secondaryId));
-		} catch (std::out_of_range& e) {
-			KISS_LOG_ERROR << "HadronicInteraction::loadData: secondaryId " << cs.secondaryId << " not found in secondary_mc2 map." << std::endl;
-			throw std::runtime_error("HadronicInteraction: secondaryId not found in secondary_mc2 map");
-		}
-	}	
-
-	double a;
-	while(infile.good()) {
-		infile >> a;
-		if(not infile) 
-			break;
-		
-		cs.energyPrimary.push_back(a);
-	
-		std::vector<double> cdf;
-		for (int i = 0; i < cs.energySecondary.size(); i++){
-			infile >> a;
-			cdf.push_back(a);
-		}
-		cs.sigma.push_back(cdf);
-	}
-
-	infile.close();
+	initData();
 }
 
 void HadronicInteraction::initData() {
+	for (const auto& [density, target] : media) {
+		std::string targetLabel = target.getName();
+		#ifdef DEBUG
+			std::cout << "HadronicInteraction::initData: loading cross sections for target medium " << targetLabel << std::endl;
+		#endif
 
-	ref_ptr<MediumComposition> target = density->getTargetMedium();
-	std::string targetLabel = target->getLabel();
+		for (const auto& primaryId : listOfPrimaries) {
+			if (haveNeutrinos) {
+				std::vector<int> neutrinos = {-12, 12, -14, 14};
+				for (const auto& neutrino : neutrinos) {
+					CrossSection cs(primaryId, neutrino, target, 1.0);
+					cs.loadData();
+					addCrossSection(cs);
+				}
+			}
 
-	std::cout << "HadronicInteraction: loading cross sections for target medium " << targetLabel << std::endl;
-	if (listOfPrimaries.empty()) {
-		listOfPrimaries = availableNuclei;
+			if (haveElectrons) {
+				std::vector<int> electrons = {-11, 11};
+				for (const auto& electron : electrons) {
+					CrossSection cs(primaryId, electron, target, 1.0);
+					cs.loadData();
+					addCrossSection(cs);
+				}
+			}
+
+			if (havePhotons) {
+				CrossSection cs(primaryId, 22, target, 1.0);
+				cs.loadData();
+				addCrossSection(cs);
+			}
+			
+			if (haveNucleons) {
+				std::vector<int> nucleons = {1000010010, 1000010010};
+				for (const auto& nucleon : nucleons) {
+					CrossSection cs(primaryId, nucleon, target, 1.0);
+					cs.loadData();
+					addCrossSection(cs);
+				}
+			}
+
+			if (haveAntiNucleons) {
+				std::vector<int> antiNucleons = {-1000010010, 1000010010};
+				for (const auto& antiNucleon : antiNucleons) {
+					CrossSection cs(primaryId, antiNucleon, target, 1.0);
+					cs.loadData();
+					addCrossSection(cs);
+				}
+			}
+
+		}
+
+		#ifdef DEBUG
+			std::cout << "HadronicInteraction: loaded " << crossSectionList.size() << " primary IDs with their cross sections." << std::endl; 
+		#endif
 	}
-
-	for (const auto& primaryId : listOfPrimaries) {
-
-		if (haveNeutrinos) {
-			std::vector<int> neutrinos = {-12, 12, -14, 14};
-			for (const auto& neutrino : neutrinos) {
-				CrossSection cs(primaryId, neutrino, target, 1.0);
-				cs.loadData();
-				addCrossSection(cs);
-			}
-		}
-
-		if (haveElectrons) {
-			std::vector<int> electrons = {-11, 11};
-			for (const auto& electron : electrons) {
-				CrossSection cs(primaryId, electron, target, 1.0);
-				cs.loadData();
-				addCrossSection(cs);
-			}
-		}
-
-		if (havePhotons) {
-			CrossSection cs(primaryId, 22, target, 1.0);
-			cs.loadData();
-			addCrossSection(cs);
-		}
-		
-		if (haveNucleons) {
-			std::vector<int> nucleons = {1000010010, 1000010010};
-			for (const auto& nucleon : nucleons) {
-				CrossSection cs(primaryId, nucleon, target, 1.0);
-				cs.loadData();
-				addCrossSection(cs);
-			}
-		}
-
-		if (haveAntiNucleons) {
-			std::vector<int> antiNucleons = {-1000010010, 1000010010};
-			for (const auto& antiNucleon : antiNucleons) {
-				CrossSection cs(primaryId, antiNucleon, target, 1.0);
-				cs.loadData();
-				addCrossSection(cs);
-			}
-		}
-
-	}
-
-	std::cout << "HadronicInteraction: loaded " << crossSectionList.size() << " primary IDs with their cross sections." << std::endl;
-
-	// // Initialize data for hadronic interactions
-	// for (const auto& [id, crossSections] : crossSectionList) {
-	// 	for (const auto& cs : crossSections) {
-	// 		// Perform any necessary initialization for each cross section
-	// 	}
-	// }   
 }
 
-// void HadronicInteraction::initData(std::string configFile) {
-// 	std::filesystem::path configPath = configFile;
-// 	if (not configPath.is_absolute()) {
-// 		configPath = std::filesystem::absolute(getDataPath("hadronic_interaction/" + configFile));
-// 	}
-
-// 	if (not std::filesystem::exists(configPath)) {
-// 		throw std::runtime_error("HadronicInteraction: could not open file " + configPath.string());
-// 	}
-
-// 	std::ifstream infile(configPath);
-
-// 	while (infile.good()) {
-// 		if (infile.peek() != '#') {
-// 			HadronicInteraction::CrossSection cs;
-// 			int primId;
-// 			int secId;
-// 			double w;
-// 			bool 
-			
-
-// 			infile >> cs.secondaryId; 
-// 			infile >> cs.addSecondary;
-// 			infile >> cs.weightEnergyLoss;
-// 			infile >> cs.primaryId;
-
-// 			std::string path; 
-// 			infile >> path;
-
-// 			if (not infile) 
-// 				break;    // end of file
-
-// 			// decide if local or global paths are used 
-// 			std::filesystem::path loadFile = path;
-// 			if (not loadFile.is_absolute()) {
-// 				loadFile = std::filesystem::absolute(getDataPath("hadronic_interaction/" + path));
-// 			}
-
-// 			loadData(loadFile.string(), cs);
-// 			crossSectionList.try_emplace(cs.primaryId).first->second.push_back(cs);
-// 		}
-
-// 		infile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-// 	}
-
-// 	infile.close();
-// }
-
-void HadronicInteraction::setListOfPrimaries(std::vector<int> primaries) {
-	listOfPrimaries = primaries;
+void HadronicInteraction::setListOfPrimaries(std::span<const int> primaries) {
+	listOfPrimaries.assign(primaries.begin(), primaries.end());
 }
 
 void HadronicInteraction::addCrossSection(HadronicInteraction::CrossSection cs) { 
-	// problem there : I would need the ID corresponding to the cs to add it at the right place to CSList ; maybe I can add the 
 	crossSectionList.try_emplace(cs.primaryId).first->second.push_back(cs);
 }
 
-void HadronicInteraction::setHavePhotons(bool b) {
+void HadronicInteraction::setHavePhotons(bool b) noexcept {
 	havePhotons = b;
 }
 
-void HadronicInteraction::setHaveElectrons(bool b) {
+void HadronicInteraction::setHaveElectrons(bool b) noexcept {
 	haveElectrons = b;
 }
 
-void HadronicInteraction::setHaveNeutrinos(bool b) {
+void HadronicInteraction::setHaveNeutrinos(bool b) noexcept {
 	haveNeutrinos = b;
 }
 
-void HadronicInteraction::setHaveNucleons(bool b) {
+void HadronicInteraction::setHaveNucleons(bool b) noexcept {
 	haveNucleons = b;
 
 	// if this option is true, catastrophic loss are activated
@@ -337,24 +272,20 @@ void HadronicInteraction::setHaveNucleons(bool b) {
 		setCatastrophic(true);
 }
 
-void HadronicInteraction::setHaveAntiNucleons(bool b) {
+void HadronicInteraction::setHaveAntiNucleons(bool b) noexcept {
 	haveAntiNucleons = b;
 }
 
-void HadronicInteraction::setLimit(double lim) {
+void HadronicInteraction::setCatastrophic(bool b) noexcept {
+	catastrophicLoss = b;
+}
+
+void HadronicInteraction::setLimit(double lim) noexcept {
 	limit = lim;
 }
 
 void HadronicInteraction::setInteractionTag(std::string tag) {
 	interactionTag = tag;
-}
-
-void HadronicInteraction::setCatastrophic(bool b) {
-	catastrophicLoss = b;
-}
-
-void HadronicInteraction::setDensity(ref_ptr<Density> d) {
-	density = d;
 }
 
 void HadronicInteraction::setSampler(ref_ptr<SamplerEvents> s) {
@@ -393,18 +324,32 @@ std::string HadronicInteraction::getInteractionTag() const {
 	return interactionTag;
 }
 
-double HadronicInteraction::getDensityAtPosition(const Vector3d& pos) const {
-	return density->getDensity(pos);
-}
-
 bool HadronicInteraction::isPrimaryImplemented(const int& id) const {
 	return crossSectionList.find(id) != crossSectionList.end();
+}
+
+std::vector<int> HadronicInteraction::getListOfPrimaries() const {
+	return listOfPrimaries;
+}
+
+void HadronicInteraction::addMedium(ref_ptr<Density> density, TargetMedium target) {
+	media.push_back(std::pair<ref_ptr<Density>, TargetMedium>(density, target));
+}
+
+double HadronicInteraction::getDensity(const Vector3d& pos, const double& z) const {
+	double n = 0;
+	for (const auto& [density, _] : media) {
+		n += density->getDensity(pos, z);
+	}
+
+	return n;
 }
 
 void HadronicInteraction::process(Candidate* candidate) const {
 	int id = candidate->current.getId();
 	if (not isPrimaryImplemented(id)) {
 		#ifdef DEBUG
+			std::cout << "HadronicInteraction::process: id = " << id << " is not implemented in the cross section list." << std::endl;
 			KISS_LOG_ERROR << "HadronicInteraction:process \tid " << id << " is not implemented in the cross section list." << std::endl;
 		#endif
 		return;
@@ -418,20 +363,14 @@ void HadronicInteraction::process(Candidate* candidate) const {
 
 
 	Random& random = Random::instance();
-	ref_ptr<MediumComposition> target = density->getTargetMedium();
-	unsigned int nComponents = 1;
-	if (target->isAdmixed())
-		nComponents = target->numberOfComponents();
-
-	for (size_t i = 0; i < nComponents; i++) {
-		double At = target->getCompositionWeight();
+	for (const auto& [density, target] : media) {
+		double At = target.getWeight();
 
 		// decide on interaction 
 		double n0 = density->getDensity(pos, z);
 		double prob = CrossSection::totalInelasticCrossSection(Eprimary, id, At) * n0 * step;
 
-
-		if (random.rand() < prob){
+		if (random.rand() < prob) {
 			performInteraction(candidate, At);
 		} else {
 			candidate->limitNextStep(limit * step / prob);
@@ -457,15 +396,11 @@ void HadronicInteraction::performInteraction(Candidate* candidate, const int& At
 
 	Random& random = Random::instance();
 
-// std::cout << "entering the loop" << std::endl;
-
 	// loop over all secondary species
 	for (size_t i = 0; i < crossSectionList.at(id + At - 1).size(); i++) {
 		sigmaInterp.clear();
 
 		CrossSection cs = crossSectionList.at(id + At - 1)[i];
-
-		// std::cout << "i = " << i << " \t" << cs.primaryId << " \t" << cs.secondaryId << std::endl;
 
 		int index = closestIndex(K / GeV, cs.energyPrimary);
 		int l = 0;
@@ -495,8 +430,6 @@ void HadronicInteraction::performInteraction(Candidate* candidate, const int& At
 		if (random.rand() > nSecondaries) {
 			nSecondaries++;
 		}
-
-	// std::cout << "nSecondaries = " << nSecondaries << " for id = " << id << ", At = " << At << ", and secondaryId = " << cs.secondaryId << "\t\t sigmaRatio = " << sigmaRatio << std::endl;
 		
 
 		// sample secondaries
@@ -510,28 +443,40 @@ void HadronicInteraction::performInteraction(Candidate* candidate, const int& At
 			}
 			totalEnergyLoss += sampledEnergy * cs.weightEnergyLoss;
 
+			double Eout = sampledEnergy / (1 + z) * GeV;
+			double f = Eout / Eprimary;
+			Vector3d pos = random.randomInterpolatedPosition(candidate->previous.getPosition(), candidate->current.getPosition());
+
 			if (havePhotons and cs.secondaryId == 22) {
-				candidate->addSecondary(cs.secondaryId, sampledEnergy * GeV, 1., interactionTag);
+				double w = sampler->computeWeight(cs.secondaryId, Eout, f);
+				if (w > 0)
+					candidate->addSecondary(cs.secondaryId, Eout, pos, w, interactionTag);		
 			} else if (haveElectrons and abs(cs.secondaryId) == 11) {
-				candidate->addSecondary(cs.secondaryId, sampledEnergy * GeV, 1., interactionTag);
+				double w = sampler->computeWeight(cs.secondaryId, Eout, f);
+				if (w > 0)
+					candidate->addSecondary(cs.secondaryId, Eout, pos, w, interactionTag);	
 			} else if (haveNeutrinos and (abs(cs.secondaryId) == 12 or abs(cs.secondaryId) == 14 or abs(cs.secondaryId) == 16)) {
-				candidate->addSecondary(cs.secondaryId, sampledEnergy * GeV, 1., interactionTag);
+				double w = sampler->computeWeight(cs.secondaryId, Eout, f);
+				if (w > 0)
+					candidate->addSecondary(cs.secondaryId, Eout, pos, w, interactionTag);	
 			} else if (haveAntiNucleons and (cs.secondaryId == -1000010010 or cs.secondaryId == -1000000010 or cs.secondaryId == -2212 or cs.secondaryId == -2112)) {
-				candidate->addSecondary(cs.secondaryId, sampledEnergy * GeV, 1., interactionTag);
+				double w = sampler->computeWeight(cs.secondaryId, Eout, f);
+				if (w > 0)
+					candidate->addSecondary(cs.secondaryId, Eout, pos, w, interactionTag);	
 			} else {
-				candidate->addSecondary(cs.secondaryId, sampledEnergy * GeV, 1., interactionTag);
+				double w = sampler->computeWeight(cs.secondaryId, Eout, f);
+				if (w > 0)
+					candidate->addSecondary(cs.secondaryId, Eout, pos, w, interactionTag);	
 			}
 
 		}
 	}
 
 	// apply energy loss
-	candidate->current.setEnergy(K - totalEnergyLoss * GeV);
-	// if (catastrophicLoss)
-	// 	candidate->setActive(false);
-		
+	candidate->current.setEnergy((K - totalEnergyLoss * GeV) / (1 + z));
+	if (catastrophicLoss)
+		candidate->setActive(false);
 }
-
 
 
 } // namespace crpropa

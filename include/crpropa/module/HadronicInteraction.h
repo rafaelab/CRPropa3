@@ -1,11 +1,11 @@
-#ifndef CRPROPA_HADRONICINTERACTION_H
-#define CRPROPA_HADRONICINTERACTION_H
-
+#pragma once
 
 #include <filesystem>
 #include <fstream>
 #include <limits>
 #include <string>
+#include <type_traits>
+#include <vector>
 
 #include "crpropa/Common.h"
 #include "crpropa/ParticleID.h"
@@ -15,6 +15,7 @@
 #include "crpropa/Source.h"
 #include "crpropa/Units.h"
 #include "crpropa/massDistribution/Density.h"
+#include "crpropa/massDistribution/TargetMedium.h"
 #include "kiss/logger.h"
 #include "HepPID/ParticleIDMethods.hh"
 
@@ -27,6 +28,7 @@ namespace crpropa {
  * \addtogroup EnergyLosses
  * @{
  */
+
 
 /**
  * @class HadronicInteraction
@@ -73,30 +75,28 @@ class HadronicInteraction : public Module {
 				int primaryId; // to know which table should be loaded ; need to know the CR and the target (p or He)
 				int secondaryId; //< id of the secondary particle
 				// int targetId; //< id of the target particles/medium
-				ref_ptr<MediumComposition> targetMedium; //< target medium composition for the cross section
+				TargetMedium targetMedium; //< target medium composition for the cross section
 
 			public: 
 				CrossSection();
-				CrossSection(int primaryId, int secondaryId, ref_ptr<MediumComposition> target, double weightEnergyLoss = 1.0);
+				CrossSection(int primaryId, int secondaryId, TargetMedium target, double weightEnergyLoss = 1.0);
 				void loadData();
+				void loadDataFromFile(const std::string& filename);
 				void setPrimaryId(int id);
 				void setSecondaryId(int id);
-				void setTargetMedium(ref_ptr<MediumComposition> target);
+				void setTargetMedium(TargetMedium target);
 				void setWeightEnergyLoss(double weight);
 				int getPrimaryId() const;
 				int getSecondaryId() const;
 				double getWeightEnergyLoss() const;
-				ref_ptr<MediumComposition> getTargetMedium() const;
+				TargetMedium getTargetMedium() const;
 
 				static double totalInelasticCrossSectionProton(const double& energy);
 				static double totalInelasticCrossSection(const double& T, const int& id, const int& At);
 		};
 
-	protected:
-		void loadData(std::string file, CrossSection& cs);
-
 	private:
-		ref_ptr<Density> density; //< target field (proton number density)
+		std::vector<std::pair<ref_ptr<Density>, TargetMedium>> media; //< list of media with their target medium
 		double limit; //< limit the next step to a fraction of the mean free path
 		bool catastrophicLoss; //< deactivate the primary particle after the interaction
 		bool havePhotons; //< if true, photons are produced and added as candidates
@@ -106,8 +106,9 @@ class HadronicInteraction : public Module {
 		bool haveAntiNucleons; //< if true, anti-nucleons are produced 
 		std::string interactionTag;
 		std::vector<int> listOfPrimaries; //< list of primary IDs for which cross sections are loaded
-		std::map<int, std::vector<CrossSection>> crossSectionList; // list of the included crosssections; dict : id of the CR
+		std::map<int, std::vector<CrossSection>> crossSectionList; // list of the included cross sections; keys: primary IDs, values: vector of cross sections for this primary
 		ref_ptr<SamplerEvents> sampler;		// sampler for the interaction rate (thinning)
+		
 
 		inline static const std::map<int, double> restEnergiesNuclei = {
 			{1000010010, mass_proton * c_squared }, 
@@ -134,19 +135,20 @@ class HadronicInteraction : public Module {
 		}; // list of available nuclei in the cross section files
 
 	public:
-		HadronicInteraction(ref_ptr<Density> density, bool havePhotons = false, bool haveElectrons = false, bool haveNeutrinos = false, bool haveNucleons = false, bool haveAntiNucleons = false, bool catastrophic = false, ref_ptr<SamplerEvents> sampling = ref_ptr<SamplerEvents>(new SamplerEventsNull()), double limit = 0.1);
+		HadronicInteraction(bool havePhotons = false, bool haveElectrons = false, bool haveNeutrinos = false, bool haveNucleons = false, bool haveAntiNucleons = false, bool catastrophic = false, ref_ptr<SamplerEvents> sampling = ref_ptr<SamplerEvents>(new SamplerEventsNull()), double limit = 0.1);
+		HadronicInteraction(ref_ptr<Density> density, TargetMedium target, bool havePhotons = false, bool haveElectrons = false, bool haveNeutrinos = false, bool haveNucleons = false, bool haveAntiNucleons = false, bool catastrophic = false, ref_ptr<SamplerEvents> sampling = ref_ptr<SamplerEvents>(new SamplerEventsNull()), double limit = 0.1);
+		HadronicInteraction(std::vector<ref_ptr<Density>> densities, std::vector<TargetMedium> targets, bool havePhotons = false, bool haveElectrons = false, bool haveNeutrinos = false, bool haveNucleons = false, bool haveAntiNucleons = false, bool catastrophic = false, ref_ptr<SamplerEvents> sampling = ref_ptr<SamplerEvents>(new SamplerEventsNull()), double limit = 0.1);
 		void initData();
-		void setHavePhotons(bool b);
-		void setHaveElectrons(bool b);
-		void setHaveNeutrinos(bool b);
-		void setHaveNucleons(bool b);
-		void setHaveAntiNucleons(bool b);
-		void setLimit(double limit); 
-		void setDensity(ref_ptr<Density> density);
+		void setHavePhotons(bool b) noexcept;
+		void setHaveElectrons(bool b) noexcept;
+		void setHaveNeutrinos(bool b) noexcept;
+		void setHaveNucleons(bool b) noexcept;
+		void setHaveAntiNucleons(bool b) noexcept;
+		void setCatastrophic(bool b) noexcept;
+		void setLimit(double limit) noexcept; 
 		void setInteractionTag(std::string tag);
-		void setCatastrophic(bool b);
 		void setSampler(ref_ptr<SamplerEvents> sampler);
-		void setListOfPrimaries(std::vector<int> primaries);
+		void setListOfPrimaries(std::span<const int> primaries);
 		bool getHavePhotons() const;
 		bool getHaveElectrons() const;
 		bool getHaveNeutrinos() const;
@@ -155,11 +157,13 @@ class HadronicInteraction : public Module {
 		bool isCatastrophic() const;
 		double getLimit() const;
 		std::string getInteractionTag() const;
+		std::vector<int> getListOfPrimaries() const;
+		void addMedium(ref_ptr<Density> density, TargetMedium target);
 		void addCrossSection(CrossSection cs);
-		bool isPrimaryImplemented(const int& id) const;
+		[[nodiscard]] bool isPrimaryImplemented(const int& id) const;
+		[[nodiscard]] double getDensity(const Vector3d& pos, const double& z) const;
 		void process(Candidate* candidate) const;
 		void performInteraction(Candidate* candidate, const int& At) const;
-		double getDensityAtPosition(const Vector3d& pos) const;
 
 		// void printCrosssections() {
 		// 	for(int i = 0; i < crosssectionList[1000010010].size(); i++) { // [1000010010] : print CS of protons
@@ -176,8 +180,10 @@ class HadronicInteraction : public Module {
 		// }
 };
 
-}
+/** @} 
+ */
+
+} // namespace crpropa
 
 
 
-#endif // CRPROPA_HADRONICINTERACTION_H
