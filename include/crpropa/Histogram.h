@@ -83,31 +83,31 @@ class Histogram1D : public Referenced {
 			}
 		}
 
-		[[nodiscard]] std::string getScale() const {
+		std::string getScale() const {
 			return scale;
 		}
 
-		[[nodiscard]] std::vector<double> getBinEdges() const {
+		std::vector<double> getBinEdges() const {
 			return edges;
 		}
 
-		[[nodiscard]] std::vector<double> getBinWidths() const {
+		std::vector<double> getBinWidths() const {
 			return widths;
 		}
 
-		[[nodiscard]] std::vector<double> getBinCentres() const {
+		std::vector<double> getBinCentres() const {
 			return centres;
 		}
 
-		[[nodiscard]] std::vector<double> getBinContents() const {
+		std::vector<double> getBinContents() const {
 			return contents;
 		}
 
-		[[nodiscard]] int getNumberOfBins() const {
+		int getNumberOfBins() const {
 			return static_cast<int>(contents.size());
 		}
 
-		[[nodiscard]] double getSample() const {
+		double getSample() const {
 			Random& random = Random::instance();
 			size_t bin = random.randBin(contents);
 			if (scale == "log") {
@@ -136,11 +136,11 @@ class Histogram1D : public Referenced {
 			normalise(norm);
 		}
 
-		[[nodiscard]] double sum() const {
+		double sum() const {
 			return std::accumulate(contents.begin(), contents.end(), 0.0);
 		}
 
-		[[nodiscard]] double integrate() const {
+		double integrate() const {
 			if (scale == "log") {
 				return std::transform_reduce(contents.begin(), contents.end(), widths.begin(), 0.0, std::plus<>(), [](double c, double w) {
 					return c / w * log(10);
