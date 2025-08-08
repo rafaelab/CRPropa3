@@ -30,19 +30,19 @@ void TargetMedium::setWeight(double w) noexcept {
 	weight = w;
 }
 
-[[nodiscard]] std::string TargetMedium::getName() const noexcept {
+std::string TargetMedium::getName() const noexcept {
 	return name;
 }
 
-[[nodiscard]] std::string TargetMedium::getTag() const noexcept {
+std::string TargetMedium::getTag() const noexcept {
 	return tag;
 }
 
-[[nodiscard]] double TargetMedium::getWeight() const noexcept {
+double TargetMedium::getWeight() const noexcept {
 	return weight;
 }
 
-[[nodiscard]] std::string TargetMedium::getDescription() const noexcept {
+std::string TargetMedium::getDescription() const noexcept {
 	std::ostringstream oss;
 	oss << "Target " << name << "; tag: " << tag << " (w = " << weight << ")";
 	return oss.str();
