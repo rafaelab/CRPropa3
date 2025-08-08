@@ -2,6 +2,7 @@
 #define CRPROPA_PARTICLE_ID_H
 
 #include <cstddef>
+#include <format>
 #include <source_location>
 #include <string>
 #include <string_view>
