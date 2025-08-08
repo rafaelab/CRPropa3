@@ -29,16 +29,19 @@ std::string DensityEvolution::getDescription() const {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-DensityGrid::DensityGrid( ref_ptr<Grid1f> densityGrid)
+DensityGrid::DensityGrid() {
+}
+
+DensityGrid::DensityGrid(ref_ptr<Grid1f> densityGrid)
 	: grid(densityGrid) {
 }
 
 void DensityGrid::setGrid(ref_ptr<Grid1f> g) {
-	grid = g;
+	this->grid = g;
 }
 
 double DensityGrid::getDensity(const Vector3d& position, const double& z) const {
-	return grid->interpolate(position);
+	return this->grid->interpolate(position);
 }
 
 std::string DensityGrid::getDescription() const {

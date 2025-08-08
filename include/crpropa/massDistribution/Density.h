@@ -70,7 +70,7 @@ class DensityGrid: public Density {
 		ref_ptr<Grid1f> grid; 
 
 	public:
-		DensityGrid() = default;
+		DensityGrid();
 		DensityGrid(ref_ptr<Grid1f> grid);
 		void setGrid(ref_ptr<Grid1f> grid);
 		double getDensity(const Vector3d& position, const double& z = 0) const override;
