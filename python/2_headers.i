@@ -268,9 +268,41 @@
 };
 %thread; /* reenable threading */
 
+
+%include "crpropa/Grid.h"
+%include "crpropa/GridTools.h"
+
+%template(Array3d) std::array<double, 3>;
+%template(Array3f) std::array<float, 3>;
+
+%implicitconv crpropa::ref_ptr<crpropa::Grid<crpropa::Vector3<float>>>;
+%template(Grid3fRefPtr) crpropa::ref_ptr<crpropa::Grid<crpropa::Vector3<float>>>;
+%template(Grid3f) crpropa::Grid<crpropa::Vector3<float>>;
+
+%implicitconv crpropa::ref_ptr<crpropa::Grid<crpropa::Vector3<double>>>;
+%template(Grid3dRefPtr) crpropa::ref_ptr<crpropa::Grid<crpropa::Vector3<double>>>;
+%template(Grid3d) crpropa::Grid<crpropa::Vector3<double>>;
+
+%implicitconv crpropa::ref_ptr<crpropa::Grid<float>>;
+%template(Grid1fRefPtr) crpropa::ref_ptr<crpropa::Grid<float>>;
+%template(Grid1f) crpropa::Grid<float>;
+
+%implicitconv crpropa::ref_ptr<crpropa::Grid<double>>;
+%template(Grid1dRefPtr) crpropa::ref_ptr<crpropa::Grid<double>>;
+%template(Grid1d) crpropa::Grid<double>;
+
+%implicitconv std::pair<std::vector<int>, std::vector<float>>;
+%template(PairIntFloat) std::pair<int, float>;
+%template(PairVector) std::vector<std::pair<int, float>>;
+
+%include "crpropa/EmissionMap.h"
+%implicitconv crpropa::ref_ptr<crpropa::EmissionMap>;
+%template(EmissionMapRefPtr) crpropa::ref_ptr<crpropa::EmissionMap>;
+%implicitconv crpropa::ref_ptr<crpropa::CylindricalProjectionMap>;
+%template(CylindricalProjectionMapRefPtr) crpropa::ref_ptr<crpropa::CylindricalProjectionMap>;
+
 %template(Histogram1DRefPtr) crpropa::ref_ptr<crpropa::Histogram1D>;
 %include "crpropa/Histogram.h"
-
 
 %template(CandidateVector) std::vector<crpropa::ref_ptr<crpropa::Candidate>>;
 %template(CandidateRefPtr) crpropa::ref_ptr<crpropa::Candidate>;
@@ -322,38 +354,6 @@
 %shared_ptr(crpropa::TargetMedium);
 %include "crpropa/massDistribution/TargetMedium.h"
 
-
-%include "crpropa/Grid.h"
-%include "crpropa/GridTools.h"
-
-%template(Array3d) std::array<double, 3>;
-%template(Array3f) std::array<float, 3>;
-
-%implicitconv crpropa::ref_ptr<crpropa::Grid<crpropa::Vector3<float>>>;
-%template(Grid3fRefPtr) crpropa::ref_ptr<crpropa::Grid<crpropa::Vector3<float>>>;
-%template(Grid3f) crpropa::Grid<crpropa::Vector3<float>>;
-
-%implicitconv crpropa::ref_ptr<crpropa::Grid<crpropa::Vector3<double>>>;
-%template(Grid3dRefPtr) crpropa::ref_ptr<crpropa::Grid<crpropa::Vector3<double>>>;
-%template(Grid3d) crpropa::Grid<crpropa::Vector3<double>>;
-
-%implicitconv crpropa::ref_ptr<crpropa::Grid<float>>;
-%template(Grid1fRefPtr) crpropa::ref_ptr<crpropa::Grid<float>>;
-%template(Grid1f) crpropa::Grid<float>;
-
-%implicitconv crpropa::ref_ptr<crpropa::Grid<double>>;
-%template(Grid1dRefPtr) crpropa::ref_ptr<crpropa::Grid<double>>;
-%template(Grid1d) crpropa::Grid<double>;
-
-%implicitconv std::pair<std::vector<int>, std::vector<float>>;
-%template(PairIntFloat) std::pair<int, float>;
-%template(PairVector) std::vector<std::pair<int, float>>;
-
-%include "crpropa/EmissionMap.h"
-%implicitconv crpropa::ref_ptr<crpropa::EmissionMap>;
-%template(EmissionMapRefPtr) crpropa::ref_ptr<crpropa::EmissionMap>;
-%implicitconv crpropa::ref_ptr<crpropa::CylindricalProjectionMap>;
-%template(CylindricalProjectionMapRefPtr) crpropa::ref_ptr<crpropa::CylindricalProjectionMap>;
 
 %include "crpropa/magneticField/MagneticFieldGrid.h"
 %include "crpropa/magneticField/GalacticMagneticField.h"
