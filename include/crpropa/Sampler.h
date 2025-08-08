@@ -23,7 +23,7 @@ namespace crpropa {
  */
 class SamplerEvents: public Referenced {
 	public:
-		[[nodiscard]] virtual double computeWeight(const int& id, const double& energy = 0, const double& energyFraction = 0, const int& counter = 0) const = 0;
+		virtual double computeWeight(const int& id, const double& energy = 0, const double& energyFraction = 0, const int& counter = 0) const = 0;
 };
 
 
@@ -44,9 +44,9 @@ class SamplerEventsUniform: public SamplerEvents {
 		SamplerEventsUniform(int particleId, double sampling);
 		void setSampling(double sampling);
 		void setParticleId(int particleId);
-		[[nodiscard]] double getSampling() const;
-		[[nodiscard]] int getParticleId() const;
-		[[nodiscard]] double computeWeight(const int& id, const double& energy = 0, const double& energyFraction = 0, const int& counter = 0) const override;
+		double getSampling() const;
+		int getParticleId() const;
+		double computeWeight(const int& id, const double& energy = 0, const double& energyFraction = 0, const int& counter = 0) const override;
 };
 
 
@@ -67,10 +67,10 @@ class SamplerEventsEnergy : public SamplerEvents {
 		SamplerEventsEnergy(int particleId, double sampling);
 		void setSampling(double sampling);
 		void setParticleId(int particleId);
-		[[nodiscard]] double getSampling() const;
-		[[nodiscard]] int getParticleId() const;
-		[[nodiscard]] double computeWeight(const int& id, const double& energy = 0, const double& energyFraction = 0, const int& counter = 0) const override;
-		[[nodiscard]] virtual double weightFunction(const int& id, const double& energy = 0, const double& energyFraction = 0, const int& counter = 0) const = 0;
+		double getSampling() const;
+		int getParticleId() const;
+		double computeWeight(const int& id, const double& energy = 0, const double& energyFraction = 0, const int& counter = 0) const override;
+		virtual double weightFunction(const int& id, const double& energy = 0, const double& energyFraction = 0, const int& counter = 0) const = 0;
 };
 
 
@@ -91,8 +91,8 @@ class SamplerEventsEnergyFractionPowerLaw: public SamplerEventsEnergy {
 	public:
 		SamplerEventsEnergyFractionPowerLaw(double index, int particleId, double sampling);
 		void setIndex(double index);
-		[[nodiscard]] double getIndex() const;
-		[[nodiscard]] double weightFunction(const int& id, const double& energy = 0, const double& energyFraction = 0, const int& counter = 0) const override;
+		double getIndex() const;
+		double weightFunction(const int& id, const double& energy = 0, const double& energyFraction = 0, const int& counter = 0) const override;
 };
 
 
@@ -154,7 +154,7 @@ class SamplerEventsEnergyFraction: public SamplerEventsEnergyFractionPowerLaw {
 class SamplerEventsNull : public SamplerEvents {
 	public:
 		SamplerEventsNull();
-		[[nodiscard]] double computeWeight(const int& id, const double& energy = 0, const double& energyFraction = 0, const int& counter = 0) const override;
+		double computeWeight(const int& id, const double& energy = 0, const double& energyFraction = 0, const int& counter = 0) const override;
 };
 
 
@@ -169,7 +169,7 @@ class SamplerEventsList : public SamplerEvents {
 		SamplerEventsList();
 		SamplerEventsList(std::vector<ref_ptr<SamplerEvents>> samplers);
 		void add(SamplerEvents* samplers);
-		[[nodiscard]] double computeWeight(const int& id, const double& energy = 0, const double& energyFraction = 0, const int& counter = 0) const override;
+		double computeWeight(const int& id, const double& energy = 0, const double& energyFraction = 0, const int& counter = 0) const override;
 };
 
 
@@ -199,8 +199,8 @@ class SamplerDistributionUniform : public SamplerDistribution {
 		void setSize(int size);
 		int getSize() const override;
 		void setDistribution(ref_ptr<Histogram1D> dist);
-		[[nodiscard]] ref_ptr<Histogram1D> getDistribution() const override;
-		[[nodiscard]] std::vector<double> getSample(int nSamples) const override;
+		ref_ptr<Histogram1D> getDistribution() const override;
+		std::vector<double> getSample(int nSamples) const override;
 		void transformToPDF() override;
 		void transformToCDF() override;
 		void append(const std::vector<double>& v) override;

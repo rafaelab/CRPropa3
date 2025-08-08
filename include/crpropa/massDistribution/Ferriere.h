@@ -44,20 +44,20 @@ class FerriereBase {
 		 * @param position The position in Galactic coordinates.
 		 * @return The transformed position in CMZ coordinates.
 		 */
-		[[nodiscard]] static Vector3d transformCoordinatesCMZ(const Vector3d& position);
+		static Vector3d transformCoordinatesCMZ(const Vector3d& position);
 
 		/**
 		 * @brief Transform coordinates from the Galactic coordinate system to the Disk coordinate system.
 		 * @param position The position in Galactic coordinates.
 		 * @return The transformed position in Disk coordinates.
 		 */
-		[[nodiscard]] static Vector3d transformCoordinatesDisk(const Vector3d& position);
+		static Vector3d transformCoordinatesDisk(const Vector3d& position);
 
 		/**
 		 * @brief Return the target medium for the density distribution.
 		 * @return The target medium.
 		 */
-		[[nodiscard]] virtual TargetMedium getTargetMedium() const = 0;
+		virtual TargetMedium getTargetMedium() const = 0;
 
 };
 
@@ -69,9 +69,9 @@ class FerriereBase {
 class FerriereHI : public Density, public FerriereBase {
 	public:
 		FerriereHI() noexcept;
-		[[nodiscard]] double getDensity(const Vector3d& position, const double& z = 0) const override;
-		[[nodiscard]] std::string getDescription() const override;
-		[[nodiscard]] TargetMedium getTargetMedium() const override;
+		double getDensity(const Vector3d& position, const double& z = 0) const override;
+		std::string getDescription() const override;
+		TargetMedium getTargetMedium() const override;
 };
 	
 
@@ -82,9 +82,9 @@ class FerriereHI : public Density, public FerriereBase {
 class FerriereHII : public Density, public FerriereBase {
 	public:
 		FerriereHII() noexcept;
-		[[nodiscard]] double getDensity(const Vector3d& position, const double& z = 0) const override;
-		[[nodiscard]] std::string getDescription() const override;
-		[[nodiscard]] TargetMedium getTargetMedium() const override;
+		double getDensity(const Vector3d& position, const double& z = 0) const override;
+		std::string getDescription() const override;
+		TargetMedium getTargetMedium() const override;
 };
 	
 
@@ -95,9 +95,9 @@ class FerriereHII : public Density, public FerriereBase {
 class FerriereH2 : public Density, public FerriereBase {
 	public:
 		FerriereH2() noexcept;
-		[[nodiscard]] double getDensity(const Vector3d& position, const double& z = 0) const override;
-		[[nodiscard]] std::string getDescription() const override;
-		[[nodiscard]] TargetMedium getTargetMedium() const override;
+		double getDensity(const Vector3d& position, const double& z = 0) const override;
+		std::string getDescription() const override;
+		TargetMedium getTargetMedium() const override;
 };
 	
 

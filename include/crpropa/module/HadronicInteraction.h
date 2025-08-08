@@ -160,8 +160,8 @@ class HadronicInteraction : public Module {
 		std::vector<int> getListOfPrimaries() const;
 		void addMedium(ref_ptr<Density> density, TargetMedium target);
 		void addCrossSection(CrossSection cs);
-		[[nodiscard]] bool isPrimaryImplemented(const int& id) const;
-		[[nodiscard]] double getDensity(const Vector3d& pos, const double& z) const;
+		bool isPrimaryImplemented(const int& id) const;
+		double getDensity(const Vector3d& pos, const double& z) const;
 		void process(Candidate* candidate) const;
 		void performInteraction(Candidate* candidate, const int& At) const;
 

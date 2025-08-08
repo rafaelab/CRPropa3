@@ -44,10 +44,10 @@ class TargetMedium {
 		void setName(std::string n) noexcept;
 		void setTag(std::string t) noexcept;
 		void setWeight(double w) noexcept;
-		[[nodiscard]] std::string getName() const noexcept;
-		[[nodiscard]] std::string getTag() const noexcept;
-		[[nodiscard]] double getWeight() const noexcept;
-		[[nodiscard]] std::string getDescription() const noexcept;
+		std::string getName() const noexcept;
+		std::string getTag() const noexcept;
+		double getWeight() const noexcept;
+		std::string getDescription() const noexcept;
 };
 
 

@@ -28,9 +28,9 @@ class CordesHII: public Density {
 
 	public:
 		CordesHII() noexcept;
-		[[nodiscard]] double getDensity(const Vector3d& position, const double& z = 0) const override;
-		[[nodiscard]] std::string getDescription() const override;
-		[[nodiscard]] TargetMedium getTargetMedium() const;
+		double getDensity(const Vector3d& position, const double& z = 0) const override;
+		std::string getDescription() const override;
+		TargetMedium getTargetMedium() const;
 };
 
 

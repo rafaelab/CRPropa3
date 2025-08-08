@@ -79,7 +79,7 @@ class AbstractCondition: public Module {
  * @class Deactivation
  * @brief Direct deactivation of the candidate. Can be used for debuging.
  */
-class Deactivation final: public AbstractCondition {
+class Deactivation: public AbstractCondition {
 	public: 
 		void process(Candidate* candidate) const override { 
 			reject(candidate); 

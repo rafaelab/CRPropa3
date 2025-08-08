@@ -34,9 +34,9 @@ class ConstantDensity: public Density {
 		void setDensityValue(double density) noexcept;
 		double getDensityValue() const noexcept;
 		void setTargetMedium(const TargetMedium& target);
-		[[nodiscard]] TargetMedium getTargetMedium() const;
-		[[nodiscard]] double getDensity(const Vector3d& position, const double& z = 0) const override;
-		[[nodiscard]] std::string getDescription() const override;
+		TargetMedium getTargetMedium() const;
+		double getDensity(const Vector3d& position, const double& z = 0) const override;
+		std::string getDescription() const override;
 };
 
 }  // namespace crpropa

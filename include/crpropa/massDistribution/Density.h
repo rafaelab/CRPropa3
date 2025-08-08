@@ -28,8 +28,8 @@ class Density: public Referenced {
 		// Density& operator=(const Density&) = default;
 		// Density& operator=(Density&&) = default;
 		virtual ~Density() = default;
-		[[nodiscard]] virtual double getDensity(const Vector3d& position, const double& z = 0) const = 0;
-		[[nodiscard]] virtual std::string getDescription() const {
+		virtual double getDensity(const Vector3d& position, const double& z = 0) const = 0;
+		virtual std::string getDescription() const {
 			std::stringstream ss;
 			ss << "Density (abstract base class)\n";
 			return ss.str();
@@ -54,7 +54,7 @@ class DensityEvolution : public Density {
 		DensityEvolution(ref_ptr<Density> density, double index);
 		void setDensity(ref_ptr<Density> density);
 		void setEvolutionIndex(double index);
-		[[nodiscard]] double getDensity(const Vector3d& position, const double& z = 0) const override;
+		double getDensity(const Vector3d& position, const double& z = 0) const override;
 		std::string getDescription() const override;
 };
 
@@ -73,7 +73,7 @@ class DensityGrid: public Density {
 		DensityGrid() = default;
 		DensityGrid(ref_ptr<Grid1f> grid);
 		void setGrid(ref_ptr<Grid1f> grid);
-		[[nodiscard]] double getDensity(const Vector3d& position, const double& z = 0) const override;
+		double getDensity(const Vector3d& position, const double& z = 0) const override;
 		std::string getDescription() const override;
 };
 
