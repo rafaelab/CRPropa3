@@ -44,7 +44,6 @@
 %include "std_iostream.i"
 %include "attribute.i"
 %include "std_shared_ptr.i"
-%include "std_unique_ptr.i"
 %include "cpointer.i"
 
 
