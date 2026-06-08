@@ -38,16 +38,16 @@ Use the guest login and go to the CRPropa example via "VISPA Cluster" --> "Open 
 
 ## Installation and Documentation
 
-CRPropa can be installed simply over its [conda package]() on every linux system. For the most recent release simply use:
+CRPropa can be installed simply over its [conda package](https://crpropa.github.io/CRPropa3/pages/Installation) on every linux system. For the most recent release simply use:
 
 ```sh
-conda install crpropa::crpropa
+conda install -c conda-forge crpropa::crpropa
 ```
 
 For the current master you can use:
 
 ```sh
-conda install crpropa::crpropa==master
+conda install -c conda-forge crpropa::crpropa==master
 ```
 
 ### Testing CRPropa
@@ -56,6 +56,12 @@ You can test your CRPropa installation by just using:
 
 ```sh
 testCRPropa
+```
+
+You can find the test logs at the following location:
+
+```sh
+$CONDA_PREFIX/share/crpropa/test/Testing/Temporary/
 ```
 
 ### Building from Source
@@ -101,3 +107,4 @@ Make sure to correctly cite the plugins when using them.
 | grplinst | Plasma Instabilities | <https://github.com/rafaelab/grplinst> |
 | monopole | Magnetic Monopole Studies | https://github.com/chchristie/monopole/tree/main |
 | ROOTOutputPlugin | Output into root file format | https://github.com/CRPropa/ROOTOutputPlugin |
+| Hadronic Interactions | Proton + Proton interactions | https://gitlab.ruhr-uni-bochum.de/doernjkj/hadronic-interaction-in-crpropa |
