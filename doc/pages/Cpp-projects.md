@@ -44,8 +44,8 @@ int main(void) {
 }
 ```
 
-Compiler such as ``gcc`` should have an access to the header and to CRPropa's shared library (``libcrpropa.so``). If one used paths from [here](Installation), gcc line would look like:
-```
-g++ example.cpp -o run -I$HOME/.local/include/ -L$HOME/.local/lib/ -lcrpropa
+Compiler such as ``gcc`` should have an access to the header and to CRPropa's shared library (``libcrpropa.so``). If one uses the conda package installation as described [here](Installation), gcc line would look like:
+```sh
+g++ example.cpp -o run -I$CONDA_PREFIX/include/ -L$CONDA_PREFIX/lib/ -lcrpropa
 ```
 However, a Makefile should be employed in a general case.

@@ -1,17 +1,17 @@
 # Installation
 
-## Over Conda Package
+## Over Conda Package (recommended)
 
 CRPropa can be installed simply over its [conda package](https://anaconda.org/channels/crpropa/packages/crpropa/overview) on every linux system. For the most recent release simply use:
 
 ```sh
-conda install crpropa::crpropa
+conda install -c conda-forge crpropa::crpropa
 ```
 
 For the current master you can use:
 
 ```sh
-conda install crpropa::crpropa==master
+conda install -c conda-forge crpropa::crpropa==master
 ```
 
 You will find more information on how to install conda on their [documentation](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html).
@@ -22,6 +22,12 @@ You can test your CRPropa installation by just using:
 
 ```sh
 testCRPropa
+```
+
+You can find the test logs at the following location:
+
+```sh
+$CONDA_PREFIX/share/crpropa/test/Testing/Temporary/
 ```
 
 ### Notes
@@ -51,12 +57,12 @@ $CONDA_PREFIX/lib
 $CONDA_PREFIX/include
 ```
 
-# Building from Source
+## Building from Source
 
-## Requirements
+### Requirements
 In general you need the following tools to build CRPropa3 from source, below are instructions how to install those on different operating systems.
 
-- C++ Compiler with `C++17` support (`gcc`, `clang` and `icc` are known to work)
+- C++ Compiler with `C++17` support (`gcc` and `clang` are known to work)
 - Fortran Compiler: to compile SOPHIA (for example `gfortran`)
 
 Optionally CRPropa can be compiled with the following dependencies to enable certain functionality.
@@ -69,7 +75,7 @@ Optionally CRPropa can be compiled with the following dependencies to enable cer
 - `sphinx`: to build this documentation from the `doxygen` generated documentation and possibly include the coverage report by copying the by `coverage` generated `coverageReport` to `doc/pages/coverageReport` and then do `cmake --build /path/to/your/buildfolder --target coverage`
 - `hdf5`: to enable the option to generate binary output
 
-## CMake Flag Documentation
+### CMake Flag Documentation
 
 ( name = default : explanation )
 - `BUILD_DOC = OFF` : This enables the building of a `doxygen` version of the documentation, this will look very bare bone. To build a better documentation additionally install `sphinx` and use `cmake --build /path/to/your/buildfolder --target doc` while this options is set to `ON`.
@@ -88,34 +94,35 @@ Optionally CRPropa can be compiled with the following dependencies to enable cer
 - `INSTALL_EIGEN = OFF` : Whether to install the provided eigen or not, this might override any preexisting version.
 - `OMP_SCHEDULE = static,100` : The OMP strategy to use, to see more infos see [OMP Documentation](https://www.openmp.org/spec-html/5.0/openmpse49.html)
 - `SIMD_EXTENSIONS = none` : The SIMD flag to use, allowed are `avx`, `avx+fma`, `native` and `none`. Check with `lscpu | grep -e avx -e fma` what is supported on your CPU, you could also use `native` to use whatever is available.
+- `Python_INSTALL_PACKAGE_DIR` : With this variable you can specify your own install target for the python packages without changing the search path for the required sitelibs like `numpy`.
 
-## Building on Linux
+### Building on Linux
 
 The following instructions are for a global installation, for a local installation see the conda section.
 First you need to install the requirements with your favorite package manager, in the installation commands is every optional performance package included:
 
-### Debian/Ubuntu
+#### Debian/Ubuntu
 
 ```sh
 sudo apt update
 sudo apt install cmake cmake-curses-gui ninja-build git gcc g++ gfortran python3-dev python3-numpy-dev python-dev-is-python3 swig libhdf5-dev libmuparser-dev libfftw3-dev libgoogle-perftools-dev
 ```
 
-### Fedora
+#### Fedora
 
 ```sh
-sudo dnf makecache
+sudo dnf check-update
 sudo dnf install cmake ccmake ninja git gcc g++ gfortran python3-devel python3-numpy swig hdf5-devel muParser-devel fftw3-devel gperftools
 ```
 
-### Arch
+#### Arch
 
 ```sh
 sudo pacman -Sy
 sudo pacman -S cmake ninja git gcc gcc-fortran python python-numpy swig hdf5 muparser fftw gperftools pkgconfig
 ```
 
-### Conda
+#### Conda
 
 To see how to install conda please follow their [documentation](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html).
 
@@ -125,7 +132,7 @@ conda install -c conda-forge compilers git cmake ninja swig zlib gperftools fftw
 
 You should also set `CMAKE_INSTALL_PREFIX=$CONDA_PREFIX` during the configure step.
 
-### Building
+#### Building
 
 To then actually build the project do (independent of distribution):
 
@@ -148,7 +155,7 @@ ctest --output-on-failure --repeat until-pass:3
 cmake --install .
 ```
 
-## Building on MacOS
+### Building on MacOS
 
 The following constructions are taken from an old version of this installation guide, the instructions could not be tested due to missing hardware.
 
@@ -200,7 +207,7 @@ Check that all paths are set correctly with the following command in the build f
   ```
 and configure and generate again after changes.
 
-## Building on Windows
+### Building on Windows
 
 Currently, we do not officially support Windows, it is advised to install UbuntuWSL and install it there.
 However, it might be possible to install it natively on Windows, you would however need to change some includes
