@@ -72,7 +72,7 @@ Optionally CRPropa can be compiled with the following dependencies to enable cer
 - `muparser`: to define the source spectrum through a mathematical formula
 - `doxygen`: to build a `doxygen` documentation
 - `lcov`, `genhtml`: to build coverage report with `cmake --build /path/to/your/buildfolder --target coverage` (requires executed tests over `ctest`)
-- `sphinx`: to build this documentation from the `doxygen` generated documentation and possibly include the coverage report by copying the by `coverage` generated `coverageReport` to `doc/pages/coverageReport` and then do `cmake --build /path/to/your/buildfolder --target coverage`
+- `sphinx`, `sphinx_rtd_theme`, `m2r2`, `nbsphinx`, `lxml_html_clean`, `breathe`, `pandoc`, `exhale`: to build this documentation from the `doxygen` generated documentation with `cmake --build /path/to/your/buildfolder --target doc` and possibly include the coverage report by copying the by `coverage` generated `coverageReport` to `doc/pages/coverageReport` and then do `cmake --build /path/to/your/buildfolder --target coverage`. You might want to install the mentioned packages over `pip` rather then `conda` since there is a known [bug](https://github.com/sphinx-doc/sphinx/issues/12239).
 - `hdf5`: to enable the option to generate binary output
 
 ### CMake Flag Documentation
@@ -131,6 +131,23 @@ conda install -c conda-forge compilers git cmake ninja swig zlib gperftools fftw
 ```
 
 You should also set `CMAKE_INSTALL_PREFIX=$CONDA_PREFIX` during the configure step.
+
+#### Virtual Environment
+
+If you want to avoid conda but still want to use additional python packages for example for the documentation,
+you could also create a python virtual environment and install crpropa over that.
+To do that you need to do some additional steps, assuming you do not have set up a virtual environment yet:
+
+```sh
+sudo apt install python3-venv
+python -m venv /path/to/your/venv
+source /pyth/to/your/venv/bin/activate
+pip install numpy
+```
+
+After these steps you can then just continue with the [building](#Building) step, the python paths pointing to the virtual environment should be prioritized.
+
+In this example it is assumed you are on ubuntu for the installation of `python3-venv`, on fedora the corresponding package is called `python-venv` and on arch it is already included in the `python` package.
 
 #### Building
 
