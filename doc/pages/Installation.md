@@ -167,8 +167,7 @@ cmake --build . -j
 # optionally do the tests to check if everything was build correctly
 ctest --output-on-failure --repeat until-pass:3
 
-# finally install, if you did not specify a CMAKE_INSTALL_PREFIX where you have write rights
-# of are not in a venv or conda environment you need to use the next line with sudo:
+# finally install; sudo might be needed
 cmake --install .
 ```
 
