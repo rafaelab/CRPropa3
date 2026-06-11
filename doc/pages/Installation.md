@@ -32,7 +32,7 @@ $CONDA_PREFIX/share/crpropa/test/Testing/Temporary/
 
 ### Notes
 
-The conda package does not come with all possible available features:
+The conda package does not come with all features:
 - No local documentation
 - No [coverage (lcov)](https://github.com/linux-test-project/lcov) report generation for tests
 - No [QUIMBY](https://github.com/CRPropa/Quimby)
@@ -90,7 +90,7 @@ Optionally CRPropa can be compiled with the following dependencies to enable cer
 - `ENABLE_QUIMBY = OFF` : Enables [QUIMBY](https://github.com/CRPropa/Quimby) support, however you would need to build that tool yourself. You would want to include the quimby include path to your prefix path, in conda environments this is usually a given.
 - `ENABLE_SWIG_BUILTIN = ON` : This enables us to create python-builtin types rather than proxies which increases performance.
 - `ENABLE_TESTING = ON` : Enables the creation of test executables, the tests can then be done by using `ctest --output-on-failure`.
-- `FAST_WAVES = OFF` : Enables the usage of SIMD extensions in `PaneWaveTurbulence`, this can increase the performance by a lot if supported by your CPU. To check if you CPU supports this feature use `lscpu | grep -e avx -e fma`.
+- `FAST_WAVES = OFF` : Enables the usage of SIMD extensions in `PlaneWaveTurbulence`, this can increase the performance by a lot if supported by your CPU. To check if you CPU supports this feature use `lscpu | grep -e avx -e fma`.
 - `INSTALL_EIGEN = OFF` : Whether to install the provided eigen or not, this might override any preexisting version.
 - `OMP_SCHEDULE = static,100` : The OMP strategy to use, to see more infos see [OMP Documentation](https://www.openmp.org/spec-html/5.0/openmpse49.html)
 - `SIMD_EXTENSIONS = none` : The SIMD flag to use, allowed are `avx`, `avx+fma`, `native` and `none`. Check with `lscpu | grep -e avx -e fma` what is supported on your CPU, you could also use `native` to use whatever is available.
@@ -141,7 +141,7 @@ To do that you need to do some additional steps, assuming you do not have set up
 ```sh
 sudo apt install python3-venv
 python -m venv /path/to/your/venv
-source /pyth/to/your/venv/bin/activate
+source /path/to/your/venv/bin/activate
 pip install numpy
 ```
 
@@ -174,7 +174,6 @@ cmake --install .
 
 ### Building on MacOS
 
-The following constructions are taken from an old version of this installation guide, the instructions could not be tested due to missing hardware.
 
 For a clean OS X (Sonoma 14+) installation, if you use Homebrew, the main dependencies can be installed as follows:
    ```sh
@@ -227,8 +226,6 @@ and configure and generate again after changes.
 ### Building on Windows
 
 Currently, we do not officially support Windows, it is advised to install UbuntuWSL and install it there.
-However, it might be possible to install it natively on Windows, you would however need to change some includes
-that are only available on linux to the corresponding packages on Windows. It probably helps to use conda as a package manager.
 
 ## Notes
 
