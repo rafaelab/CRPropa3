@@ -2,7 +2,7 @@
 
 ## Over Conda Package (recommended)
 
-CRPropa can be installed simply over its [conda package](https://anaconda.org/channels/crpropa/packages/crpropa/overview) on every linux system. For the most recent release simply use:
+CRPropa can be installed simply over its [conda package](https://anaconda.org/channels/crpropa/packages/crpropa/overview) on every linux or macos system. For the most recent release simply use:
 
 ```sh
 conda install -c conda-forge crpropa::crpropa
@@ -188,6 +188,10 @@ Similarly to Brew, if you use [MacPorts](https://www.macports.org/) instead of H
 ```sh
 sudo port install cmake ninja gfortran libomp python swig numpy hdf5 fftw muparser gperftools
 ```
+
+#### Conda
+
+In a conda environment you can build CRPropa3 [exactly like on a linux machine](#conda) .
 
 #### Building
 

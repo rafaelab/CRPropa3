@@ -38,7 +38,7 @@ Use the guest login and go to the CRPropa example via "VISPA Cluster" --> "Open 
 
 ## Installation and Documentation
 
-CRPropa can be installed simply over its [conda package](https://crpropa.github.io/CRPropa3/pages/Installation) on every linux system. For the most recent release simply use:
+CRPropa can be installed simply over its [conda package](https://crpropa.github.io/CRPropa3/pages/Installation) on every linux or macos system. For the most recent release simply use:
 
 ```sh
 conda install -c conda-forge crpropa::crpropa
