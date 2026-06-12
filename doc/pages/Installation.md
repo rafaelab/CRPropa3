@@ -183,7 +183,7 @@ brew install cmake ninja gfortran libomp python swig numpy hdf5 fftw muparser gp
 
 #### MacPorts
 
-Similarly, if you use MacPorts instead of Homebrew, download the corresponding packages:
+Similarly to Brew, if you use [MacPorts](https://www.macports.org/) instead of Homebrew, download the corresponding packages:
 
 ```sh
 sudo port install cmake ninja gfortran libomp python swig numpy hdf5 fftw muparser gperftools
