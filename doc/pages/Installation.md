@@ -245,3 +245,8 @@ cmake .. \
 ```sh
 pybind11-stubgen -o $(python -c "import sysconfig; print(sysconfig.get_paths()['purelib'])") crpropa
 ```
+
+# Known Issues
+
+- The command `testCRPropa` is based on `ctest` which is provided by `cmake` which is a runtime requirement for crpropa for this reason. However, since we do not require a specific version, it is possible, that the provided `ctest` is too modern for your machine and runs into issues even though `crpropa` might still be runable.
+The current workaround would be either to install an older `ctest` version or to run the tests manually which are located in `$CONDA_PREFIX/share/crpropa/test`.
