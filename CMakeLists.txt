@@ -556,7 +556,16 @@ if(ENABLE_PYTHON AND Python_FOUND)
     OUTPUT_NAME "_crpropa"
     SUFFIX ".so"
   )
-  
+
+  if(APPLE)
+    set_target_properties(crpropa-swig PROPERTIES
+      INSTALL_RPATH "@loader_path;@loader_path/../../${PYTHON_PROJECT}/.libs"
+    )
+    set_property(TARGET crpropa-swig APPEND PROPERTY
+      LINK_FLAGS "-flat_namespace -undefined suppress"
+    )
+  endif()
+
   if(BUILD_DOC AND DOXYGEN_FOUND)
     add_dependencies(crpropa-swig docstrings_from_doxy)
   endif(BUILD_DOC AND DOXYGEN_FOUND)
