@@ -263,13 +263,14 @@ class testVector3(unittest.TestCase):
       import io
       with unittest.mock.patch('sys.stdout', new = io.StringIO()) as fake_out:
         print(v)
+        self.assertEqual(fake_out.getvalue().rstrip(), v.getDescription())
     else:
       import StringIO
       fake_out = StringIO.StringIO()
       sys.stdout = fake_out
       print(v)
       sys.stdout = sys.__stdout__
-    self.assertEqual(fake_out.getvalue().rstrip(), v.getDescription())
+      self.assertEqual(fake_out.getvalue().rstrip(), v.getDescription())
 
   def testOutOfBound(self):
     v = crp.Vector3d(1., 2., 3.)

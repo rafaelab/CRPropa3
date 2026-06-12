@@ -457,6 +457,7 @@ find_package(Python 3.0 COMPONENTS Interpreter Development NumPy)
 
 if(ENABLE_PYTHON AND Python_FOUND)
   find_package(SWIG 3.0 REQUIRED)
+  include(UseSWIG)
   include_directories(${Python_INCLUDE_DIRS})
   add_definitions(-DCRPROPA_HAVE_PYTHON)
   list(APPEND CRPROPA_SWIG_DEFINES -DCRPROPA_HAVE_PYTHON)
@@ -514,6 +515,7 @@ if(ENABLE_PYTHON AND Python_FOUND)
 
   if(ENABLE_SWIG_BUILTIN)
     set(BUILTIN "-builtin")
+    list(APPEND CRPROPA_SWIG_DEFINES "-builtin")
     if(SWIG_VERSION VERSION_LESS 4.0.2)
         message(WARNING, "The SWIG builtin option should not be used with SWIG version below 4.0.2 due to https://github.com/swig/swig/issues/1595")
     endif()
@@ -523,31 +525,53 @@ if(ENABLE_PYTHON AND Python_FOUND)
 
   set(SWIG_INCLUDES)
   foreach(p in ${SWIG_INCLUDE_DIRECTORIES})
-    list(APPEND SWIG_INCLUDES -I${p})
+    list(APPEND SWIG_INCLUDES ${p})
   endforeach()
 
   file(GLOB_RECURSE CRPROPA_SWIG_INPUTS python/*.i)
-  set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/crpropa_wrap.cxx PROPERTIES GENERATED true)
-  add_custom_target(crpropa-swig-wrapper
-    COMMAND swig ${BUILTIN} -c++ -python -I${CMAKE_CURRENT_SOURCE_DIR}/include -I${CMAKE_CURRENT_SOURCE_DIR}/libs/HepPID/include ${SWIG_INCLUDES} ${CRPROPA_SWIG_DEFINES} -dirprot -o ${CMAKE_CURRENT_BINARY_DIR}/crpropa_wrap.cxx -outdir ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/python/crpropa${BUILTIN}.i
-    DEPENDS ${CRPROPA_SWIG_INPUTS} ${CRPROPA_INCLUDES} )
 
-  if(BUILD_DOC AND DOXYGEN_FOUND)
-    add_dependencies(crpropa-swig-wrapper docstrings_from_doxy)
-  endif(BUILD_DOC AND DOXYGEN_FOUND)
-
-  add_library(crpropa-swig MODULE ${CMAKE_CURRENT_BINARY_DIR}/crpropa_wrap.cxx)
-  set_target_properties(crpropa-swig PROPERTIES PREFIX "")
-  # disable warnings on automatically generated interface code
-  set_target_properties(crpropa-swig PROPERTIES COMPILE_FLAGS "-w")
-  set_target_properties(crpropa-swig PROPERTIES OUTPUT_NAME "_crpropa")
+  set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/python/crpropa${BUILTIN}.i
+    PROPERTIES
+    CPLUSPLUS ON
+    SWIG_MODULE_NAME "crpropa"
+    SWIG_FLAGS "${CRPROPA_SWIG_DEFINES};-dirprot;${CMAKE_SWIG_FLAGS}"
+    DEPENDS ${CRPROPA_SWIG_INPUTS} ${CRPROPA_INCLUDES}
+    OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}
+  )
+  
+  swig_add_library(crpropa-swig TYPE SHARED LANGUAGE python
+    SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/python/crpropa${BUILTIN}.i
+  )
+  
+  target_include_directories(crpropa-swig PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/libs/HepPID/include
+    ${SWIG_INCLUDES}
+  )
+  
   target_link_libraries(crpropa-swig crpropa ${Python_LIBRARIES} ${Python_LIBRARY})
-  add_dependencies(crpropa-swig crpropa-swig-wrapper)
+  
+  set_target_properties(crpropa-swig PROPERTIES
+    PREFIX ""
+    OUTPUT_NAME "_crpropa"
+    SUFFIX ".so"
+  )
+  
+  if(BUILD_DOC AND DOXYGEN_FOUND)
+    add_dependencies(crpropa-swig docstrings_from_doxy)
+  endif(BUILD_DOC AND DOXYGEN_FOUND)
 
   install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/python/crpropa" DESTINATION "${Python_INSTALL_PACKAGE_DIR}")
   install(FILES "${CMAKE_CURRENT_BINARY_DIR}/crpropa.py" DESTINATION "${Python_INSTALL_PACKAGE_DIR}/crpropa")
   install(TARGETS crpropa-swig LIBRARY DESTINATION "${Python_INSTALL_PACKAGE_DIR}/crpropa")
   install(FILES ${CRPROPA_SWIG_INPUTS} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/crpropa/swig_interface)
+
+  find_program(PYBIND11_STUBGEN_EXECUTABLE NAMES "pybind11-stubgen")
+	if(PYBIND11_STUBGEN_EXECUTABLE)
+		message(STATUS "Found pybind11-stubgen at ${PYBIND11_STUBGEN_EXECUTABLE}")
+		install(CODE "execute_process(COMMAND ${PYBIND11_STUBGEN_EXECUTABLE} --ignore-all-errors -o ${Python_SITELIB} crpropa)")
+    install(CODE "execute_process(COMMAND echo -- Generated python stubs over pybind11-stubgen for crpropa)")
+	endif()
 
 endif(ENABLE_PYTHON AND Python_FOUND)
 
