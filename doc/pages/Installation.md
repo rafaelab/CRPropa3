@@ -36,7 +36,7 @@ The conda package does not come with all features:
 - No local documentation
 - No [coverage (lcov)](https://github.com/linux-test-project/lcov) report generation for tests
 - No [QUIMBY](https://github.com/CRPropa/Quimby)
-- No SIMD extensions for arm processors (not supported by the achitecture)
+- No SIMD extensions for arm processors (not supported by the architecture)
 
 If you want to include your custom data the location of the different data folders and files is
 
@@ -72,7 +72,7 @@ Optionally CRPropa can be compiled with the following dependencies to enable cer
 - `muparser`: to define the source spectrum through a mathematical formula
 - `doxygen`: to build a `doxygen` documentation
 - `lcov`, `genhtml`: to build coverage report with `cmake --build /path/to/your/buildfolder --target coverage` (requires executed tests over `ctest`)
-- `sphinx`, `sphinx_rtd_theme`, `m2r2`, `nbsphinx`, `lxml_html_clean`, `breathe`, `pandoc`, `exhale`: to build this documentation from the `doxygen` generated documentation with `cmake --build /path/to/your/buildfolder --target doc` and possibly include the coverage report by copying the by `coverage` generated `coverageReport` to `doc/pages/coverageReport` and then do `cmake --build /path/to/your/buildfolder --target coverage`. You might want to install the mentioned packages over `pip` rather then `conda` since there is a known [bug](https://github.com/sphinx-doc/sphinx/issues/12239).
+- `sphinx`, `sphinx_rtd_theme`, `m2r2`, `nbsphinx`, `lxml_html_clean`, `breathe`, `pandoc`, `exhale`: to build this documentation from the `doxygen` generated documentation with `cmake --build /path/to/your/buildfolder --target doc` and possibly include the coverage report by copying the by `coverage` generated `coverageReport` to `doc/pages/coverageReport` and then do `cmake --build /path/to/your/buildfolder --target coverage`. You might want to install the mentioned packages over `pip` rather than `conda` since there is a known [bug](https://github.com/sphinx-doc/sphinx/issues/12239).
 - `hdf5`: to enable the option to generate binary output
 
 ### CMake Flag Documentation
@@ -134,8 +134,8 @@ You should also set `CMAKE_INSTALL_PREFIX=$CONDA_PREFIX` during the configure st
 
 #### Virtual Environment
 
-If you want to avoid conda but still want to use additional python packages for example for the documentation,
-you could also create a python virtual environment and install crpropa over that.
+If you want to avoid `conda` but still want to use additional python packages for example for the documentation,
+you could also create a python virtual environment and install CRPropa over that.
 To do that you need to do some additional steps, assuming you do not have set up a virtual environment yet:
 
 ```sh
@@ -186,16 +186,19 @@ brew install cmake ninja gfortran libomp python swig numpy hdf5 fftw muparser gp
 Similarly to Brew, if you use [MacPorts](https://www.macports.org/) instead of Homebrew, download the corresponding packages:
 
 ```sh
-sudo port install cmake ninja gfortran libomp python swig numpy hdf5 fftw muparser gperftools
+sudo port install cmake ninja gcc15 libomp python swig pkgconfig py-numpy hdf5 fftw-3 muparser gperftools
+sudo port select --set gcc mp-gcc15
 ```
+
+With MacPorts you might struggle to find the `python` and `numpy` libraries and headers, if so just follow [Notes](#notes-1).
 
 #### Conda
 
-In a conda environment you can build CRPropa3 [exactly like on a linux machine](#conda) .
+In a conda environment you can build CRPropa3 [exactly like on a linux machine](#conda).
 
 #### Building
 
-To then actually build the project do. Libomp is usually not found, so we need to specify the location and corresponding flags here:
+With the now installed requirements we can now start building CRPropa. `libomp` is usually not found, so we need to specify the location and corresponding flags here:
 
 ```sh
 # clone the repository wherever you want:
@@ -228,7 +231,7 @@ Currently, we do not officially support Windows, it is advised to install Ubuntu
 
 ## Notes
 
-- Sometimes CMake has difficulties finding the correct python and numpy header and executables, to help CMake finding those define the following environment variables before using `cmake`:
+- Sometimes CMake has difficulties finding the correct `python` and `numpy` header and executables, to help CMake finding those define the following environment variables before using `cmake`:
 ```sh
 export PYTHON_EXECUTABLE=$(which python)
 export PYTHON_INCLUDE_DIR=$(${PYTHON_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_paths()['include'])")
@@ -238,10 +241,10 @@ export PYTHON_INSTALL_PACKAGE_DIR=$(${PYTHON_EXECUTABLE} -c "import sysconfig; p
 And hand them over to `cmake` as CMake-Variables so `find_python` can recognize them:
 ```sh
 cmake .. \
-	-DPython_EXECUTABLE=${PYTHON_EXECUTABLE} \
-	-DPython_INCLUDE_DIR=${PYTHON_INCLUDE_DIR} \
-	-DPython_NumPy_INCLUDE_DIR=${NUMPY_INCLUDE_DIR} \
-	-DPython_INSTALL_PACKAGE_DIR=${PYTHON_INSTALL_PACKAGE_DIR}
+  -DPython_EXECUTABLE=${PYTHON_EXECUTABLE} \
+  -DPython_INCLUDE_DIRS=${PYTHON_INCLUDE_DIR} \
+  -DPython_NumPy_INCLUDE_DIRS=${NUMPY_INCLUDE_DIR} \
+  -DPython_INSTALL_PACKAGE_DIR=${PYTHON_INSTALL_PACKAGE_DIR}
 ```
 - To do the coverage report first install `lcov` and `genhtml`, then do the tests with `ctest` and built the coverage target with `cmake --build /path/to/your/buildfolder --target coverage`.
 - It is generally advised to use `ninja` instead of the default `make`, use it with the `-G Ninja` flag for `cmake`, you can install it over `pip`, `conda` or your package manager
@@ -252,5 +255,5 @@ pybind11-stubgen -o $(python -c "import sysconfig; print(sysconfig.get_paths()['
 
 # Known Issues
 
-- The command `testCRPropa` is based on `ctest` which is provided by `cmake` which is a runtime requirement for crpropa for this reason. However, since we do not require a specific version, it is possible, that the provided `ctest` is too modern for your machine and runs into issues even though `crpropa` might still be runable.
+- The command `testCRPropa` is based on `ctest` which is provided by `cmake` which is a runtime requirement for CRPropa for this reason. However, since we do not require a specific version, it is possible, that the provided `ctest` is too modern for your machine and runs into issues even though `crpropa` might still be runnable.
 The current workaround would be either to install an older `ctest` version or to run the tests manually which are located in `$CONDA_PREFIX/share/crpropa/test`.
