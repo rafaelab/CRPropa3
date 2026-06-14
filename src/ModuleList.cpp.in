@@ -68,9 +68,10 @@ void ModuleList::run(Candidate* candidate, bool recursive, bool secondariesFirst
 
 		// propagate all secondaries before next step of primary
 		if (recursive and secondariesFirst) {
+#pragma omp taskloop num_tasks(2 * omp_get_max_threads()) untied
 			for (size_t i = 0; i < candidate->secondaries.size(); i++) {
 				if (g_cancel_signal_flag != 0)
-					break;
+					continue;
 				run(candidate->secondaries[i], recursive, secondariesFirst);
 			}
 		}
@@ -78,9 +79,10 @@ void ModuleList::run(Candidate* candidate, bool recursive, bool secondariesFirst
 
 	// propagate secondaries after completing primary
 	if (recursive and not secondariesFirst) {
+#pragma omp taskloop num_tasks(2 * omp_get_max_threads()) untied
 		for (size_t i = 0; i < candidate->secondaries.size(); i++) {
 			if (g_cancel_signal_flag != 0)
-				break;
+				continue;
 			run(candidate->secondaries[i], recursive, secondariesFirst);
 		}
 	}
@@ -153,9 +155,8 @@ void ModuleList::run(const candidate_vector_t *candidates, bool recursive, bool 
 void ModuleList::run(SourceInterface *source, size_t count, bool recursive, bool secondariesFirst) {
 
 #if _OPENMP
-	std::cout << "crpropa::ModuleList: Number of Threads: " << omp_get_max_threads() << std::endl;
+	std::cout << "crpropa::ModuleList: Number of Threads: " << omp_get_max_threads() << " Lizard " << std::endl;
 #endif
-
 	ProgressBar progressbar(count);
 
 	if (showProgress) {
