@@ -43,7 +43,6 @@ TabularPhotonField::TabularPhotonField(std::string fieldName, bool isRedshiftDep
 	
 	if (this->isRedshiftDependent)
 		initRedshiftScaling();
-	
 }
 
 
@@ -55,22 +54,15 @@ double TabularPhotonField::getPhotonDensity(double Ephoton, double z, const Vect
 		double zMin = this->redshifts[0];
 		
 		if(z < zMin){
-			
 			if(z < -1) {
 				KISS_LOG_WARNING << "Photon Field " << fieldName << " uses FutureRedshift with z < -1. The photon density is set to n(Ephoton, z=0). \n";
-				
 			}
 			return getPhotonDensity(Ephoton, zMin);
-			
 		} else {
-			
 			return interpolate2d(Ephoton, z, this->photonEnergies, this->redshifts, this->photonDensity);
-			
 		}
-		
 	} else {
 		return interpolate(Ephoton, this->photonEnergies, this->photonDensity);
-		
 	}
 }
 
@@ -96,7 +88,6 @@ double TabularPhotonField::getMaximumPhotonEnergy(double z, const Vector3d &pos)
 }
 
 void TabularPhotonField::readPhotonEnergy(std::string filePath) {
-	
 	std::ifstream infile(filePath.c_str());
 	
 	if (!infile.good())
@@ -170,16 +161,12 @@ void TabularPhotonField::checkInputData() const {
 		
 	if (this->photonDensity.size() != this->photonEnergies.size() * this-> redshifts.size())
 			throw std::runtime_error("TabularPhotonField::checkInputData: length of photon density input is unequal to length of photon energy input times length of redshift input");
-		
 	} else {
-		
 		if (this->photonEnergies.size() != this->photonDensity.size())
 			throw std::runtime_error("TabularPhotonField::checkInputData: length of photon energy input is unequal to length of photon density input");
-		
 	}
 
 	for (int i = 0; i < this->photonEnergies.size(); ++i) {
-		
 		double ePrevious = 0.;
 		double e = this->photonEnergies[i];
 		
@@ -191,10 +178,8 @@ void TabularPhotonField::checkInputData() const {
 	}
 
 	for (int i = 0; i < this->photonDensity.size(); ++i) {
-	
 		if (this->photonDensity[i] < 0.)
 			throw std::runtime_error("TabularPhotonField::checkInputData: a value in the photon density input is negative");
-		
 	}
 
 	if (this->isRedshiftDependent) {
@@ -214,11 +199,9 @@ void TabularPhotonField::checkInputData() const {
 		}
 
 		for (int i = 0; i < this->redshiftScalings.size(); ++i) {
-		
 			double scalingFactor = this->redshiftScalings[i];
 			if (scalingFactor <= 0.)
 				throw std::runtime_error("TabularPhotonField::checkInputData: initRedshiftScaling has created a non-positive scaling factor");
-			
 		}
 	}
 }
@@ -244,7 +227,6 @@ TabularSpatialPhotonField::TabularSpatialPhotonField(std::string fieldName, ref_
 		
 		this->photonEnergies = vE;
 		break;
-		
 	}
 	
 	fs::path dirD = getDataPath("") + "Scaling/" + this->fieldName + "/photonDensity/";
@@ -255,7 +237,6 @@ TabularSpatialPhotonField::TabularSpatialPhotonField(std::string fieldName, ref_
 	}
 	
 	for (auto const& dir_entry : fs::directory_iterator{dirD}) {
-		
 		double x, y, z;
 		std::string str;
 		std::stringstream ss;
@@ -271,7 +252,7 @@ TabularSpatialPhotonField::TabularSpatialPhotonField(std::string fieldName, ref_
 		
 		while (getline(ss, str, '_')) {
 			if (iLine == 2) {
-				x = -stod(str) * kpc;
+				x = stod(str) * kpc;
 			}
 			if (iLine == 3) {
 				y = stod(str) * kpc;
@@ -288,12 +269,10 @@ TabularSpatialPhotonField::TabularSpatialPhotonField(std::string fieldName, ref_
 			continue;
 		
 		photonDict[iFile] = vPos;
-		
 		iFile = iFile + 1;
 		
 		std::vector<double> vD = readPhotonDensity(dir_entry.path().string());
 		this->photonDensity.push_back(vD);
-		
 	}
 	
 	if (this->photonDensity.empty())
@@ -309,12 +288,10 @@ void TabularSpatialPhotonField::setSurface(ref_ptr<Surface> surface) {
 }
 
 double TabularSpatialPhotonField::getPhotonDensity(const double ePhoton, double z, const Vector3d &pos) const {
-	
 	double dMin = 1000.;
 	int iMin = -1;
 	
 	for (const auto& el : this->photonDict) {
-		
 		Vector3d posNode = el.second;
 		double d;
 		d = sqrt((- posNode.x / kpc  - pos.x / kpc) * (- posNode.x / kpc - pos.x / kpc) + (posNode.y / kpc - pos.y / kpc) * (posNode.y / kpc - pos.y / kpc ) + (posNode.z / kpc - pos.z / kpc) * (posNode.z / kpc - pos.z / kpc));
@@ -323,7 +300,6 @@ double TabularSpatialPhotonField::getPhotonDensity(const double ePhoton, double 
 			dMin = d;
 			iMin = el.first;
 		}
-		
 	}
 	
 	if (iMin == -1) {
@@ -331,23 +307,20 @@ double TabularSpatialPhotonField::getPhotonDensity(const double ePhoton, double 
 	} else {
 		if ((ePhoton < photonEnergies[0]) || (ePhoton > photonEnergies[photonEnergies.size() - 1])) {
 			return 0;
-			
 		} else {
-			
 			std::vector<double> rowE = this->photonEnergies; // assuming all the nodes have the same energy binning
 			std::vector<double> rowD = this->photonDensity[iMin];
 			return interpolate(ePhoton, rowE, rowD);
-			
 		}
 	}
 }
 
 double TabularSpatialPhotonField::getMinimumPhotonEnergy(double z, const Vector3d &pos) const {
-		return photonEnergies[0]; // assuming all the nodes have the same energy bins
+	return photonEnergies[0]; // assuming all the nodes have the same energy bins
 }
 
 double TabularSpatialPhotonField::getMaximumPhotonEnergy(double z, const Vector3d &pos) const {
-		return photonEnergies[photonEnergies.size() - 1]; // assuming all the nodes have the same energy bins
+	return photonEnergies[photonEnergies.size() - 1]; // assuming all the nodes have the same energy bins
 }
 
 std::vector<double> TabularSpatialPhotonField::readPhotonEnergy(std::string filePath) {
@@ -356,45 +329,35 @@ std::vector<double> TabularSpatialPhotonField::readPhotonEnergy(std::string file
 	if (!infile.good())
 		throw std::runtime_error("TabularPhotonField::readPhotonEnergy: could not open " + filePath);
 	
-	
 	std::string line;
 	std::vector<double> vE;
 	
 	while (std::getline(infile, line)) {
-		
 		if ((line.size() > 0) & (line[0] != '#') ) {
 			vE.insert(vE.begin(),std::stod(line));
-			
 		}
 	}
 	
 	infile.close();
 	return vE;
-	
 }
  
 std::vector<double> TabularSpatialPhotonField::readPhotonDensity(std::string filePath) {
-	
 	std::ifstream infile(filePath.c_str());
-	
+
 	if (!infile.good())
 		throw std::runtime_error("TabularPhotonField::readPhotonDensity: could not open " + filePath);
-	
 	
 	std::string line;
 	std::vector<double> vD;
 	
-	
 	while (std::getline(infile, line)) {
-		
 		if ((line.size() > 0) & (line[0] != '#') )
 			vD.insert(vD.begin(),std::stod(line));
-		
 	}
 	
 	infile.close();
 	return vD;
-	
 }
 
 void TabularSpatialPhotonField::checkInputData() const {
@@ -403,30 +366,25 @@ void TabularSpatialPhotonField::checkInputData() const {
 	std::size_t numRowsEn = this->photonDensity.size();
 	
 	for (int j = 0; j < this->photonDensity.size(); ++j) { //take the proper row size!
-		
+
 		if (this->photonEnergies.size() != this->photonDensity[j].size())
 			throw std::runtime_error("TabularPhotonField::checkInputData: length of photon energy input is unequal to length of photon density input");
 		
 		for (int i = 0; i < this->photonEnergies.size(); ++i) {
-			
 			double ePrevious = 0.;
 			double e = this->photonEnergies[i];
 			
 			if (e <= 0.)
 				throw std::runtime_error("TabularSpatialPhotonField::checkInputData: a value in the photon energy input is not positive");
-			
 			if (e <= ePrevious)
 				throw std::runtime_error("TabularSpatialPhotonField::checkInputData: photon energy values are not strictly increasing");
-			
 			ePrevious = e;
-			
 		}
 		
 		for (int i = 0; i < this->photonDensity[j].size(); ++i) {
 	
 			if (this->photonDensity[j][i] < 0.)
 				throw std::runtime_error("TabularSpatialPhotonField::checkInputData: a value in the photon density input is negative");
-			
 		}
 	}
 }
