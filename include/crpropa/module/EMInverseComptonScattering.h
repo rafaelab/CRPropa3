@@ -1,8 +1,7 @@
 #ifndef CRPROPA_EMINVERSECOMPTONSCATTERING_H
 #define CRPROPA_EMINVERSECOMPTONSCATTERING_H
 
-#include <fstream>
-#include <cmath>
+#include <string>
 
 #include "crpropa/Module.h"
 #include "crpropa/PhotonBackground.h"
@@ -96,10 +95,8 @@ public:
 	 */
 	void initCumulativeRate(std::string path);
 
-
 	void process(Candidate *candidate) const;
 	void performInteraction(Candidate *candidate) const;
-
 };
 /** @}*/
 

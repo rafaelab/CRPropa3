@@ -31,7 +31,7 @@ struct PointCloud {
 	bool kdtree_get_bbox(BBOX& /*bb*/) const {
 		return false;  // no bounding box optimization
 	}
-	
+
 };
 
 using KDTree = nanoflann::KDTreeSingleIndexAdaptor<
@@ -43,7 +43,7 @@ using KDTree = nanoflann::KDTreeSingleIndexAdaptor<
 /**
  * \addtogroup InteractionRates
  * @{
- */
+*/
 
 /**
  @class Interaction Rates
@@ -52,7 +52,12 @@ using KDTree = nanoflann::KDTreeSingleIndexAdaptor<
 class InteractionRates: public Referenced {
 public:
 	virtual double getProcessRate(const double E, const Vector3d &position) const = 0;
-	virtual void loadPerformInteractionTabs(const Vector3d &position, std::vector<double> &tabE, std::vector<double> &tabs, std::vector<std::vector<double>> &tabCDF) const = 0;
+	virtual void loadPerformInteractionTabs(
+		const Vector3d &position, 
+		std::vector<double> &tabE, 
+		std::vector<double> &tabs, 
+		std::vector<std::vector<double>> &tabCDF
+	) const = 0;
 	
 	std::string getRatesName() const {
 		return this->ratesName;
@@ -69,33 +74,54 @@ public:
 	virtual void initRate(std::string path) = 0;
 	virtual void initCumulativeRate(std::string path) = 0;
 
-protected: 
+	protected: 
 
-  std::string ratesName = "AbstractInteractionRates";
-  bool isPositionDependent = false; 
+	std::string ratesName = "AbstractInteractionRates";
+	bool isPositionDependent = false; 
 
 };
 
 /**
  @class InteractionRateHomogeneous
  @brief Interaction rates decorator for tabulated homogeneous photon fields.
+
+ This class handles the interaction rates for homogeneous photon fields.
+ It is mainly used in the EM* interaction classes.
+ For position dependend photon fields use InteractionRatesPositionDependent.
  */
 class InteractionRatesHomogeneous: public InteractionRates {
-public:
+	public:
 	/** Constructor of InteractionRatesHomogeneous
 	 * @param RateFile Path to the file containing the interaction rate data
 	 * @param CumulativeRateFile Path to the file containing the cumulative interaction rate data
 	 */
 	InteractionRatesHomogeneous(std::string RateFile = "", std::string CumulativeRateFile = "");
 	
-	std::vector<double> getTabulatedEnergy() const;
-	std::vector<double> getTabulatedRate() const;
-	std::vector<double> getTabulatedE() const;
-	std::vector<double> getTabulateds() const;
-	std::vector<std::vector<double>> getTabulatedCDF() const;
+	inline std::vector<double> getTabulatedEnergy() const {return tabEnergy;}
+	inline std::vector<double> getTabulatedRate() const {return tabRate;}
+	inline std::vector<double> getTabulatedE() const {return tabE;}
+	inline std::vector<double> getTabulateds() const {return tabs;}
+	inline std::vector<std::vector<double>> getTabulatedCDF() const {return tabCDF;}
 	
-	double getProcessRate(const double E, const Vector3d &position) const;
-	void loadPerformInteractionTabs(const Vector3d &position, std::vector<double> &tabE, std::vector<double> &tabs, std::vector<std::vector<double>> &tabCDF) const;
+	/** Returns the interaction rate for the given candidate energy E
+	 * this is just a wrapper for interpolate(E, tabEnergy, tabRate) and is not positon dependend.
+	 * @param E  Candidate Energy
+	 * @param position  Position is never used here
+	 */
+	double getProcessRate(const double E, const Vector3d &position = Vector3d(0,0,0)) const;
+	/** Loads tabE, tabs and tabCDF
+	 * Alternatively you could use getTabulated*() functions directly here since nothing is position dependend here
+	 * @param position  Position is not used here
+	 * @param tabE  Vector to save tabulated energies to
+	 * @param tabs  Vector to save tabulated rates to
+	 * @param tabCDF  Vector to save tabulated CDF to
+	 */
+	void loadPerformInteractionTabs(
+		const Vector3d &position, 
+		std::vector<double> &tabE, 
+		std::vector<double> &tabs, 
+		std::vector<std::vector<double>> &tabCDF
+	) const;
 	
 	void setTabulatedEnergy (std::vector<double>& tabEnergy);
 	void setTabulatedRate (std::vector<double>& tabRate);
@@ -104,17 +130,17 @@ public:
 	void setTabulatedCDF (std::vector<std::vector<double>>& tabCDF);
 
 	/** Loads the interaction rate
-	 * This function loads the interaction rate
+	 * This function loads the interaction rate from a given filename
 	 * @param filename The name of the file containing the interaction rates
 	 */
 	void initRate(std::string filename);
 	/** Loads the cumulative interaction rate
-	 * This function loads the interaction rate
+	 * This function loads the interaction rate from a given filename
 	 * @param filename The name of the file containing the interaction rates
 	 */
 	void initCumulativeRate(std::string filename);
 	
-protected:
+	protected:
 	
 	// tabulated interaction rates 1/lambda(E)
 	std::vector<double> tabEnergy; //!< electron energy in [J]
@@ -132,29 +158,55 @@ protected:
  @brief Interaction rates decorator for tabulated position dependent photon fields.
  */
 class InteractionRatesPositionDependent: public InteractionRates {
+	private:
+	/** Finds closest point cloud ID
+	 * This function takes a position vector and searches for the closes Grid point,
+	 * it returns the point cloud ID to be used
+	 * @param position  The position to search for a grid point
+	 */
+	int findClosestGridPoint(const Vector3d &position) const;
 
-public:
-	/** Constructor of InteractioNRatesPositionDependent
+	public:
+	/** Constructor of InteractionRatesPositionDependent
 	 * @param RateFilePath Path containing the interaction rates files (* /Rate)
 	 * @param CumulativeRateFilePath Path containing the cumulative interaction rates files (* /CumulativeRate)
 	 * @param surface Closed surface to confine the grid nodes to be uploaded (optional)
 	 */
-	InteractionRatesPositionDependent(std::string RateFilePath = "", std::string CumulativeRateFilePath = "", ref_ptr<Surface> surface = NULL);
+	InteractionRatesPositionDependent(
+		std::string RateFilePath = "", 
+		std::string CumulativeRateFilePath = "", 
+		ref_ptr<Surface> surface = NULL
+	);
 	
-	int findClosestGridPoint(const Vector3d &position) const;
-	
-	std::vector<double> getTabulatedEnergy() const;
-	std::vector<std::vector<double>> getTabulatedRate() const;
-	std::vector<double> getTabulatedE() const;
-	std::vector<std::vector<double>> getTabulateds() const;
-	std::vector<std::vector<std::vector<double>>> getTabulatedCDF() const;
-	std::unordered_map<int, Vector3d> getPhotonDict() const;
+	inline std::vector<double> getTabulatedEnergy() const {return tabEnergy;}
+	inline std::vector<std::vector<double>> getTabulatedRate() const {return tabRate;}
+	inline std::vector<double> getTabulatedE() const {return tabE;}
+	inline std::vector<std::vector<double>> getTabulateds() const {return tabs;}
+	inline std::vector<std::vector<std::vector<double>>> getTabulatedCDF() const {return tabCDF;}
+	inline std::unordered_map<int, Vector3d> getPhotonDict() const {return photonDict;}
 	std::vector<double> getClosestRate(const Vector3d &position) const;
 	std::vector<double> getClosests(const Vector3d &position) const;
 	std::vector<std::vector<double>> getClosestCDF(const Vector3d &position) const;
 	
+	/** Returns the interaction rate for the given candidate energy E and position
+	 * This function calculated the interaction rate dependend on the given postion and particle energy E
+	 * @param E  Candidate Energy
+	 * @param position  Current position of particle
+	 */
 	double getProcessRate(const double E, const Vector3d &position) const;
-	void loadPerformInteractionTabs(const Vector3d &position, std::vector<double> &tabE, std::vector<double> &tabs, std::vector<std::vector<double>> &tabCDF) const;
+	/** Loads tabE, tabs and tabCDF dependend on the position
+	 * Loads the tabulated Energies, rates and CDF dependend on the given position
+	 * @param position  Position to load tab* for
+	 * @param tabE  Vector to save tabulated energies to
+	 * @param tabs  Vector to save tabulated rates to
+	 * @param tabCDF  Vector to save tabulated CDF to
+	 */
+	void loadPerformInteractionTabs(
+		const Vector3d &position, 
+		std::vector<double> &tabE, 
+		std::vector<double> &tabs, 
+		std::vector<std::vector<double>> &tabCDF
+	) const;
 	
 	void setTabulatedEnergy (std::vector<double>& tabEnergy);
 	void setTabulatedRate (std::vector<std::vector<double>>& tabRate);
@@ -167,7 +219,7 @@ public:
 	 * @param surface Closed surface to confine the grid nodes to be uploaded
 	 */
 	void setSurface(ref_ptr<Surface> surface);
-	ref_ptr<Surface> getSurface() const;
+	inline ref_ptr<Surface> getSurface() const {return surface;}
 
 	/** Loads the interaction rate
 	 * This function loads the position dependent interaction rate
@@ -180,7 +232,7 @@ public:
 	 */
 	void initCumulativeRate(std::string filepath);
 
-protected:
+	protected:
 	
 	// tabulated interaction rates 1/lambda(E)
 	std::vector<double> tabEnergy; //!< electron energy in [J], assuming the same energy binning in each node

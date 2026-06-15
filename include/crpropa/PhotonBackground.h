@@ -40,7 +40,7 @@ public:
 	virtual double getPhotonDensity(double ePhoton, double z = 0., const Vector3d &pos = Vector3d(0.,0.,0.)) const = 0;
 	virtual double getMinimumPhotonEnergy(double z, const Vector3d &pos = Vector3d(0.,0.,0.)) const = 0;
 	virtual double getMaximumPhotonEnergy(double z, const Vector3d &pos = Vector3d(0.,0.,0.)) const = 0;
-	virtual std::string getFieldName() const {
+	virtual inline std::string getFieldName() const {
 		return this->fieldName;
 	}
 	
@@ -49,19 +49,19 @@ public:
 	 (cf. CRPropa3-data/calc_scaling.py)
 	 @param z		redshift
 	 */
-	virtual double getRedshiftScaling(double z) const {
+	virtual inline double getRedshiftScaling(double z) const {
 		return 1.;
 	};
 	
-	bool hasRedshiftDependence() const {
+	inline bool hasRedshiftDependence() const {
 		return this->isRedshiftDependent;
 	}
 	
-	bool hasPositionDependence() const {
+	inline bool hasPositionDependence() const {
 		return this->isPositionDependent;
 	}
 	
-	ref_ptr<Surface> getSurface() const {
+	inline ref_ptr<Surface> getSurface() const {
 		return this->surface;
 	}
 	
@@ -87,25 +87,25 @@ protected:
  Optionally, a third file contains redshifts, named fieldName_redshift.txt.
  */
 class TabularPhotonField: public PhotonField {
-public:
-	TabularPhotonField(const std::string fieldName, const bool isRedshiftDependent = true);
+	public:
+		TabularPhotonField(const std::string fieldName, const bool isRedshiftDependent = true);
 
-	double getPhotonDensity(double ePhoton, double z = 0., const Vector3d &pos = Vector3d(0.,0.,0.)) const;
-	double getRedshiftScaling(double z) const;
-	double getMinimumPhotonEnergy(double z, const Vector3d &pos = Vector3d(0.,0.,0.)) const;
-	double getMaximumPhotonEnergy(double z, const Vector3d &pos = Vector3d(0.,0.,0.)) const;
+		double getPhotonDensity(double ePhoton, double z = 0., const Vector3d &pos = Vector3d(0.,0.,0.)) const;
+		double getRedshiftScaling(double z) const;
+		double getMinimumPhotonEnergy(double z, const Vector3d &pos = Vector3d(0.,0.,0.)) const;
+		double getMaximumPhotonEnergy(double z, const Vector3d &pos = Vector3d(0.,0.,0.)) const;
 
-protected:
-	void readPhotonEnergy(std::string filePath);
-	void readPhotonDensity(std::string filePath);
-	void readRedshift(std::string filePath);
-	void initRedshiftScaling();
-	void checkInputData() const;
+	protected:
+		void readPhotonEnergy(std::string filePath);
+		void readPhotonDensity(std::string filePath);
+		void readRedshift(std::string filePath);
+		void initRedshiftScaling();
+		void checkInputData() const;
 
-	std::vector<double> photonEnergies;
-	std::vector<double> photonDensity;
-	std::vector<double> redshifts;
-	std::vector<double> redshiftScalings;
+		std::vector<double> photonEnergies;
+		std::vector<double> photonDensity;
+		std::vector<double> redshifts;
+		std::vector<double> redshiftScalings;
 };
 
 /**
@@ -120,14 +120,14 @@ protected:
  The surface is defined to include the nodes of the grid contained within.
  */
 class TabularSpatialPhotonField: public PhotonField {
-public:
+	public:
 		TabularSpatialPhotonField(const std::string fieldName, ref_ptr<Surface> surface = nullptr);
 		
 		double getPhotonDensity(double ePhoton = 0., double z = 0., const Vector3d &pos = Vector3d(0.,0.,0.)) const;
 		double getMinimumPhotonEnergy(double z, const Vector3d &pos = Vector3d(0.,0.,0.)) const;
 		double getMaximumPhotonEnergy(double z, const Vector3d &pos = Vector3d(0.,0.,0.)) const;
 
-protected:
+	protected:
 		std::vector<double> readPhotonEnergy(std::string filePath);
 		std::vector<double> readPhotonDensity(std::string filePath);
 		void checkInputData() const;
@@ -348,7 +348,7 @@ public:
  */
 class ISRF_Freudenreich98: public TabularSpatialPhotonField {
 public:
-		ISRF_Freudenreich98(ref_ptr<Surface> surface) : TabularSpatialPhotonField("ISRF_Freudenreich98", surface) {}
+	ISRF_Freudenreich98(ref_ptr<Surface> surface) : TabularSpatialPhotonField("ISRF_Freudenreich98", surface) {}
 };
 
 /**
@@ -361,7 +361,7 @@ public:
  */
 class ISRF_Robitaille12: public TabularSpatialPhotonField {
 public:
-		ISRF_Robitaille12(ref_ptr<Surface> surface) : TabularSpatialPhotonField("ISRF_Robitaille12", surface) {}
+	ISRF_Robitaille12(ref_ptr<Surface> surface) : TabularSpatialPhotonField("ISRF_Robitaille12", surface) {}
 };
 
 /**

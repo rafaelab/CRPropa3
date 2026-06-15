@@ -1,8 +1,7 @@
 #ifndef CRPROPA_EMPAIRPRODUCTION_H
 #define CRPROPA_EMPAIRPRODUCTION_H
 
-#include <fstream>
-#include <cmath>
+#include <string>
 
 #include "crpropa/Module.h"
 #include "crpropa/PhotonBackground.h"
@@ -99,7 +98,6 @@ public:
 		
 	void performInteraction(Candidate *candidate) const;
 	void process(Candidate *candidate) const;
-	
 };
 
 } // namespace crpropa

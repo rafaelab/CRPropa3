@@ -12,7 +12,6 @@
 namespace crpropa {
 
 InteractionRatesHomogeneous::InteractionRatesHomogeneous(std::string RateFile, std::string CumulativeRateFile) {
-	
 	this->ratesName = "interactionRatesHomogeneous";
 	this->isPositionDependent = false;
 
@@ -22,33 +21,8 @@ InteractionRatesHomogeneous::InteractionRatesHomogeneous(std::string RateFile, s
 		initCumulativeRate(CumulativeRateFile);
 }
 
-std::vector<double> InteractionRatesHomogeneous::getTabulatedEnergy() const {
-	return tabEnergy;
-}
-
-std::vector<double> InteractionRatesHomogeneous::getTabulatedRate() const {
-	return tabRate;
-}
-
-std::vector<double> InteractionRatesHomogeneous::getTabulatedE() const {
-	return tabE;
-}
-
-std::vector<double> InteractionRatesHomogeneous::getTabulateds() const {
-	return tabs;
-}
-
-std::vector<std::vector<double>> InteractionRatesHomogeneous::getTabulatedCDF() const {
-	return tabCDF;
-}
-
 double InteractionRatesHomogeneous::getProcessRate(const double E, const Vector3d &position) const {
-	if (!this->isPositionDependent) {
-		// compute the interaction rate for the given candidate energy, E
-		return interpolate(E, this->tabEnergy, this->tabRate);
-	} else {
-		throw std::runtime_error("Error in boolean isPositionDependent!");
-	}
+	return interpolate(E, this->tabEnergy, this->tabRate);
 }
 
 void InteractionRatesHomogeneous::loadPerformInteractionTabs(const Vector3d &position, std::vector<double> &tabE, std::vector<double> &tabs, std::vector<std::vector<double>> &tabCDF) const {
@@ -183,30 +157,6 @@ int InteractionRatesPositionDependent::findClosestGridPoint(const Vector3d &posi
 	
 }
 
-std::vector<double> InteractionRatesPositionDependent::getTabulatedEnergy() const {
-	return tabEnergy;
-}
-
-std::vector<std::vector<double>> InteractionRatesPositionDependent::getTabulatedRate() const {
-	return tabRate;
-}
-
-std::vector<double> InteractionRatesPositionDependent::getTabulatedE() const {
-	return tabE;
-}
-
-std::vector<std::vector<double>> InteractionRatesPositionDependent::getTabulateds() const {
-	return tabs;
-}
-
-std::vector<std::vector<std::vector<double>>> InteractionRatesPositionDependent::getTabulatedCDF() const {
-	return tabCDF;
-}
-
-std::unordered_map<int, Vector3d> InteractionRatesPositionDependent::getPhotonDict() const {
-	return photonDict;
-}
-
 std::vector<double> InteractionRatesPositionDependent::getClosestRate(const Vector3d &position) const {
 	int iMin = findClosestGridPoint(position);
 	return tabRate[iMin];
@@ -223,15 +173,9 @@ std::vector<std::vector<double>> InteractionRatesPositionDependent::getClosestCD
 }
 
 double InteractionRatesPositionDependent::getProcessRate(const double E, const Vector3d &position) const {
-	if (!this->isPositionDependent) {
-		throw std::runtime_error("Error in boolean isPositionDependent!");
-	} else {
-		std::vector<double> tabRate = this->getClosestRate(position);
-		
-		// compute the interaction rate for the given candidate energy, E
-		double rate = interpolate(E, this->tabEnergy, tabRate);
-		return rate;
-	}
+	std::vector<double> tabRate = this->getClosestRate(position);
+	// compute the interaction rate for the given candidate energy, E
+	return interpolate(E, this->tabEnergy, tabRate);
 }
 
 void InteractionRatesPositionDependent::loadPerformInteractionTabs(const Vector3d &position, std::vector<double> &tabE, std::vector<double> &tabs, std::vector<std::vector<double>> &tabCDF) const {
@@ -292,10 +236,6 @@ void InteractionRatesPositionDependent::setPhotonDict(std::unordered_map<int, Ve
 
 void InteractionRatesPositionDependent::setSurface(ref_ptr<Surface> surface) {
 	this->surface = surface;
-}
-
-ref_ptr<Surface> InteractionRatesPositionDependent::getSurface() const {
-	return this->surface;
 }
 
 void InteractionRatesPositionDependent::initRate(std::string filepath){

@@ -1,7 +1,6 @@
 #ifndef CRPROPA_GEOMETRY_H
 #define CRPROPA_GEOMETRY_H
 
-#include <vector>
 #include <string>
 
 #include "crpropa/Candidate.h"

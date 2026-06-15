@@ -1,8 +1,7 @@
 #ifndef CRPROPA_EMDOUBLEPAIRPRODUCTION_H
 #define CRPROPA_EMDOUBLEPAIRPRODUCTION_H
 
-#include <fstream>
-#include <cmath>
+#include <string>
 
 #include "crpropa/Module.h"
 #include "crpropa/PhotonBackground.h"
