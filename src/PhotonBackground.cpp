@@ -4,26 +4,9 @@
 #include "crpropa/Common.h"
 
 #include "kiss/logger.h"
+#include "kiss/path.h"
 
 #include <fstream>
-#include <locale>
-#include <stdexcept>
-#include <limits>
-#include <cmath>
-#include <string>
-#include <sstream>
-#include <unordered_map>
-
-#if defined(__APPLE__) && defined(_LIBCPP_VERSION)
-		#include <filesystem>
-		namespace fs = std::__fs::filesystem;
-#elif defined(__GNUC__) && (__GNUC__ < 10)
-		#include <experimental/filesystem>
-		namespace fs = std::experimental::filesystem;
-#else
-		#include <filesystem>
-		namespace fs = std::filesystem;
-#endif
 
 namespace crpropa {
 
@@ -69,13 +52,10 @@ double TabularPhotonField::getPhotonDensity(double Ephoton, double z, const Vect
 double TabularPhotonField::getRedshiftScaling(double z) const {
 	if (!this->isRedshiftDependent)
 		return 1.;
- 
 	if (z < this->redshifts.front())
 		return 1.;
- 
 	if (z > this->redshifts.back())
 		return 0.;
- 
 	return interpolate(z, this->redshifts, this->redshiftScalings);
 }
 
@@ -98,9 +78,7 @@ void TabularPhotonField::readPhotonEnergy(std::string filePath) {
 		if ((line.size() > 0) & (line[0] != '#') )
 			this->photonEnergies.push_back(std::stod(line));
 	}
-
 	infile.close();
-	
 }
 
 void TabularPhotonField::readPhotonDensity(std::string filePath) {
@@ -114,7 +92,6 @@ void TabularPhotonField::readPhotonDensity(std::string filePath) {
 		if ((line.size() > 0) & (line[0] != '#') )
 			this->photonDensity.push_back(std::stod(line));
 	}
-	
 	infile.close();
 }
 
@@ -129,9 +106,7 @@ void TabularPhotonField::readRedshift(std::string filePath) {
 		if ((line.size() > 0) & (line[0] != '#') )
 			this->redshifts.push_back(std::stod(line));
 	}
-	
 	infile.close();
-	
 }
 
 void TabularPhotonField::initRedshiftScaling() {
@@ -150,9 +125,7 @@ void TabularPhotonField::initRedshiftScaling() {
 				n0 += (getPhotonDensity(e_j, 0) + getPhotonDensity(e_j1, 0)) / 2. * deltaLogE;
 			n += (getPhotonDensity(e_j, z) + getPhotonDensity(e_j1, z)) / 2. * deltaLogE;
 		}
-	
 		this->redshiftScalings.push_back(n / n0);
-		
 	}
 }
 
@@ -213,36 +186,42 @@ TabularSpatialPhotonField::TabularSpatialPhotonField(std::string fieldName, ref_
 	this->isPositionDependent = true;
 	this->surface = surface;
 	
-	fs::path dirE = getDataPath("") + "Scaling/" + this->fieldName + "/photonEnergy/";
-	if (!fs::exists(dirE)) {
+	std::string dirE = getDataPath("") + "Scaling/" + this->fieldName + "/photonEnergy/";
+	if (!is_directory(dirE)) {
 		std::cout << "Photon tables not found in " << dirE << std::endl;
 		return;
 	}
 	
 	std::unordered_map<int, Vector3d> photonDict;
 	int iFile = 0;
+
+	std::vector<std::string> dirsE;
+	if(!list_directory(dirE, dirsE))
+		throw std::runtime_error("Could not find any files in " + dirE + "!\n");
 	
-	for (auto const& dir_entry : fs::directory_iterator{dirE}) {
-		std::vector<double> vE = readPhotonEnergy(dir_entry.path().string());
+	for (auto const& dir_entry : dirsE) {
+		std::vector<double> vE = readPhotonEnergy(dir_entry);
 		
 		this->photonEnergies = vE;
 		break;
 	}
 	
-	fs::path dirD = getDataPath("") + "Scaling/" + this->fieldName + "/photonDensity/";
-	
-	if (!fs::exists(dirD)) {
+	std::string dirD = getDataPath("") + "Scaling/" + this->fieldName + "/photonDensity/";
+	if (!is_directory(dirD)) {
 		std::cout << "Photon tables not found in " << dirD << std::endl;
 		return;
 	}
+
+	std::vector<std::string> dirsD;
+	if(!list_directory(dirD, dirsD))
+		throw std::runtime_error("Could not find any files in " + dirD + "!\n");
 	
-	for (auto const& dir_entry : fs::directory_iterator{dirD}) {
+	for (auto const& dir_entry : dirsD) {
 		double x, y, z;
 		std::string str;
 		std::stringstream ss;
 		
-		
-		std::string filename = splitFilename(dir_entry.path().string());
+		std::string filename = splitFilename(dir_entry);
 		ss << filename;
 		
 		//Getline function to take and store the x, y, z coordinates of each node
@@ -271,7 +250,7 @@ TabularSpatialPhotonField::TabularSpatialPhotonField(std::string fieldName, ref_
 		photonDict[iFile] = vPos;
 		iFile = iFile + 1;
 		
-		std::vector<double> vD = readPhotonDensity(dir_entry.path().string());
+		std::vector<double> vD = readPhotonDensity(dir_entry);
 		this->photonDensity.push_back(vD);
 	}
 	
@@ -280,7 +259,6 @@ TabularSpatialPhotonField::TabularSpatialPhotonField(std::string fieldName, ref_
 	
 	this->photonDict = photonDict;
 	checkInputData();
-	
 }
 
 void TabularSpatialPhotonField::setSurface(ref_ptr<Surface> surface) {

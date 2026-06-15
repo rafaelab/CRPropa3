@@ -3,32 +3,17 @@
 #include "crpropa/Random.h"
 #include "crpropa/Common.h"
 
-#include <fstream>
-#include <locale>
-#include <limits>
-#include <stdexcept>
-#include <filesystem>
-#include <string>
-#include <sstream>
-#include <unordered_map>
 #include <vector>
-
-#if defined(__APPLE__) && defined(_LIBCPP_VERSION)
-	namespace fs = std::__fs::filesystem;
-#else
-	namespace fs = std::filesystem;
-#endif
+#include <cmath>
 
 namespace crpropa {
 
 EMDoublePairProduction::EMDoublePairProduction(ref_ptr<PhotonField> photonField, bool haveElectrons, double thinning, double limit, ref_ptr<Surface> surface) {
-
 	setSurface(surface);
 	setPhotonField(photonField);
 	setHaveElectrons(haveElectrons);
 	setLimit(limit);
 	setThinning(thinning);
-	
 }
 
 void EMDoublePairProduction::setPhotonField(ref_ptr<PhotonField> photonField) {
@@ -42,16 +27,13 @@ void EMDoublePairProduction::setPhotonField(ref_ptr<PhotonField> photonField) {
 		this->interactionRates = new InteractionRatesHomogeneous(
 			getDataPath("EMDoublePairProduction/rate_" + fname + ".txt")
 		);
-		
 	} else {
 		this->interactionRates = new InteractionRatesPositionDependent(
 			getDataPath("EMDoublePairProduction/"+fname+"/Rate/"),
 			"",
 			this->surface
 		);
-		
 	}
-	
 }
 
 void EMDoublePairProduction::setHaveElectrons(bool haveElectrons) {
@@ -67,11 +49,11 @@ void EMDoublePairProduction::setThinning(double thinning) {
 }
 
 void EMDoublePairProduction::setSurface(ref_ptr<Surface> surface) {
-		this->surface = surface;
+	this->surface = surface;
 }
 
 ref_ptr<Surface> EMDoublePairProduction::getSurface() const {
-		return this->surface;
+	return this->surface;
 }
 
 void EMDoublePairProduction::setInteractionRates(ref_ptr<InteractionRates> intRates) {
@@ -114,7 +96,6 @@ void EMDoublePairProduction::performInteraction(Candidate *candidate) const {
 			double w = 1. / pow(f, thinning);
 			candidate->addSecondary(-11, Ee / (1 + z), pos, w, interactionTag);
 		}
-
 }
 
 void EMDoublePairProduction::process(Candidate *candidate) const {

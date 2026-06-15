@@ -1,37 +1,22 @@
 #include "crpropa/module/EMPairProduction.h"
 #include "crpropa/Units.h"
 #include "crpropa/Random.h"
+#include "crpropa/Common.h"
 #include "kiss/logger.h"
 
-#include <fstream>
-#include <locale>
-#include <iomanip>
-#include <limits>
-#include <stdexcept>
-#include <filesystem>
-#include <string>
-#include <sstream>
-#include <unordered_map>
 #include <vector>
-
-#if defined(__APPLE__) && defined(_LIBCPP_VERSION)
-	namespace fs = std::__fs::filesystem;
-#else
-	namespace fs = std::filesystem;
-#endif
+#include <cmath>
 
 namespace crpropa {
 
 static const double mec2 = mass_electron * c_squared;
 
 EMPairProduction::EMPairProduction(ref_ptr<PhotonField> photonField, bool haveElectrons, double thinning, double limit, ref_ptr<Surface> surface) {
-
 	setSurface(surface);
 	setPhotonField(photonField);
 	setThinning(thinning);
 	setLimit(limit);
 	setHaveElectrons(haveElectrons);
-	
 }
 
 void EMPairProduction::setPhotonField(ref_ptr<PhotonField> photonField) {
@@ -45,7 +30,6 @@ void EMPairProduction::setPhotonField(ref_ptr<PhotonField> photonField) {
 			getDataPath("EMPairProduction/rate_" + fname + ".txt"),
 			getDataPath("EMPairProduction/cdf_" + fname + ".txt")
 		);
-				
 	} else {
 		this->interactionRates = new InteractionRatesPositionDependent(
 			getDataPath("EMPairProduction/"+fname+"/Rate/"),
@@ -68,11 +52,11 @@ void EMPairProduction::setThinning(double thinning) {
 }
 
 void EMPairProduction::setSurface(ref_ptr<Surface> surface) {
-		this->surface = surface;
+	this->surface = surface;
 }
 
 ref_ptr<Surface> EMPairProduction::getSurface() const {
-		return this->surface;
+	return this->surface;
 }
 
 void EMPairProduction::setInteractionRates(ref_ptr<InteractionRates> intRates) {
@@ -230,7 +214,7 @@ void EMPairProduction::performInteraction(Candidate *candidate) const {
 	if (random.rand() < pow(1 - f, thinning)) {
 		double w = 1. / pow(1 - f, thinning);
 		candidate->addSecondary(-11, Ee / (1 + z), pos, w, interactionTag);
-	}	
+	}
 }
 
 void EMPairProduction::process(Candidate *candidate) const {
@@ -265,7 +249,6 @@ void EMPairProduction::process(Candidate *candidate) const {
 		}
 		step -= randDistance;
 	} while (step > 0.);
-	
 }
 
 void EMPairProduction::setInteractionTag(std::string tag) {

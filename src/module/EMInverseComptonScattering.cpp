@@ -3,37 +3,19 @@
 #include "crpropa/Random.h"
 #include "crpropa/Common.h"
 
-#include "crpropa/InteractionRates.h"
-
-#include <fstream>
-#include <locale>
-#include <iomanip>  // Required for std::fixed and std::setprecision
-#include <limits>
-#include <stdexcept>
-#include <filesystem>
-#include <string>
-#include <sstream>
-#include <unordered_map>
 #include <vector>
-
-#if defined(__APPLE__) && defined(_LIBCPP_VERSION)
-	namespace fs = std::__fs::filesystem;
-#else
-	namespace fs = std::filesystem;
-#endif
+#include <cmath>
 
 namespace crpropa {
 
 static const double mec2 = mass_electron * c_squared;
 
 EMInverseComptonScattering::EMInverseComptonScattering(ref_ptr<PhotonField> photonField, bool havePhotons, double thinning, double limit, ref_ptr<Surface> surface) {
-
 	setSurface(surface);
 	setPhotonField(photonField);
 	setHavePhotons(havePhotons);
 	setLimit(limit);
 	setThinning(thinning);
-	
 }
 
 void EMInverseComptonScattering::setPhotonField(ref_ptr<PhotonField> photonField) {
@@ -47,7 +29,6 @@ void EMInverseComptonScattering::setPhotonField(ref_ptr<PhotonField> photonField
 			getDataPath("EMInverseComptonScattering/rate_" + fname + ".txt"),
 			getDataPath("EMInverseComptonScattering/cdf_" + fname + ".txt")
 		);
-
 	} else {
 		this->interactionRates = new InteractionRatesPositionDependent(
 			getDataPath("EMInverseComptonScattering/" + fname + "/Rate/"),
@@ -70,11 +51,11 @@ void EMInverseComptonScattering::setThinning(double thinning) {
 }
 
 void EMInverseComptonScattering::setSurface(ref_ptr<Surface> surface) {
-		this->surface = surface;
+	this->surface = surface;
 }
 
 ref_ptr<Surface> EMInverseComptonScattering::getSurface() const {
-		return this->surface;
+	return this->surface;
 }
 
 void EMInverseComptonScattering::setInteractionRates(ref_ptr<InteractionRates> intRates) {
@@ -202,7 +183,6 @@ void EMInverseComptonScattering::performInteraction(Candidate *candidate) const 
 	
 	// update the primary particle energy; do this after adding the secondary to correctly set the secondary's parent
 	candidate->current.setEnergy(Enew / (1 + z));
-	
 }
 
 void EMInverseComptonScattering::process(Candidate *candidate) const {
@@ -240,7 +220,6 @@ void EMInverseComptonScattering::process(Candidate *candidate) const {
 		// repeat with remaining step
 		step -= randDistance;
 	} while (step > 0);
-	
 }
 
 void EMInverseComptonScattering::setInteractionTag(std::string tag) {

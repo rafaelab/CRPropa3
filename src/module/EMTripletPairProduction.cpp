@@ -3,30 +3,19 @@
 #include "crpropa/Random.h"
 #include "crpropa/Common.h"
 
-#include <fstream>
-#include <locale>
-#include <limits>
-#include <stdexcept>
-#include <filesystem>
-
-#if defined(__APPLE__) && defined(_LIBCPP_VERSION)
-	namespace fs = std::__fs::filesystem;
-#else
-	namespace fs = std::filesystem;
-#endif
+#include <vector>
+#include <cmath>
 
 namespace crpropa {
 
 static const double mec2 = mass_electron * c_squared;
 
 EMTripletPairProduction::EMTripletPairProduction(ref_ptr<PhotonField> photonField, bool haveElectrons, double thinning, double limit, ref_ptr<Surface> surface) {
-
 	setSurface(surface);
 	setPhotonField(photonField);
 	setHaveElectrons(haveElectrons);
 	setLimit(limit);
 	setThinning(thinning);
-	
 }
 
 void EMTripletPairProduction::setPhotonField(ref_ptr<PhotonField> photonField) {
@@ -38,7 +27,6 @@ void EMTripletPairProduction::setPhotonField(ref_ptr<PhotonField> photonField) {
 			getDataPath("EMTripletPairProduction/rate_" + fname + ".txt"),
 			getDataPath("EMTripletPairProduction/cdf_" + fname + ".txt")
 		);
-
 	} else {
 		this->interactionRates = new InteractionRatesPositionDependent(
 			getDataPath("EMTripletPairProduction/"+fname+"/Rate/"),
@@ -61,11 +49,11 @@ void EMTripletPairProduction::setThinning(double thinning) {
 }
 
 void EMTripletPairProduction::setSurface(ref_ptr<Surface> surface) {
-		this->surface = surface;
+	this->surface = surface;
 }
 
 ref_ptr<Surface> EMTripletPairProduction::getSurface() const {
-		return this->surface;
+	return this->surface;
 }
 
 void EMTripletPairProduction::setInteractionRates(ref_ptr<InteractionRates> intRates) {
@@ -129,7 +117,6 @@ void EMTripletPairProduction::performInteraction(Candidate *candidate) const {
 	// Update the primary particle energy.
 	// This is done after adding the secondaries to correctly set the secondaries parent
 	candidate->current.setEnergy((E - 2 * Epp) / (1. + z));
-	
 }
 
 void EMTripletPairProduction::process(Candidate *candidate) const {
@@ -164,7 +151,6 @@ void EMTripletPairProduction::process(Candidate *candidate) const {
 		performInteraction(candidate);
 		step -= randDistance;
 	} while (step > 0.);
-	
 }
 
 void EMTripletPairProduction::setInteractionTag(std::string tag) {
