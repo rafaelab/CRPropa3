@@ -78,11 +78,11 @@ std::string getDataPath(std::string filename) {
 
 std::string getInstallPrefix()
 {
-  std::string _path = "";
-  #ifdef CRPROPA_INSTALL_PREFIX
-	_path += CRPROPA_INSTALL_PREFIX;
-  #endif
-  return _path;
+	std::string _path = "";
+	#ifdef CRPROPA_INSTALL_PREFIX
+		_path += CRPROPA_INSTALL_PREFIX;
+	#endif
+	return _path;
 };
 
 double interpolate(double x, const std::vector<double> &X,

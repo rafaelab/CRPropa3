@@ -147,7 +147,7 @@ list(APPEND CRPROPA_EXTRA_LIBRARIES kiss)
 list(APPEND CRPROPA_EXTRA_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/libs/kiss/include)
 
 # nanoflann (provided)
-list(APPEND CRPROPA_EXTRA_INCLUDES libs/nanoflann/include)
+list(APPEND CRPROPA_EXTRA_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/libs/nanoflann/include)
 
 # HepID (provided)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/libs/HepPID)
@@ -339,7 +339,7 @@ CRPropa should compile, but will likely not work properly! Please install data f
 endif()
 
 # ----------------------------------------------------------------------------
-# Library and Binary 
+# Library and Binary
 # ----------------------------------------------------------------------------
 file(GLOB_RECURSE CRPROPA_INCLUDES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} include/*.h)
 # set CRPROPA_EXTRA_INCLUDES as cache variable to hand it over when used as subproject
@@ -570,6 +570,7 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION ${CMAKE_INSTA
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/ DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.h")
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data/ DESTINATION ${CMAKE_INSTALL_PREFIX}/share/crpropa/ PATTERN ".git" EXCLUDE)
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/libs/kiss/include/ DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/libs/nanoflann/include/ DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 
 # ------------------------------------------------------------------
 # Documentation
