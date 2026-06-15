@@ -170,6 +170,9 @@ void EMPairProduction::performInteraction(Candidate *candidate) const {
 	double E = candidate->current.getEnergy() * (1 + z);
 	Vector3d position = candidate->current.getPosition();
 	
+	// cosmic ray photon is lost if interaction
+	candidate->setActive(false);
+	
 	// check if secondary electron pair needs to be produced
 	if (not haveElectrons)
 		return;
@@ -227,11 +230,7 @@ void EMPairProduction::performInteraction(Candidate *candidate) const {
 	if (random.rand() < pow(1 - f, thinning)) {
 		double w = 1. / pow(1 - f, thinning);
 		candidate->addSecondary(-11, Ee / (1 + z), pos, w, interactionTag);
-	}
-	
-	// cosmic ray photon is lost after interacting
-	candidate->setActive(false);
-	
+	}	
 }
 
 void EMPairProduction::process(Candidate *candidate) const {
