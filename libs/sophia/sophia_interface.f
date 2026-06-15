@@ -2568,45 +2568,55 @@ C...Calculate maximum weight for ND-particle decay
 
 C...generation of the masses, compute weight, if rejected try again
 240   RORD(1) = 1.D0
-      DO 260 IL1=2,ND-1
-      RSAV = RNDM(0)
-      DO 250 IL2=IL1-1,1,-1
-      IF(RSAV.LE.RORD(IL2))   GOTO 260
-250     RORD(IL2+1)=RORD(IL2)
+      DO IL1=2,ND-1
+        RSAV = RNDM(0)
+        DO IL2=IL1-1,1,-1
+          IF(RSAV.LE.RORD(IL2))   GOTO 260
+          RORD(IL2+1)=RORD(IL2)
+        ENDDO
 260     RORD(IL2+1)=RSAV
+      ENDDO
       RORD(ND) = 0.D0
       WT = 1.D0
-      DO 270 IL=ND-1,1,-1
-      PV(IL,5)=PV(IL+1,5)+P(IL,5)+(RORD(IL)-RORD(IL+1))*(PV(1,5)-PS)
-270   WT=WT*PAWT(PV(IL,5),PV(IL+1,5),P(IL,5))
+      DO IL=ND-1,1,-1
+        PV(IL,5)=PV(IL+1,5)+P(IL,5)+(RORD(IL)-RORD(IL+1))*(PV(1,5)-PS)
+        WT=WT*PAWT(PV(IL,5),PV(IL+1,5),P(IL,5))
+      ENDDO
       IF (WT.LT.RNDM(0)*WWTMAX)   GOTO 240
 
 C...Perform two particle decays in respective cm frame
-280   DO 300 IL=1,ND-1
-      PA=PAWT(PV(IL,5),PV(IL+1,5),P(IL,5))
-      UE(3)=2.D0*RNDM(0)-1.D0
-      PHI=2.D0*PI*RNDM(0)
-      UT = SQRT(1.D0-UE(3)**2)
-      UE(1) = UT*COS(PHI)
-      UE(2) = UT*SIN(PHI)
-      DO 290 J=1,3
-      P(IL,J)=PA*UE(J)
-290   PV(IL+1,J)=-PA*UE(J)
-      P(IL,4)=SQRT(PA**2+P(IL,5)**2)
-300   PV(IL+1,4)=SQRT(PA**2+PV(IL+1,5)**2)
+280   DO IL=1,ND-1
+        PA=PAWT(PV(IL,5),PV(IL+1,5),P(IL,5))
+        UE(3)=2.D0*RNDM(0)-1.D0
+        PHI=2.D0*PI*RNDM(0)
+        UT = SQRT(1.D0-UE(3)**2)
+        UE(1) = UT*COS(PHI)
+        UE(2) = UT*SIN(PHI)
+        DO J=1,3
+          P(IL,J)=PA*UE(J)
+          PV(IL+1,J)=-PA*UE(J)
+        ENDDO
+        P(IL,4)=SQRT(PA**2+P(IL,5)**2)
+        PV(IL+1,4)=SQRT(PA**2+PV(IL+1,5)**2)
+      ENDDO
 
 C...Lorentz transform decay products to lab frame
-      DO 310 J=1,4
-310   P(ND,J)=PV(ND,J)
-      DO 340 IL=ND-1,1,-1
-      DO 320 J=1,3
-320   BE(J)=PV(IL,J)/PV(IL,4)
-      GA=PV(IL,4)/PV(IL,5)
-      DO 340 I=IL,ND
-      BEP = BE(1)*P(I,1)+BE(2)*P(I,2)+BE(3)*P(I,3)
-      DO 330 J=1,3
-330   P(I,J)=P(I,J)+GA*(GA*BEP/(1.+GA)+P(I,4))*BE(J)
-340   P(I,4)=GA*(P(I,4)+BEP)
+      DO J=1,4
+        P(ND,J)=PV(ND,J)
+      ENDDO
+      DO IL=ND-1,1,-1
+        DO J=1,3
+          BE(J)=PV(IL,J)/PV(IL,4)
+        ENDDO
+        GA=PV(IL,4)/PV(IL,5)
+        DO I=IL,ND
+          BEP = BE(1)*P(I,1)+BE(2)*P(I,2)+BE(3)*P(I,3)
+          DO J=1,3
+            P(I,J)=P(I,J)+GA*(GA*BEP/(1.+GA)+P(I,4))*BE(J)
+          ENDDO
+          P(I,4)=GA*(P(I,4)+BEP)
+        ENDDO
+      ENDDO
 
 C...Weak decays
         IF (MAT .EQ. 1)  THEN
@@ -2621,14 +2631,17 @@ C...Weak decays
 
 C...Boost back for rapidly moving particle
       IF (MBST .EQ. 1)   THEN
-         DO 440 J=1,3
-440      BE(J)=P0(J)/P0(4)
-         GA= P0(4)/P0(5)
-         DO 460 I=1,ND
-         BEP=BE(1)*P(I,1)+BE(2)*P(I,2)+BE(3)*P(I,3)
-         DO 450 J=1,3
-450         P(I,J)=P(I,J)+GA*(GA*BEP/(1.+GA)+P(I,4))*BE(J)
-460         P(I,4)=GA*(P(I,4)+BEP)
+        DO J=1,3
+          BE(J)=P0(J)/P0(4)
+        ENDDO
+        GA= P0(4)/P0(5)
+        DO I=1,ND
+          BEP=BE(1)*P(I,1)+BE(2)*P(I,2)+BE(3)*P(I,3)
+          DO J=1,3
+            P(I,J)=P(I,J)+GA*(GA*BEP/(1.+GA)+P(I,4))*BE(J)
+          ENDDO
+          P(I,4)=GA*(P(I,4)+BEP)
+        ENDDO
       ENDIF
 
 C...labels for antiparticle decay
@@ -2804,8 +2817,9 @@ C********************************************************************
       IF(RNDM(0).GT.Y**(F-1.D0)) GOTO 10
    40 IF(N.EQ.0) GOTO 70
    50 Z = 1.D0
-      DO 60 I = 1,N
-   60 Z = Z*RNDM(0)
+      DO I = 1,N
+        Z = Z*RNDM(0)
+      ENDDO
       Y = Y-LOG(Z+1.D-7)
    70 PO_RNDGAM = Y/ALAM
 

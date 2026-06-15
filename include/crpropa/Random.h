@@ -92,7 +92,7 @@ namespace crpropa {
 
  Mersenne Twister random number generator -- a C++ class Random
  Based on code by Makoto Matsumoto, Takuji Nishimura, and Shawn Cokus
- Richard J. Wagner  v1.0  15 May 2003  rjwagner@writeme.com
+ Richard J. Wagner  v1.0  15 May 2003  rjwagner\@writeme.com
  */
 class Random {
 public:

@@ -1,5 +1,6 @@
 #ifndef CRPROPA_VECTOR3_H
 #define CRPROPA_VECTOR3_H
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION 
 
 #include <iostream>
 #include <cmath>
@@ -12,7 +13,6 @@
 #endif // CRPROPA_HAVE_PYTHON
 #include <unistd.h>
 
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION 
 
 namespace crpropa {
 
@@ -420,7 +420,7 @@ public:
 	
 	const std::string getDescription() {
 		char buffer[256];
-		sprintf(buffer, "Vector(%.6G, %.6G, %.6G)", data[0], data[1], data[2]);
+		snprintf(buffer, 256, "Vector(%.6G, %.6G, %.6G)", data[0], data[1], data[2]);
 		return buffer;
 	}
 

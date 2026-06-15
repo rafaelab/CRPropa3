@@ -222,7 +222,7 @@ void HDF5Output::open(const std::string& filename) {
 
 		attr_space = H5Screate_simple(0, dims, NULL);
 		char nameBuffer[256];
-		sprintf(nameBuffer, "SEED_%03lu", i);
+		snprintf(nameBuffer, 256, "SEED_%03lu", i);
 		KISS_LOG_DEBUG << "Creating HDF5 attribute: " << nameBuffer << " with dimensions " << dims[0] << "x" << dims[1] ;
 
 		version_attr = H5Acreate2(dset, nameBuffer, type, attr_space, H5P_DEFAULT, H5P_DEFAULT);
