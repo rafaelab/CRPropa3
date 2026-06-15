@@ -68,18 +68,19 @@ void ModuleList::run(Candidate* candidate, bool recursive, bool secondariesFirst
 
 		// propagate all secondaries before next step of primary
 		if (recursive and secondariesFirst) {
-#pragma omp taskloop num_tasks(2 * omp_get_max_threads()) untied
+			#pragma omp taskloop num_tasks(2 * omp_get_max_threads()) untied
 			for (size_t i = 0; i < candidate->secondaries.size(); i++) {
 				if (g_cancel_signal_flag != 0)
 					continue;
 				run(candidate->secondaries[i], recursive, secondariesFirst);
 			}
+			#pragma omp taskwait
 		}
 	}
 
 	// propagate secondaries after completing primary
 	if (recursive and not secondariesFirst) {
-#pragma omp taskloop num_tasks(2 * omp_get_max_threads()) untied
+		#pragma omp taskloop num_tasks(2 * omp_get_max_threads()) untied
 		for (size_t i = 0; i < candidate->secondaries.size(); i++) {
 			if (g_cancel_signal_flag != 0)
 				continue;
