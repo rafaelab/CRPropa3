@@ -1,16 +1,4 @@
-## PR #535 position dependent photon field for EM interactions (optimised)
-
-### fixes after JanNiklasB comments:
-* The amount of includes has been optimised
-* The splitFilename has been added to Common.h 
-* Comments have been added on functions
-* The flags for the PhotonBackground are more explicit and efficient (the redundant if sentences have been removed) 
-* The CMakeFiles.txt has been implemented following the comments
-
-### in the github PR the reasons why in the new design the InteractionRates class have been implemented for both homogeneous and inhomogeneous case have been elaborated.  
-
-
-## CRPropa vNext
+## CRPropa 3.2.2
 
 ### Bug fixes:
 * Fixed sign for exponential decay of magn. field strength with Galactic height in LogarithmicSpiralField
