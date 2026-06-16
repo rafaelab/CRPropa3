@@ -24,7 +24,13 @@ class PhotonField: public Referenced {
 	
 public:
 	
-	/// Constructor
+	/** Constructor
+	 * Sets the following values per default:
+	 * @var fieldName = "AbstractPhotonField";
+	 * @var isRedshiftDependent = false;
+	 * @var isPositionDependent = false;
+	 * @var surface = nullptr;
+	 */
 	PhotonField() {
 		this->fieldName = "AbstractPhotonField";
 		this->isRedshiftDependent = false;
@@ -40,8 +46,17 @@ public:
 	 @param pos			position (if position dependent, default = Vector3d(0,0,0))
 	 */
 	virtual double getPhotonDensity(double ePhoton, double z = 0., const Vector3d &pos = Vector3d(0.,0.,0.)) const = 0;
+	/** Returns the minimum photon energy
+	 * @param z  Redshift
+	 * @param pos  Position 
+	 */
 	virtual double getMinimumPhotonEnergy(double z, const Vector3d &pos = Vector3d(0.,0.,0.)) const = 0;
+	/** Returns the maximum photon energy
+	 * @param z  Redshift
+	 * @param pos  Position 
+	 */
 	virtual double getMaximumPhotonEnergy(double z, const Vector3d &pos = Vector3d(0.,0.,0.)) const = 0;
+	/// Returns name of the current used photon field
 	virtual inline std::string getFieldName() const {
 		return this->fieldName;
 	}
@@ -55,27 +70,30 @@ public:
 		return 1.;
 	};
 	
+	/// Returns if the derived field has a redshift dependency or not
 	inline bool hasRedshiftDependence() const {
 		return this->isRedshiftDependent;
 	}
-	
+	/// Returns if the derived field has a position dependency or not
 	inline bool hasPositionDependence() const {
 		return this->isPositionDependent;
 	}
-	
+	/// Returns the set surface
 	inline ref_ptr<Surface> getSurface() const {
 		return this->surface;
 	}
-	
+	/** Sets the name of the currently used photon field
+	 * @param fieldName  Name of the currently used photon field
+	 */
 	void setFieldName(std::string fieldName) {
 		this->fieldName = fieldName;
 	}
 	
 protected:
-	std::string fieldName;
-	bool isRedshiftDependent;
-	bool isPositionDependent;
-	ref_ptr<Surface> surface;
+	std::string fieldName;  /**< Name of the currently used field */
+	bool isRedshiftDependent;  /**< If photon field is redshift dependent */
+	bool isPositionDependent;  /**< If photon field is position dependent */
+	ref_ptr<Surface> surface;  /**< Currently used Surface */
 	
 };
 
