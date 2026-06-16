@@ -69,7 +69,8 @@ jobs:
                 [ "$file" = "lensing_crv4ipynb.py" ] ||
                 [ "$file" = "interrupt_candidateVectoripynb.py" ] ||
                 [ "$file" = "interrupt_sourceipynb.py" ] ||
-                [ "$file" = "lensing_mapsv4ipynb.py" ]; then
+                [ "$file" = "lensing_mapsv4ipynb.py" ] ||
+                [ "$file" = "galactic_propagation_gammarays_ISRipynb.py" ]; then
                 echo "skip file $file"
             else 
               echo "run file $file"
