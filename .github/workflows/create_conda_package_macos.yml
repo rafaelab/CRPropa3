@@ -1,4 +1,4 @@
-name: create_conda_package
+name: create_conda_package_macos
 on:
   push:
     branches: 
