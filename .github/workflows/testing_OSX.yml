@@ -9,6 +9,7 @@ jobs:
         config:
           - name: "macos-14"
             os: macos-14 
+            fc: "gfortran-14"
             swig_builtin: "On" #uses swig 4.0.2
             py: "/usr/bin/python3" # python 3.14
     steps:
@@ -23,6 +24,8 @@ jobs:
          pip install numpy cmake
          pip show numpy # cross-check numpy version for Python_NumPy_INCLUDE_DIR
      - name: Set up the build
+       env:
+          FC: ${{ matrix.config.fc }}
        run: |
         mkdir build
         cd build
