@@ -16,7 +16,7 @@ jobs:
             py: "/usr/bin/python3" # python 3.14
     steps:
      - name: Checkout repository 
-       uses: actions/checkout@v4 
+       uses: actions/checkout@v6
      - name: Preinstall 
        run: | 
          brew install hdf5 fftw cfitsio muparser libomp swig 
@@ -39,8 +39,6 @@ jobs:
           -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/venv \
           -DENABLE_PYTHON=True \
           -DPython_EXECUTABLE=$GITHUB_WORKSPACE/venv/bin/python \
-          -DCMAKE_CXX_STANDARD=17 \
-          -DCMAKE_CXX_FLAGS="-std=c++17 -stdlib=libc++" \
           -DENABLE_TESTING=On \
           -DENABLE_SWIG_BUILTIN=${{ matrix.config.swig_builtin }} \
           -DPython_INSTALL_PACKAGE_DIR=$GITHUB_WORKSPACE/venv/lib/python3.14/site-packages
@@ -57,7 +55,7 @@ jobs:
          ctest --output-on-failure --repeat until-pass:3
      - name: Archive test results
        if: always()
-       uses: actions/upload-artifact@v4
+       uses: actions/upload-artifact@v7
        with:
          name: "test-report_${{matrix.config.name}}"
          path: build/Testing/Temporary/LastTest.log

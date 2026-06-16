@@ -17,7 +17,7 @@ jobs:
            py: "/usr/bin/python3" #python 3.10
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Preinstall
         run: |
           sudo apt-get update
@@ -44,7 +44,7 @@ jobs:
           ctest --output-on-failure --repeat until-pass:3
       - name: Archive test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: "test-report_${{matrix.config.name}}"
           path: build/Testing/Temporary/LastTest.log

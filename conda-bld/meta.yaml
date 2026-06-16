@@ -20,6 +20,7 @@ requirements:
     - cmake
     - ninja
     - swig
+    - pkgconfig
   
   host:
     # host only requirements

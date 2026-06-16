@@ -290,13 +290,13 @@ if(APPLE OR USE_ABSOLUTE_RPATH)
   set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
   set(ABSOLUTE_RPATH "${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX}")
   if(NOT IS_ABSOLUTE ${ABSOLUTE_RPATH})
-    set(ABSOLUTE_RPATH ${CMAKE_CURRENT_BINARY_DIR}/${ABSOLUTE_RPATH})
+    set(ABSOLUTE_RPATH ${CMAKE_BINARY_DIR}/${ABSOLUTE_RPATH})
   endif()
 
   list(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${ABSOLUTE_RPATH}" isSystemDir)
   if("${isSystemDir}" STREQUAL "-1")
     message(STATUS "Use absolute RPATH ${ABSOLUTE_RPATH}")
-    set(CMAKE_INSTALL_RPATH "${ABSOLUTE_RPATH}")
+    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH}:${ABSOLUTE_RPATH}")
   endif("${isSystemDir}" STREQUAL "-1")
 endif()
 
@@ -556,7 +556,16 @@ if(ENABLE_PYTHON AND Python_FOUND)
     OUTPUT_NAME "_crpropa"
     SUFFIX ".so"
   )
-  
+
+  if(APPLE)
+    set_target_properties(crpropa-swig PROPERTIES
+      INSTALL_RPATH "@loader_path;@loader_path/../../${PYTHON_PROJECT}/.libs"
+    )
+    set_property(TARGET crpropa-swig APPEND PROPERTY
+      LINK_FLAGS "-flat_namespace -undefined suppress"
+    )
+  endif()
+
   if(BUILD_DOC AND DOXYGEN_FOUND)
     add_dependencies(crpropa-swig docstrings_from_doxy)
   endif(BUILD_DOC AND DOXYGEN_FOUND)
