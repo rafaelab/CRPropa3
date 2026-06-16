@@ -1,4 +1,4 @@
-## CRPropa vNext
+## CRPropa 3.2.2
 
 ### Bug fixes:
 * Fixed sign for exponential decay of magn. field strength with Galactic height in LogarithmicSpiralField
