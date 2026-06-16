@@ -146,8 +146,8 @@ public:
 private:
 	module_list_t modules; /**< Vector containing reference pointer of all modules added with ModuleList::add */
 	bool showProgress; /**< Whether to show the progess bar or not */
-	Output* interruptAction; /** The output module to call when CRPropa receives a userinterrupt signal */
-	bool haveInterruptAction = false; /** Whether a interrupt action is set or not */
+	Output* interruptAction; /**< The output module to call when CRPropa receives a userinterrupt signal */
+	bool haveInterruptAction = false; /**< Whether a interrupt action is set or not */
 	std::vector<int> notFinished; /**< List with not finished numbers of candidates */
 };
 

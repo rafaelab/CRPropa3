@@ -62,14 +62,14 @@ public:
  */
 class AbstractCondition: public Module {
 protected:
-	ref_ptr<Module> rejectAction, /**< Module to call when Candidate is rejected */
-		acceptAction; /**< Module to call when Candidate is accepted */
-	bool makeRejectedInactive, /**< If to make Candidate inactive on rejection */
-		makeAcceptedInactive; /**< If to make Candidate inactive on acception */
-	std::string rejectFlagKey, /**< key for the Candidate property that should be set on rejection */
-		rejectFlagValue, /**< value for the Candidate property that should be set on rejection */
-		acceptFlagKey, /**< key for the Candidate property that should be set on acception */
-		acceptFlagValue; /**< value for the Candidate property that should be set on acception */
+	ref_ptr<Module> rejectAction; /**< Module to call when Candidate is rejected */
+	ref_ptr<Module> acceptAction; /**< Module to call when Candidate is accepted */
+	bool makeRejectedInactive; /**< If to make Candidate inactive on rejection */
+	bool makeAcceptedInactive; /**< If to make Candidate inactive on acception */
+	std::string rejectFlagKey; /**< key for the Candidate property that should be set on rejection */
+	std::string rejectFlagValue; /**< value for the Candidate property that should be set on rejection */
+	std::string acceptFlagKey; /**< key for the Candidate property that should be set on acception */
+	std::string acceptFlagValue; /**< value for the Candidate property that should be set on acception */
 
 	/** Function to reject particle
 	 * This function rejects the particle, what that means is determined by
