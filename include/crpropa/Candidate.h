@@ -53,6 +53,15 @@ private:
 	uint64_t serialNumber;
 
 public:
+	/** Constructor
+	 * @param id  Particle ID after the 2012 Monte Carlo nuclear code scheme, use nuleusId(A,Z) for nuclei
+	 * @param energy  Particle energy
+	 * @param position  Start position
+	 * @param direction  Start direction
+	 * @param z  Redshift
+	 * @param weight  Statistical weight (important property for some modules, usally just 1)
+	 * @param tagOrigin  Usually either "PRIM" for primary particle or "SEC" for secondary particle, but can be anything
+	 */
 	Candidate(
 		int id = 0,
 		double energy = 0,
@@ -66,15 +75,27 @@ public:
 	/**
 	 Creates a candidate, initializing the Candidate::source, Candidate::created,
 	 Candidate::previous and Candidate::current state with the argument.
+	 @param state  ParticleState for source, created, previous and current. Makes copies.
 	 */
 	Candidate(const ParticleState &state);
 
+	/** Checks if particle is still active */
 	bool isActive() const;
+	/** Sets particle active or unactive, in unactive state it is ignored by all modules */
 	void setActive(bool b);
 
+	/** Sets trajectory length
+	 * Mostly used by propagators over setCurrentStep, but usefull if particle should start
+	 * at a later position.
+	 * @param length  Trajectory length in meter
+	 */
 	void setTrajectoryLength(double length);
+	/** Returns current trajectory length */
 	double getTrajectoryLength() const;
 	
+	/** Returns absolute of current velocity
+	 * To get the current velocity vector you can use Candidate.current.getVelocity()
+	 */
 	double getVelocity() const;
 
 	void setRedshift(double z);
@@ -85,21 +106,28 @@ public:
 	 Weights are calculated for each tracked secondary.
 	 */
 	void setWeight(double weight);
+	/** Updates Weight
+	 * Multiplies the current weight with the given weight
+	 */
     void updateWeight(double weight);
 	double getWeight() const;
 
 	/**
-	 Sets the current step and increases the trajectory length accordingly.
+	 Sets the current step and increases the trajectory length and time accordingly.
 	 Only the propagation module should use this.
+	 @param step  Current step in meter
 	 */
 	void setCurrentStep(double step);
+	/** @return Current stepsize in meter */
 	double getCurrentStep() const;
 
 	/**
 	 Sets the proposed next step.
 	 Only the propagation module should use this.
+	 @param step  Proposed next stepsize in meter
 	 */
 	void setNextStep(double step);
+	/** @return  Proposed next stepsize in meter */
 	double getNextStep() const;
 
 	/**
@@ -110,34 +138,55 @@ public:
 
 	/**
 	 Sets the time of the candidate.
+	 This is done automatically together with the increase of TrajectoryLength,
+	 since CRPropa assumes lightspeed in every case both TrajectoryLength and Time are equal.
+	 @param t  Time in seconds
 	 */
 	void setTime(double t);
+	/** Returns the time of the candidate.
+	 * The time is tracked alongside TrajectoryLength by dividing the current TrajecoryLength by c
+	 * @return Current time in seconds
+	 */
 	double getTime() const;
 
 	/**
 	 Make a bid for the next step size: the lowest wins.
+	 @param step  The bid in meter
 	 */
 	void limitNextStep(double step);
 
-	void setProperty(const std::string &name, const Variant &value);
-	const Variant &getProperty(const std::string &name) const;
-	bool removeProperty(const std::string &name);
-	bool hasProperty(const std::string &name) const;
+	/** Sets a arbitrary property
+	 * This function either creates a property if it does not exist or updates it.
+	 * @param key  Key to put into unordered_map
+	 * @param value  Any Variant object, Variant can represent a variety of data types so
+	 * that a property can have any basic datatype
+	 */
+	void setProperty(const std::string &key, const Variant &value);
+	/** Returns the value of the Property with given key
+	 * This function loops through the unordered_map and returns the first property fitting to
+	 * the provided key. If no key value pair is found it throws an error
+	 * @param key  Key to search for
+	 */
+	const Variant &getProperty(const std::string &key) const;
+	/** Tries to remove property that has given key
+	 * @return Returns true if property was removed successfully or false if not
+	 */
+	bool removeProperty(const std::string &key);
+	/** @return Returns true if property exists, false otherwise */
+	bool hasProperty(const std::string &key) const;
 
-	/**
-	 Add a new candidate to the list of secondaries.
-	 @param c Candidate
-
+	/** Add a new candidate to the list of secondaries.
 	 Adds a new candidate to the list of secondaries of this candidate.
 	 The secondaries Candidate::source and Candidate::previous state are set to the _source_ and _previous_ state of its parent.
 	 The secondaries Candidate::created and Candidate::current state are set to the _current_ state of its parent, except for the secondaries current energy and particle id.
 	 Trajectory length and redshift are copied from the parent.
+	 @param c Candidate
 	 */
 	void addSecondary(Candidate *c);
 	inline void addSecondary(ref_ptr<Candidate> c) { addSecondary(c.get()); };
 	/**
 	 Add a new candidate to the list of secondaries.
-	 @param id			particle ID of the secondary
+	 @param id			particle ID of the secondary after the 2012 Monte Carlo nuclear code scheme
 	 @param energy		energy of the secondary
 	 @param w			weight of the secondary
 	 @param tagOrigin 	tag of the secondary
@@ -145,35 +194,38 @@ public:
 	void addSecondary(int id, double energy, double w = 1., std::string tagOrigin = "SEC");
 	/**
 	 Add a new candidate to the list of secondaries.
-	 @param id			particle ID of the secondary
+	 @param id			particle ID of the secondary after the 2012 Monte Carlo nuclear code scheme
 	 @param energy		energy of the secondary
 	 @param position	start position of the secondary
 	 @param w			weight of the secondary
 	 @param tagOrigin 	tag of the secondary
 	 */
 	void addSecondary(int id, double energy, Vector3d position, double w = 1., std::string tagOrigin = "SEC");
+	/** Clears all stored secondaries (deletes them) */
 	void clearSecondaries();
 
 	std::string getDescription() const;
 
-	/** Unique (inside process) serial number (id) of candidate */
+	/** @return Returns a the unique serial number of the particle */
 	uint64_t getSerialNumber() const;
+	/** Sets a custom serial number
+	 * @param snr  Custom serial number
+	 */
 	void setSerialNumber(const uint64_t snr);
 
-	/** Serial number of candidate at source*/
+	/** @return Serial number of candidate at source*/
 	uint64_t getSourceSerialNumber() const;
 
-	/** Serial number of candidate at creation */
+	/** @return Serial number of candidate at creation */
 	uint64_t getCreatedSerialNumber() const;
 
 	/** Set the next serial number to use */
 	static void setNextSerialNumber(uint64_t snr);
 
-	/** Get the next serial number that will be assigned */
+	/** @return Get the next serial number that will be assigned */
 	static uint64_t getNextSerialNumber();
 
-	/**
-	 Create an exact clone of candidate
+	/** Create an exact clone of candidate
 	 @param recursive	recursively clone and add the secondaries
 	 */
 	ref_ptr<Candidate> clone(bool recursive = false) const;

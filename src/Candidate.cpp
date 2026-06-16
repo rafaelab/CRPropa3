@@ -86,7 +86,7 @@ void Candidate::setWeight(double w) {
 }
 
 void Candidate::updateWeight(double w) {
-  weight *= w;
+	weight *= w;
 }
 
 void Candidate::setCurrentStep(double lstep) {
