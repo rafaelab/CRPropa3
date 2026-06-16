@@ -15,7 +15,7 @@ jobs:
       # define steps to take
       steps: 
         - name: Checkout repository
-          uses: actions/checkout@v4
+          uses: actions/checkout@v6
         - name: Prerequirements
           run: |
             sudo apt-get update
@@ -43,7 +43,7 @@ jobs:
             make coverage
             tar -zcvf coverage.tar.gz coverageReport
         - name: archive documentation
-          uses: actions/upload-artifact@v4
+          uses: actions/upload-artifact@v7
           with:
             name: "coverage"
             path: | 

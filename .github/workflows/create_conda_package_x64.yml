@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Preinstall
         run: |
           set -ex
@@ -47,7 +47,7 @@ jobs:
             | tee build.log
       - name: Archive Build Logs
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: "Anaconda_Build_x64_Log"
           path: conda-bld/build.log
