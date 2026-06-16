@@ -20,7 +20,7 @@ jobs:
     # define steps to take
     steps: 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Prerequirements
         run: |
           sudo apt-get update
@@ -59,7 +59,7 @@ jobs:
         run: | 
           mv build/doc ~/final_doc
       - name: deploy documentation #deploys the documentation to the gh-pages branch
-        uses: JamesIves/github-pages-deploy-action@v4
+        uses: JamesIves/github-pages-deploy-action@v7
         with:
             folder: ~/final_doc
             
