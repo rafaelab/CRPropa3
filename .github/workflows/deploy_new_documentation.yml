@@ -59,7 +59,7 @@ jobs:
         run: | 
           mv build/doc ~/final_doc
       - name: deploy documentation #deploys the documentation to the gh-pages branch
-        uses: JamesIves/github-pages-deploy-action@v5
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
             folder: ~/final_doc
             

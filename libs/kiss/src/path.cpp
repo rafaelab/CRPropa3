@@ -171,7 +171,7 @@ std::string executable_path() {
 
 	#ifdef __linux__
 		size_t len = readlink("/proc/self/exe", buf, sizeof(buf)-1);
-	#else if defined(_WIN32)
+	#elif defined(_WIN32)
 		size_t len = ::GetModuleFileName(NULL, buf, sizeof(buf)-1 );
 	#endif  // __linux__
 
