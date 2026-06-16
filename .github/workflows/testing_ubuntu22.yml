@@ -10,9 +10,9 @@ jobs:
         config:
          - name: "ubuntu-22"
            os: ubuntu-22.04
-           cxx: "g++-11"
-           cc: "gcc-11"
-           fc: "gfortran-11"
+           cxx: "g++-17"
+           cc: "gcc-17"
+           fc: "gfortran-17"
            swig_builtin: "On" #uses swig 4.0.2
            py: "/usr/bin/python3" #python 3.10
     steps:
