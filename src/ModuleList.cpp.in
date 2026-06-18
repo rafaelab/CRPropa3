@@ -82,7 +82,9 @@ void ModuleList::run(Candidate* candidate, bool recursive, bool secondariesFirst
 			taskedSecondaries += candidate->secondaries.size();
 			
 			// wait for completion of tasked secondaries or continue with primary
-			if (waitForSecondaries) {#pragma omp taskwait;} 
+			if (waitForSecondaries) {
+				#pragma omp taskwait
+				} 
 		}
 	}
 
@@ -102,11 +104,11 @@ void ModuleList::run(Candidate* candidate, bool recursive, bool secondariesFirst
 		dumpCandidate(candidate);
 }
 
-void ModuleList::run(ref_ptr<Candidate> candidate, bool recursive, bool secondariesFirst) {
-	run((Candidate*) candidate, recursive, secondariesFirst);
+void ModuleList::run(ref_ptr<Candidate> candidate, bool recursive, bool secondariesFirst, bool waitForSecondaries) {
+	run((Candidate*) candidate, recursive, secondariesFirst, waitForSecondaries);
 }
 
-void ModuleList::run(const candidate_vector_t *candidates, bool recursive, bool secondariesFirst) {
+void ModuleList::run(const candidate_vector_t *candidates, bool recursive, bool secondariesFirst, bool waitForSecondaries) {
 	size_t count = candidates->size();
 
 #if _OPENMP
@@ -162,7 +164,7 @@ void ModuleList::run(const candidate_vector_t *candidates, bool recursive, bool 
 	}
 }
 
-void ModuleList::run(SourceInterface *source, size_t count, bool recursive, bool secondariesFirst) {
+void ModuleList::run(SourceInterface *source, size_t count, bool recursive, bool secondariesFirst, bool waitForSecondaries) {
 
 #if _OPENMP
 	std::cout << "crpropa::ModuleList: Number of Threads: " << omp_get_max_threads() << " Lizard " << std::endl;
