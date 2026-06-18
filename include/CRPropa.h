@@ -136,11 +136,6 @@
  * @{ @brief File outputs.
  * @}
  *
- * \defgroup MagneticLenses Magnetic Lenses
- * @{ @brief Lensing technique to account for deflections in the galactic
- * magnetic field.
- * @}
- *
  * \defgroup Acceleration Acceleration Processes
  * @{ @brief Modules and techniques to simualte particle acceleration
  *
