@@ -61,7 +61,7 @@ void ModuleList::process(ref_ptr<Candidate> candidate) const {
 	process((Candidate*) candidate);
 }
 
-void ModuleList::run(Candidate* candidate, bool recursive, bool secondariesFirst) {
+void ModuleList::run(Candidate* candidate, bool recursive, bool secondariesFirst, bool waitForSecondaries) {
 	
 	int taskedSecondaries = 0; //Secondaries already submitted as tasks for all threads
 	
@@ -78,7 +78,7 @@ void ModuleList::run(Candidate* candidate, bool recursive, bool secondariesFirst
 				run(candidate->secondaries[i], recursive, secondariesFirst);
 			}
 			taskedSecondaries += candidate->secondaries.size();
-			#pragma omp taskwait
+			if (waitForSecondaries) {#pragma omp taskwait;}
 		}
 	}
 
