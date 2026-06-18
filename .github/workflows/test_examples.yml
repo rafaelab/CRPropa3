@@ -60,16 +60,13 @@ jobs:
           PYTHONPATH: "/home/runner/.local"
           runfolder: "/home/runner/notebook_run"
         run: | 
-          cp doc/pages/example_notebooks/galactic_lensing/crpropa_output.txt "$runfolder"/
           cd "$runfolder"
           for file in *.py; do
             if [ "$file" = "custom-photon-fieldipynb.py" ] || 
                 [ "$file" = "MHD_modelsipynb.py" ] || 
                 [ "$file" = "density_grid_samplingipynb.py" ] ||
-                [ "$file" = "lensing_crv4ipynb.py" ] ||
                 [ "$file" = "interrupt_candidateVectoripynb.py" ] ||
-                [ "$file" = "interrupt_sourceipynb.py" ] ||
-                [ "$file" = "lensing_mapsv4ipynb.py" ]; then
+                [ "$file" = "interrupt_sourceipynb.py" ]; then
                 echo "skip file $file"
             else 
               echo "run file $file"
