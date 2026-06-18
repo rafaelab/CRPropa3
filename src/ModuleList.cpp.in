@@ -136,7 +136,7 @@ void ModuleList::run(const candidate_vector_t *candidates, bool recursive, bool 
 		}
 
 		try {
-			run(candidates->operator[](i), recursive);
+			run(candidates->operator[](i), recursive, secondariesFirst, waitForSecondaries);
 		} catch (std::exception &e) {
 			std::cerr << "Exception in crpropa::ModuleList::run: " << std::endl;
 			std::cerr << e.what() << std::endl;
@@ -202,7 +202,7 @@ void ModuleList::run(SourceInterface *source, size_t count, bool recursive, bool
 
 		if (candidate.valid()) {
 			try {
-				run(candidate, recursive);
+				run(candidate, recursive, secondariesFirst, waitForSecondaries);
 			} catch (std::exception &e) {
 				std::cerr << "Exception in crpropa::ModuleList::run: " << std::endl;
 				std::cerr << e.what() << std::endl;
