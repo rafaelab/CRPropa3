@@ -77,8 +77,12 @@ void ModuleList::run(Candidate* candidate, bool recursive, bool secondariesFirst
 					continue;
 				run(candidate->secondaries[i], recursive, secondariesFirst);
 			}
+
+			// increase counter of already tasked secondaries
 			taskedSecondaries += candidate->secondaries.size();
-			if (waitForSecondaries) {#pragma omp taskwait;}
+			
+			// wait for completion of tasked secondaries or continue with primary
+			if (waitForSecondaries) {#pragma omp taskwait;} 
 		}
 	}
 
