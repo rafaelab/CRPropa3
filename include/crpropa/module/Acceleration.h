@@ -122,13 +122,13 @@ class DirectedFlowOfScatterCenters : public StepLengthModifier {
 /// @class QuasiLinearTheory
 /// @brief Scales the steplength according to quasi linear theory.
 /// @details Following quasi-linear theory [Schlickeiser1989], the mean free
-/// path \f$\lambda\f$ of a
-///  particle with energy \f$E\f$ and charge \f$Z\f$ in a field with turbulence
-///  spectrum \f$\frac{k}{k_{\min}}^{-q}\f$ is
-///   \f$ \lambda = {\left(\frac{B}{\delta B}\right)}^2 {\left(R_G\;
-///   k_{\min}\right)}^{1-q} R_G \equiv \lambda_0 {\left( \frac{E}{1
-///   EeV}\frac{1}{Z} \right)}^{2-q} \f$
-///  where \f$R_G = \frac{E}{B Z}\f$ is the gyro-radius of the
+/// path \\f$\\lambda\\f$ of a
+///  particle with energy \\f$E\\f$ and charge \\f$Z\\f$ in a field with turbulence
+///  spectrum \\f$\\frac{k}{k_{\\min}}^{-q}\\f$ is
+///   \\f$ \\lambda = {\\left(\\frac{B}{\\delta B}\\right)}^2 {\\left(R_G\\;
+///   k_{\\min}\\right)}^{1-q} R_G \\equiv \\lambda_0 {\\left( \\frac{E}{1
+///   EeV}\\frac{1}{Z} \\right)}^{2-q} \\f$
+///  where \\f$R_G = \\frac{E}{B Z}\\f$ is the gyro-radius of the
 ///  particles.
 /// This class implements the rigidity dependent scaling factor used to modify
 /// the base step length.

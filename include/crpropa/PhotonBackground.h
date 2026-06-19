@@ -24,6 +24,13 @@ class PhotonField: public Referenced {
 	
 public:
 	
+	/** Constructor
+	 * Sets the following values per default:
+	 * @var fieldName = "AbstractPhotonField";
+	 * @var isRedshiftDependent = false;
+	 * @var isPositionDependent = false;
+	 * @var surface = nullptr;
+	 */
 	PhotonField() {
 		this->fieldName = "AbstractPhotonField";
 		this->isRedshiftDependent = false;
@@ -36,11 +43,21 @@ public:
 	 multiply with (1+z^3) for physical number density.
 	 @param ePhoton		photon energy [J]
 	 @param z			redshift (if redshift dependent, default = 0.)
+	 @param pos			position (if position dependent, default = Vector3d(0,0,0))
 	 */
 	virtual double getPhotonDensity(double ePhoton, double z = 0., const Vector3d &pos = Vector3d(0.,0.,0.)) const = 0;
+	/** Returns the minimum photon energy
+	 * @param z  Redshift
+	 * @param pos  Position 
+	 */
 	virtual double getMinimumPhotonEnergy(double z, const Vector3d &pos = Vector3d(0.,0.,0.)) const = 0;
+	/** Returns the maximum photon energy
+	 * @param z  Redshift
+	 * @param pos  Position 
+	 */
 	virtual double getMaximumPhotonEnergy(double z, const Vector3d &pos = Vector3d(0.,0.,0.)) const = 0;
-	virtual std::string getFieldName() const {
+	/// Returns name of the current used photon field
+	virtual inline std::string getFieldName() const {
 		return this->fieldName;
 	}
 	
@@ -49,31 +66,34 @@ public:
 	 (cf. CRPropa3-data/calc_scaling.py)
 	 @param z		redshift
 	 */
-	virtual double getRedshiftScaling(double z) const {
+	virtual inline double getRedshiftScaling(double z) const {
 		return 1.;
 	};
 	
-	bool hasRedshiftDependence() const {
+	/// Returns if the derived field has a redshift dependency or not
+	inline bool hasRedshiftDependence() const {
 		return this->isRedshiftDependent;
 	}
-	
-	bool hasPositionDependence() const {
+	/// Returns if the derived field has a position dependency or not
+	inline bool hasPositionDependence() const {
 		return this->isPositionDependent;
 	}
-	
-	ref_ptr<Surface> getSurface() const {
+	/// Returns the set surface
+	inline ref_ptr<Surface> getSurface() const {
 		return this->surface;
 	}
-	
+	/** Sets the name of the currently used photon field
+	 * @param fieldName  Name of the currently used photon field
+	 */
 	void setFieldName(std::string fieldName) {
 		this->fieldName = fieldName;
 	}
 	
 protected:
-	std::string fieldName;
-	bool isRedshiftDependent;
-	bool isPositionDependent;
-	ref_ptr<Surface> surface;
+	std::string fieldName;  /**< Name of the currently used field */
+	bool isRedshiftDependent;  /**< If photon field is redshift dependent */
+	bool isPositionDependent;  /**< If photon field is position dependent */
+	ref_ptr<Surface> surface;  /**< Currently used Surface */
 	
 };
 
@@ -87,25 +107,56 @@ protected:
  Optionally, a third file contains redshifts, named fieldName_redshift.txt.
  */
 class TabularPhotonField: public PhotonField {
-public:
-	TabularPhotonField(const std::string fieldName, const bool isRedshiftDependent = true);
+	public:
+		/** Constructor
+		 * @param fieldName  String field identifier
+		 * @param isRedshiftDependent  Whether or not the given field is redshift dependent
+		 */
+		TabularPhotonField(const std::string fieldName, const bool isRedshiftDependent = true);
 
-	double getPhotonDensity(double ePhoton, double z = 0., const Vector3d &pos = Vector3d(0.,0.,0.)) const;
-	double getRedshiftScaling(double z) const;
-	double getMinimumPhotonEnergy(double z, const Vector3d &pos = Vector3d(0.,0.,0.)) const;
-	double getMaximumPhotonEnergy(double z, const Vector3d &pos = Vector3d(0.,0.,0.)) const;
+		/** Returns photon density dependend on energy, redshift and position
+		 * Returns the photon density for a specific photon energy, redshift and position
+		 * @param ePhoton  Photon energy
+		 * @param z  Redshift
+		 * @param pos  Position
+		 */
+		double getPhotonDensity(double ePhoton, double z = 0., const Vector3d &pos = Vector3d(0.,0.,0.)) const;
+		double getRedshiftScaling(double z) const;
+		/** Returns the minimum possible photon energy
+		 * Returns the minimum possible photon energy for a given redshift and position.
+		 * @param z  Redshift
+		 * @param pos Position
+		 */
+		double getMinimumPhotonEnergy(double z, const Vector3d &pos = Vector3d(0.,0.,0.)) const;
+		/** Returns the maximum possible photon energy
+		 * Returns the maximum possible photon energy for a given redshift and position.
+		 * @param z  Redshift
+		 * @param pos Position
+		 */
+		double getMaximumPhotonEnergy(double z, const Vector3d &pos = Vector3d(0.,0.,0.)) const;
 
-protected:
-	void readPhotonEnergy(std::string filePath);
-	void readPhotonDensity(std::string filePath);
-	void readRedshift(std::string filePath);
-	void initRedshiftScaling();
-	void checkInputData() const;
+	protected:
+		/** Reads the photon energies from the given folder
+		 * @param filePath  Path containing photon energy files
+		 */
+		void readPhotonEnergy(std::string filePath);
+		/** Reads the photon densities from the given folder
+		 * @param filePath  Path containing photon densitiy files
+		 */
+		void readPhotonDensity(std::string filePath);
+		/** Reads the photon redshift from the given folder
+		 * @param filePath  Path containing photon redshift files
+		 */
+		void readRedshift(std::string filePath);
+		/// Initializes the redshift scaling from the read photon redshift
+		void initRedshiftScaling();
+		/// Checks if read data is valid
+		void checkInputData() const;
 
-	std::vector<double> photonEnergies;
-	std::vector<double> photonDensity;
-	std::vector<double> redshifts;
-	std::vector<double> redshiftScalings;
+		std::vector<double> photonEnergies;
+		std::vector<double> photonDensity;
+		std::vector<double> redshifts;
+		std::vector<double> redshiftScalings;
 };
 
 /**
@@ -120,23 +171,47 @@ protected:
  The surface is defined to include the nodes of the grid contained within.
  */
 class TabularSpatialPhotonField: public PhotonField {
-public:
+	public:
 		TabularSpatialPhotonField(const std::string fieldName, ref_ptr<Surface> surface = nullptr);
 		
+		/** Returns photon density dependend on energy, redshift and position
+		 * Returns the photon density for a specific photon energy, redshift and position
+		 * @param ePhoton  Photon energy
+		 * @param z  Redshift
+		 * @param pos  Position
+		 */
 		double getPhotonDensity(double ePhoton = 0., double z = 0., const Vector3d &pos = Vector3d(0.,0.,0.)) const;
+		/** Returns the minimum possible photon energy
+		 * Returns the minimum possible photon energy for a given redshift and position.
+		 * @param z  Redshift
+		 * @param pos Position
+		 */
 		double getMinimumPhotonEnergy(double z, const Vector3d &pos = Vector3d(0.,0.,0.)) const;
+		/** Returns the maximum possible photon energy
+		 * Returns the maximum possible photon energy for a given redshift and position.
+		 * @param z  Redshift
+		 * @param pos Position
+		 */
 		double getMaximumPhotonEnergy(double z, const Vector3d &pos = Vector3d(0.,0.,0.)) const;
 
-protected:
+	protected:
+		/** Reads the photon energies from the given folder
+		 * @param filePath  Path containing photon energy files
+		 */
 		std::vector<double> readPhotonEnergy(std::string filePath);
+		/** Reads the photon densities from the given folder
+		 * @param filePath  Path containing photon densitiy files
+		 */
 		std::vector<double> readPhotonDensity(std::string filePath);
+		/// Checks if read data is valid
 		void checkInputData() const;
 		
 		/** Apply a surface that confine the position dependent photon field
 		 * @param surface closed surface to confine the nodes of grid to be uploaded */
 		void setSurface(ref_ptr<Surface> surface);
 		
-		std::vector<double> photonEnergies; // assuming all the nodes in the grid have the same energy binning
+		// assuming all the nodes in the grid have the same energy binning
+		std::vector<double> photonEnergies;
 		std::vector<std::vector<double>> photonDensity;
 		std::unordered_map<int, Vector3d> photonDict;
 };
@@ -348,7 +423,7 @@ public:
  */
 class ISRF_Freudenreich98: public TabularSpatialPhotonField {
 public:
-		ISRF_Freudenreich98(ref_ptr<Surface> surface) : TabularSpatialPhotonField("ISRF_Freudenreich98", surface) {}
+	ISRF_Freudenreich98(ref_ptr<Surface> surface) : TabularSpatialPhotonField("ISRF_Freudenreich98", surface) {}
 };
 
 /**
@@ -361,7 +436,7 @@ public:
  */
 class ISRF_Robitaille12: public TabularSpatialPhotonField {
 public:
-		ISRF_Robitaille12(ref_ptr<Surface> surface) : TabularSpatialPhotonField("ISRF_Robitaille12", surface) {}
+	ISRF_Robitaille12(ref_ptr<Surface> surface) : TabularSpatialPhotonField("ISRF_Robitaille12", surface) {}
 };
 
 /**
@@ -370,9 +445,30 @@ public:
  */
 class BlackbodyPhotonField: public PhotonField {
 public:
+	/** Constructor
+	 * @param fieldName  String identifier of the desired field
+	 * @param blackbodyTemperatur  Blackbody temperature
+	 */
 	BlackbodyPhotonField(const std::string fieldName, const double blackbodyTemperature);
+
+	/** Returns photon density dependend on energy, redshift and position
+	 * Returns the photon density for a specific photon energy, redshift and position
+	 * @param ePhoton  Photon energy
+	 * @param z  Redshift
+	 * @param pos  Position
+	 */
 	double getPhotonDensity(double ePhoton, double z = 0., const Vector3d &pos = Vector3d(0.,0.,0.)) const;
+	/** Returns the minimum possible photon energy
+	 * Returns the minimum possible photon energy for a given redshift and position.
+	 * @param z  Redshift
+	 * @param pos Position
+	 */
 	double getMinimumPhotonEnergy(double z, const Vector3d &pos = Vector3d(0.,0.,0.)) const;
+	/** Returns the maximum possible photon energy
+	 * Returns the maximum possible photon energy for a given redshift and position.
+	 * @param z  Redshift
+	 * @param pos Position
+	 */
 	double getMaximumPhotonEnergy(double z, const Vector3d &pos = Vector3d(0.,0.,0.)) const;
 	void setQuantile(double q);
 

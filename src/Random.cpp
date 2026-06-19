@@ -282,7 +282,8 @@ uint64_t Random::randInt64()
 {
 	int64_t a = randInt();
 	int64_t b = randInt();
-	return (b + a << 32);
+	// a is shifted to the left to create a proper 64 bit integer
+	return (b + (a << 32));
 }
 
 
@@ -390,11 +391,11 @@ void Random::initialize(const uint32_t seed) {
 void Random::reload() {
 	uint32_t *p = state;
 	int i;
-	for (i = N - M; i--; ++p)
+	for (i = +N - M; i--; ++p)
 		*p = twist(p[M], p[0], p[1]);
 	for (i = M; --i; ++p)
-		*p = twist(p[M - N], p[0], p[1]);
-	*p = twist(p[M - N], p[0], state[0]);
+		*p = twist(p[+M - N], p[0], p[1]);
+	*p = twist(p[+M - N], p[0], state[0]);
 
 	left = N, pNext = state;
 }

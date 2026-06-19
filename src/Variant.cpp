@@ -668,6 +668,7 @@ Variant Variant::fromString(const std::string& s, Type t) {
 			std::string s;
 			v.push_back(s);
 		}
+		return Variant(v);
 	} else {
 		std::string msg; 
 		msg += "fromString not implemented for type ";
@@ -1010,7 +1011,7 @@ Variant::operator const std::vector<Variant>&() const {
 
 #define INT_FUNCTION(to_type, fun, to)                                                                                 \
 	to Variant::fun() const {                                                                                          \
-		switch (type) {                                                                                                \
+		switch (to_type) {                                                                                                \
 			case Variant::TYPE_BOOL:                                                                                   \
 				return data._t_bool ? 1 : 0;                                                                           \
 				break;                                                                                                 \

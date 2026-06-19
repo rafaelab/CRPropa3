@@ -246,6 +246,8 @@
 %template(CandidateRefPtr) crpropa::ref_ptr<crpropa::Candidate>;
 %include "crpropa/Candidate.h"
 
+%implicitconv crpropa::ref_ptr<crpropa::Surface>;
+%template(SurfaceRefPtr) crpropa::ref_ptr<crpropa::Surface>;
 %feature("director") crpropa::Surface;
 %feature("director") crpropa::ClosedSurface;
 %include "crpropa/Geometry.h"
@@ -407,8 +409,10 @@
 %template(IntSet) std::set<int>;
 %include "crpropa/module/Tools.h"
 
+%implicitconv crpropa::ref_ptr<crpropa::SourceInterface>;
 %template(SourceInterfaceRefPtr) crpropa::ref_ptr<crpropa::SourceInterface>;
 %feature("director") crpropa::SourceInterface;
+%implicitconv crpropa::ref_ptr<crpropa::SourceFeature>;
 %template(SourceFeatureRefPtr) crpropa::ref_ptr<crpropa::SourceFeature>;
 %feature("director") crpropa::SourceFeature;
 %include "crpropa/Source.h"

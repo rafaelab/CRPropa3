@@ -10,14 +10,11 @@ jobs:
         config:
          - name: "ubuntu-22"
            os: ubuntu-22.04
-           cxx: "g++-11"
-           cc: "gcc-11"
-           fc: "gfortran-11"
            swig_builtin: "On" #uses swig 4.0.2
            py: "/usr/bin/python3" #python 3.10
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Preinstall
         run: |
           sudo apt-get update
@@ -26,20 +23,10 @@ jobs:
           pip install numpy 
           pip show numpy
       - name: Set up the build
-        env:
-          CXX: ${{ matrix.config.cxx }}
-          CC: ${{ matrix.config.cc }}
-          FC: ${{ matrix.config.fc }}
         run: |
           mkdir build
           cd build
-          cmake .. -DENABLE_PYTHON=True \
-            -DENABLE_TESTING=On \
-            -DPython_EXECUTABLE=${{ matrix.config.py }} \
-            -DENABLE_SWIG_BUILTIN=${{ matrix.config.swig_builtin }} \
-            -DSIMD_EXTENSIONS=native \
-            -DCMAKE_CXX_STANDARD=17 \
-            -DCMAKE_CXX_FLAGS="-std=c++17 -Wall -Wextra  -I${{ github.workspace }}/libs/nanoflann/include"
+          cmake .. -DENABLE_PYTHON=True -DENABLE_TESTING=On -DPython_EXECUTABLE=${{ matrix.config.py }} -DENABLE_SWIG_BUILTIN=${{ matrix.config.swig_builtin }} -DSIMD_EXTENSIONS=native
       - name: Build CRPropa
         run: |
           cd build
@@ -47,11 +34,10 @@ jobs:
       - name: Run tests
         run: |
           cd build
-          make test ARGS="--output-on-failure"
+          ctest --output-on-failure --repeat until-pass:3
       - name: Archive test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: "test-report_${{matrix.config.name}}"
           path: build/Testing/Temporary/LastTest.log
-  

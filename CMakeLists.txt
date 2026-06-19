@@ -1,19 +1,10 @@
 cmake_minimum_required(VERSION 3.14)
 
 project(CRPropa Fortran C CXX)
-set(CRPROPA_RELEASE_VERSION 3.2.1+)  # Update for new release
+set(CRPROPA_RELEASE_VERSION 3.2.2)  # Update for new release
 
-# Detect platform and set C++ standard
-if(APPLE)
-    message(STATUS "Building on macOS, using C++11")
-    set(CMAKE_CXX_STANDARD 11)
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
-else()
-    message(STATUS "Building on Linux/Ubuntu, using C++17")
-    set(CMAKE_CXX_STANDARD 17)
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
-endif()
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
 set(CRPROPA_EXTRA_SOURCES)
 set(CRPROPA_EXTRA_INCLUDES)
@@ -96,8 +87,8 @@ list(APPEND CRPROPA_EXTRA_SOURCES "${CMAKE_CURRENT_BINARY_DIR}/src/Version.cpp")
 #     Why is it not recommended use a pre-compiled copy of Google Test?)
 option(ENABLE_TESTING "Build tests and enable test target" ON)
 if(ENABLE_TESTING)
-  include_directories(libs/gtest/include)
-  add_subdirectory(libs/gtest)
+  include_directories(${CMAKE_CURRENT_SOURCE_DIR}/libs/gtest/include)
+  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/libs/gtest)
   if(APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGTEST_USE_OWN_TR1_TUPLE=1")
   endif(APPLE)
@@ -126,16 +117,16 @@ if(ENABLE_COVERAGE)
     if(ENABLE_TESTING)
       SET(COVERAGE_LIBS "-coverage -lgcov")
       add_custom_target(coverage_clean
-        COMMAND ${LCOV_PATH} --directory . --zerocounters
+        COMMAND ${LCOV_PATH} --directory ${CMAKE_CURRENT_BINARY_DIR} --zerocounters
       )
       add_custom_target(coverage
         # generate coverage data
-        COMMAND ${LCOV_PATH} --directory . --capture --output-file coverage.info VERBATIM
+        COMMAND ${LCOV_PATH} --directory ${CMAKE_CURRENT_BINARY_DIR} --capture --output-file ${CMAKE_CURRENT_BINARY_DIR}/coverage.info --ignore-errors negative,inconsistent,unused VERBATIM
         # clean external libs
-        COMMAND ${LCOV_PATH} --remove coverage.info "/usr/include/*" "/usr/lib/*" "*/libs/gtest/*" "*/libs/eigen3/*" "*/libs/zstream-cpp/*" "*/build/*" -o coverage.info.cleaned VERBATIM
+        COMMAND ${LCOV_PATH} --remove ${CMAKE_CURRENT_BINARY_DIR}/coverage.info "/usr/include/*" "/usr/lib/*" "*/libs/gtest/*" "*/libs/eigen3/*" "*/libs/zstream-cpp/*" "*/build/*" -o ${CMAKE_CURRENT_BINARY_DIR}/coverage.info.cleaned --ignore-errors negative,inconsistent,unused VERBATIM
         # Generate html output
-        COMMAND ${GENHTML_PATH} -o coverageReport coverage.info.cleaned VERBATIM
-        COMMAND echo "Generated coverage report in coverageReport/index.html"
+        COMMAND ${GENHTML_PATH} -o ${CMAKE_CURRENT_BINARY_DIR}/coverageReport ${CMAKE_CURRENT_BINARY_DIR}/coverage.info.cleaned VERBATIM
+        COMMAND echo "Generated coverage report in ${CMAKE_CURRENT_BINARY_DIR}/coverageReport/index.html"
       )
     endif(ENABLE_TESTING)
 
@@ -150,22 +141,22 @@ if(ENABLE_COVERAGE)
 endif(ENABLE_COVERAGE)
 
 # kiss (provided)
-add_subdirectory(libs/kiss)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/libs/kiss)
 list(APPEND CRPROPA_EXTRA_LIBRARIES kiss)
-list(APPEND CRPROPA_EXTRA_INCLUDES libs/kiss/include)
+list(APPEND CRPROPA_EXTRA_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/libs/kiss/include)
 
 # nanoflann (provided)
-list(APPEND CRPROPA_EXTRA_INCLUDES libs/nanoflann/include)
+list(APPEND CRPROPA_EXTRA_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/libs/nanoflann/include)
 
 # HepID (provided)
-add_subdirectory(libs/HepPID)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/libs/HepPID)
 list(APPEND CRPROPA_EXTRA_LIBRARIES HepPID)
-list(APPEND CRPROPA_EXTRA_INCLUDES libs/HepPID/include)
+list(APPEND CRPROPA_EXTRA_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/libs/HepPID/include)
 
 # SOPHIA (provided)
-add_subdirectory(libs/sophia)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/libs/sophia)
 list(APPEND CRPROPA_EXTRA_LIBRARIES sophia gfortran)
-list(APPEND CRPROPA_EXTRA_INCLUDES libs/sophia)
+list(APPEND CRPROPA_EXTRA_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/libs/sophia)
 
 # Galactic magnetic lenses
 option(ENABLE_GALACTICMAGNETICLENS "Galactic Magnetic Lens" OFF)
@@ -174,6 +165,7 @@ SET(EIGEN_PATH  "" CACHE STRING "Use EIGEN from this path instead of the version
 SET(WITH_GALACTIC_LENSES FALSE)
 
 if(ENABLE_GALACTICMAGNETICLENS)
+  message(DEPRECATION "Galactic magnetic lens support is deprecated and will be removed in a future release.")
   SET(WITH_GALACTIC_LENSES TRUE)
 
   if(EIGEN_PATH)
@@ -182,24 +174,24 @@ if(ENABLE_GALACTICMAGNETICLENS)
   else(EIGEN_PATH)
     # Eigen redux (provided)
     message("Using provided EIGEN")
-    list(APPEND CRPROPA_EXTRA_INCLUDES libs/eigen3)
+    list(APPEND CRPROPA_EXTRA_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/libs/eigen3)
   endif(EIGEN_PATH)
   if(INSTALL_EIGEN)
-    install(DIRECTORY libs/eigen3/ DESTINATION include)
+    install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/libs/eigen3/ DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
   endif(INSTALL_EIGEN)
 
   # healpix redux (provided)
-  add_subdirectory(libs/healpix_base)
+  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/libs/healpix_base)
   list(APPEND CRPROPA_EXTRA_LIBRARIES healpix_base)
-  list(APPEND CRPROPA_EXTRA_INCLUDES libs/healpix_base/include)
-  install(DIRECTORY libs/healpix_base/include/ DESTINATION include FILES_MATCHING PATTERN "*.h")
+  list(APPEND CRPROPA_EXTRA_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/libs/healpix_base/include)
+  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/libs/healpix_base/include/ DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.h")
 
   list(APPEND CRPROPA_SWIG_DEFINES -DWITH_GALACTIC_LENSES)
 
-  list(APPEND CRPROPA_EXTRA_SOURCES src/magneticLens/MagneticLens.cpp)
-  list(APPEND CRPROPA_EXTRA_SOURCES src/magneticLens/ModelMatrix.cpp)
-  list(APPEND CRPROPA_EXTRA_SOURCES src/magneticLens/Pixelization.cpp)
-  list(APPEND CRPROPA_EXTRA_SOURCES src/magneticLens/ParticleMapsContainer.cpp)
+  list(APPEND CRPROPA_EXTRA_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/magneticLens/MagneticLens.cpp)
+  list(APPEND CRPROPA_EXTRA_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/magneticLens/ModelMatrix.cpp)
+  list(APPEND CRPROPA_EXTRA_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/magneticLens/Pixelization.cpp)
+  list(APPEND CRPROPA_EXTRA_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/magneticLens/ParticleMapsContainer.cpp)
 endif(ENABLE_GALACTICMAGNETICLENS)
 
 # OpenMP (optional for shared memory multiprocessing)
@@ -263,7 +255,7 @@ endif(MUPARSER_FOUND)
 find_package(ZLIB)
 if(ZLIB_FOUND)
   list(APPEND CRPROPA_EXTRA_INCLUDES ${ZLIB_INCLUDE_DIRS})
-  list(APPEND CRPROPA_EXTRA_INCLUDES "libs/zstream-cpp")
+  list(APPEND CRPROPA_EXTRA_INCLUDES "${CMAKE_CURRENT_SOURCE_DIR}/libs/zstream-cpp")
   list(APPEND CRPROPA_EXTRA_LIBRARIES ${ZLIB_LIBRARIES})
   add_definitions (-DCRPROPA_HAVE_ZLIB)
   list(APPEND CRPROPA_SWIG_DEFINES -DCRPROPA_HAVE_ZLIB)
@@ -306,7 +298,7 @@ if(APPLE OR USE_ABSOLUTE_RPATH)
   list(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${ABSOLUTE_RPATH}" isSystemDir)
   if("${isSystemDir}" STREQUAL "-1")
     message(STATUS "Use absolute RPATH ${ABSOLUTE_RPATH}")
-    set(CMAKE_INSTALL_RPATH "${ABSOLUTE_RPATH}")
+    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH}:${ABSOLUTE_RPATH}")
   endif("${isSystemDir}" STREQUAL "-1")
 endif()
 
@@ -324,105 +316,107 @@ if(DOWNLOAD_DATA)
   message("-- Downloading data files from sciebo ~ 73 MB")
   file(DOWNLOAD
   https://ruhr-uni-bochum.sciebo.de/public.php/webdav/data-${CRPROPA_DATAFILE_VER}.tar.gz-CHECKSUM
-    ${CMAKE_BINARY_DIR}/data-${CRPROPA_DATAFILE_VER}.tar.gz-CHECKSUM
+    ${CMAKE_CURRENT_BINARY_DIR}/data-${CRPROPA_DATAFILE_VER}.tar.gz-CHECKSUM
     USERPWD "3juW9sntQX2IWBS")
-  file(STRINGS ${CMAKE_BINARY_DIR}/data-${CRPROPA_DATAFILE_VER}.tar.gz-CHECKSUM DATA_CHECKSUM LIMIT_COUNT 1 LENGTH_MINIMUM 32 LENGTH_MAXIMUM 32)
+  file(STRINGS ${CMAKE_CURRENT_BINARY_DIR}/data-${CRPROPA_DATAFILE_VER}.tar.gz-CHECKSUM DATA_CHECKSUM LIMIT_COUNT 1 LENGTH_MINIMUM 32 LENGTH_MAXIMUM 32)
   file(DOWNLOAD
   https://ruhr-uni-bochum.sciebo.de/public.php/webdav/data-${CRPROPA_DATAFILE_VER}.tar.gz
-    ${CMAKE_BINARY_DIR}/data-${CRPROPA_DATAFILE_VER}.tar.gz
+    ${CMAKE_CURRENT_BINARY_DIR}/data-${CRPROPA_DATAFILE_VER}.tar.gz
     USERPWD "3juW9sntQX2IWBS"
     EXPECTED_MD5 "${DATA_CHECKSUM}")
-  message("-- Extracting data file")
 else()
   message("-- Downloading of data file disabled")
 endif(DOWNLOAD_DATA)
-if(EXISTS ${CMAKE_BINARY_DIR}/data-${CRPROPA_DATAFILE_VER}.tar.gz)
-  execute_process(COMMAND ${CMAKE_COMMAND} -E tar xzf ${CMAKE_BINARY_DIR}/data-${CRPROPA_DATAFILE_VER}.tar.gz WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
-  execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/data-${CRPROPA_DATAFILE_VER}/data ${CMAKE_BINARY_DIR}/data/ WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
-  execute_process(COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/data-${CRPROPA_DATAFILE_VER}/ WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/data-${CRPROPA_DATAFILE_VER}.tar.gz)
+  message("-- Extracting data file")
+  execute_process(COMMAND ${CMAKE_COMMAND} -E tar xzf data-${CRPROPA_DATAFILE_VER}.tar.gz WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+  execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory data-${CRPROPA_DATAFILE_VER}/data data/ WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+  execute_process(COMMAND ${CMAKE_COMMAND} -E remove_directory data-${CRPROPA_DATAFILE_VER}/ WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 else()
-  message(WARNING "CRPropa data file not found at ${CMAKE_BINARY_DIR}/data-${CRPROPA_DATAFILE_VER}.tar.gz
+  message(WARNING "CRPropa data file not found at ${CMAKE_CURRENT_BINARY_DIR}/data-${CRPROPA_DATAFILE_VER}.tar.gz
 CRPropa should compile, but will likely not work properly! Please install data file manually, or use the automatic download which is enabled by default.")
 endif()
 
 # ----------------------------------------------------------------------------
-# Library and Binary 
+# Library and Binary
 # ----------------------------------------------------------------------------
-file(GLOB_RECURSE CRPROPA_INCLUDES RELATIVE ${CMAKE_SOURCE_DIR} include/*.h)
+file(GLOB_RECURSE CRPROPA_INCLUDES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} include/*.h)
+# set CRPROPA_EXTRA_INCLUDES as cache variable to hand it over when used as subproject
+set(CRPROPA_EXTRA_INCLUDES "${CRPROPA_EXTRA_INCLUDES}" CACHE STRING "The include paths of the extra libraries that are needed." FORCE)
+mark_as_advanced(CRPROPA_EXTRA_INCLUDES)
 include_directories(include ${CRPROPA_EXTRA_INCLUDES})
 
 add_library(crpropa SHARED
-  src/base64.cpp
-  src/Candidate.cpp
-  src/Clock.cpp
-  src/Common.cpp
-  src/Cosmology.cpp
-  src/EmissionMap.cpp
-  src/Geometry.cpp
-  src/GridTools.cpp
-  src/Module.cpp
-  src/ModuleList.cpp
-  src/ParticleID.cpp
-  src/ParticleMass.cpp
-  src/ParticleState.cpp
-  src/PhotonBackground.cpp
-  src/InteractionRates.cpp
-  src/ProgressBar.cpp
-  src/Random.cpp
-  src/Source.cpp
-  src/Variant.cpp
-  src/module/AdiabaticCooling.cpp
-  src/module/Acceleration.cpp
-  src/module/Boundary.cpp
-  src/module/BreakCondition.cpp
-  src/module/CandidateSplitting.cpp
-  src/module/DiffusionSDE.cpp
-  src/module/EMDoublePairProduction.cpp
-  src/module/EMInverseComptonScattering.cpp
-  src/module/EMPairProduction.cpp
-  src/module/EMTripletPairProduction.cpp
-  src/module/ElasticScattering.cpp
-  src/module/ElectronPairProduction.cpp
-  src/module/HDF5Output.cpp
-  src/module/MomentumDiffusion.cpp
-  src/module/NuclearDecay.cpp
-  src/module/Observer.cpp
-  src/module/Output.cpp
-  src/module/OutputShell.cpp
-  src/module/ParticleCollector.cpp
-  src/module/PhotoDisintegration.cpp
-  src/module/PhotoPionProduction.cpp
-  src/module/PhotonOutput1D.cpp
-  src/module/PropagationBP.cpp
-  src/module/PropagationCK.cpp
-  src/module/Redshift.cpp
-  src/module/RestrictToRegion.cpp
-  src/module/SimplePropagation.cpp
-  src/module/SynchrotronRadiation.cpp
-  src/module/TextOutput.cpp
-  src/module/Tools.cpp
-  src/magneticField/ArchimedeanSpiralField.cpp
-  src/magneticField/JF12Field.cpp
-  src/magneticField/JF12FieldSolenoidal.cpp
-  src/magneticField/MagneticField.cpp
-  src/magneticField/MagneticFieldGrid.cpp
-  src/magneticField/PolarizedSingleModeMagneticField.cpp
-  src/magneticField/PT11Field.cpp
-  src/magneticField/turbulentField/GridTurbulence.cpp
-  src/magneticField/turbulentField/HelicalGridTurbulence.cpp
-  src/magneticField/turbulentField/PlaneWaveTurbulence.cpp
-  src/magneticField/turbulentField/SimpleGridTurbulence.cpp
-  src/magneticField/TF17Field.cpp
-  src/magneticField/UF23Field.cpp
-  src/magneticField/KST24Field.cpp
-  src/magneticField/CMZField.cpp
-  src/advectionField/AdvectionField.cpp
-  src/advectionField/TimeDependentAdvectionField.cpp
-  src/massDistribution/ConstantDensity.cpp
-  src/massDistribution/Cordes.cpp
-  src/massDistribution/Ferriere.cpp
-  src/massDistribution/Massdistribution.cpp
-  src/massDistribution/Nakanishi.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/base64.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/Candidate.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/Clock.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/Common.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/Cosmology.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/EmissionMap.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/Geometry.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/GridTools.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/InteractionRates.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/Module.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/ParticleID.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/ParticleMass.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/ParticleState.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/PhotonBackground.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/ProgressBar.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/Random.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/Source.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/Variant.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/module/AdiabaticCooling.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/module/Acceleration.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/module/Boundary.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/module/BreakCondition.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/module/CandidateSplitting.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/module/DiffusionSDE.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/module/EMDoublePairProduction.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/module/EMInverseComptonScattering.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/module/EMPairProduction.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/module/EMTripletPairProduction.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/module/ElasticScattering.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/module/ElectronPairProduction.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/module/HDF5Output.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/module/MomentumDiffusion.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/module/NuclearDecay.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/module/Observer.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/module/Output.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/module/OutputShell.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/module/ParticleCollector.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/module/PhotoDisintegration.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/module/PhotoPionProduction.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/module/PhotonOutput1D.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/module/PropagationBP.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/module/PropagationCK.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/module/Redshift.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/module/RestrictToRegion.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/module/SimplePropagation.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/module/SynchrotronRadiation.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/module/TextOutput.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/module/Tools.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/magneticField/ArchimedeanSpiralField.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/magneticField/JF12Field.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/magneticField/JF12FieldSolenoidal.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/magneticField/MagneticField.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/magneticField/MagneticFieldGrid.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/magneticField/PolarizedSingleModeMagneticField.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/magneticField/PT11Field.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/magneticField/turbulentField/GridTurbulence.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/magneticField/turbulentField/HelicalGridTurbulence.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/magneticField/turbulentField/PlaneWaveTurbulence.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/magneticField/turbulentField/SimpleGridTurbulence.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/magneticField/TF17Field.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/magneticField/UF23Field.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/magneticField/KST24Field.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/magneticField/CMZField.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/advectionField/AdvectionField.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/advectionField/TimeDependentAdvectionField.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/massDistribution/ConstantDensity.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/massDistribution/Cordes.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/massDistribution/Ferriere.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/massDistribution/Massdistribution.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/massDistribution/Nakanishi.cpp
 
   ${CRPROPA_EXTRA_SOURCES}
 )
@@ -441,7 +435,7 @@ if(BUILD_DOC)
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/doc/DoxygenLayout.xml ${CMAKE_CURRENT_BINARY_DIR}/DoxygenLayout.xml COPYONLY)
     add_custom_target(doxy ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} COMMENT "Generating API documentation with Doxygen" VERBATIM)
 
-    set_source_files_properties(${CMAKE_BINARY_DIR}/docstrings_from_doxy.i PROPERTIES GENERATED true )
+    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/docstrings_from_doxy.i PROPERTIES GENERATED true )
     add_custom_target(docstrings_from_doxy
       COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/libs/doxy2swig/doxy2swig.py ${CMAKE_CURRENT_BINARY_DIR}/xml/index.xml -o ${CMAKE_CURRENT_BINARY_DIR}/docstrings_from_doxy.i
       DEPENDS doxy
@@ -463,10 +457,13 @@ endif()
 # ----------------------------------------------------------------------------
 option(ENABLE_PYTHON "Create python library via SWIG" ON)
 
-find_package(Python 3.0 REQUIRED COMPONENTS Interpreter Development NumPy)
+set(Python_FIND_VIRTUALENV "FIRST")
+set(Python_FIND_STRATEGY "LOCATION")
+find_package(Python 3.0 COMPONENTS Interpreter Development NumPy)
 
 if(ENABLE_PYTHON AND Python_FOUND)
   find_package(SWIG 3.0 REQUIRED)
+  include(UseSWIG)
   include_directories(${Python_INCLUDE_DIRS})
   add_definitions(-DCRPROPA_HAVE_PYTHON)
   list(APPEND CRPROPA_SWIG_DEFINES -DCRPROPA_HAVE_PYTHON)
@@ -513,9 +510,9 @@ if(ENABLE_PYTHON AND Python_FOUND)
     list(APPEND CRPROPA_SWIG_DEFINES -doxygen)
   else()
     if(BUILD_DOC AND DOXYGEN_FOUND)
-      LIST(APPEND CRPROPA_SWIG_INPUTS ${CMAKE_BINARY_DIR}/docstrings_from_doxy.i)
+      LIST(APPEND CRPROPA_SWIG_INPUTS ${CMAKE_CURRENT_BINARY_DIR}/docstrings_from_doxy.i)
       list(APPEND CRPROPA_SWIG_DEFINES -DWITH_DOXYGEN)
-      list(APPEND SWIG_INCLUDE_DIRECTORIES ${CMAKE_BINARY_DIR})
+      list(APPEND SWIG_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR})
     endif(BUILD_DOC AND DOXYGEN_FOUND)
   endif(SWIG_VERSION VERSION_GREATER 4.0)
 
@@ -524,52 +521,88 @@ if(ENABLE_PYTHON AND Python_FOUND)
 
   if(ENABLE_SWIG_BUILTIN)
     set(BUILTIN "-builtin")
+    list(APPEND CRPROPA_SWIG_DEFINES "-builtin")
     if(SWIG_VERSION VERSION_LESS 4.0.2)
         message(WARNING, "The SWIG builtin option should not be used with SWIG version below 4.0.2 due to https://github.com/swig/swig/issues/1595")
     endif()
-  else(ENABLE_SWIG_BUILTIN)
+  else()
     set(BUILTIN "")
   endif(ENABLE_SWIG_BUILTIN)
 
   set(SWIG_INCLUDES)
   foreach(p in ${SWIG_INCLUDE_DIRECTORIES})
-    list(APPEND SWIG_INCLUDES -I${p})
+    list(APPEND SWIG_INCLUDES ${p})
   endforeach()
 
   file(GLOB_RECURSE CRPROPA_SWIG_INPUTS python/*.i)
-  set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/crpropa_wrap.cxx PROPERTIES GENERATED true)
-  add_custom_target(crpropa-swig-wrapper
-    COMMAND swig ${BUILTIN} -c++ -python -I${CMAKE_SOURCE_DIR}/include -I${CMAKE_SOURCE_DIR}/libs/HepPID/include ${SWIG_INCLUDES} ${CRPROPA_SWIG_DEFINES} -dirprot -o ${CMAKE_CURRENT_BINARY_DIR}/crpropa_wrap.cxx -outdir ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_SOURCE_DIR}/python/crpropa${BUILTIN}.i
-    DEPENDS ${CRPROPA_SWIG_INPUTS} ${CRPROPA_INCLUDES} )
+
+  set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/python/crpropa${BUILTIN}.i
+    PROPERTIES
+    CPLUSPLUS ON
+    SWIG_MODULE_NAME "crpropa"
+    SWIG_FLAGS "${CRPROPA_SWIG_DEFINES};-dirprot;${CMAKE_SWIG_FLAGS}"
+    DEPENDS "${CRPROPA_SWIG_INPUTS};${CRPROPA_INCLUDES}"
+    OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}
+  )
+  
+  swig_add_library(crpropa-swig TYPE SHARED LANGUAGE python
+    SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/python/crpropa${BUILTIN}.i
+  )
+  
+  target_include_directories(crpropa-swig PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/libs/HepPID/include
+    ${SWIG_INCLUDES}
+  )
+  
+  target_link_libraries(crpropa-swig crpropa ${Python_LIBRARIES} ${Python_LIBRARY})
+  
+  set_target_properties(crpropa-swig PROPERTIES
+    PREFIX ""
+    OUTPUT_NAME "_crpropa"
+    SUFFIX ".so"
+  )
+
+  if(APPLE)
+    set_target_properties(crpropa-swig PROPERTIES
+      INSTALL_RPATH "@loader_path;@loader_path/../../${PYTHON_PROJECT}/.libs"
+    )
+    set_property(TARGET crpropa-swig APPEND PROPERTY
+      LINK_FLAGS "-flat_namespace -undefined suppress"
+    )
+  endif()
 
   if(BUILD_DOC AND DOXYGEN_FOUND)
-    add_dependencies(crpropa-swig-wrapper docstrings_from_doxy)
+    add_dependencies(crpropa-swig docstrings_from_doxy)
   endif(BUILD_DOC AND DOXYGEN_FOUND)
 
-  add_library(crpropa-swig MODULE ${CMAKE_CURRENT_BINARY_DIR}/crpropa_wrap.cxx)
-  set_target_properties(crpropa-swig PROPERTIES PREFIX "")
-  # disable warnings on automatically generated interface code
-  set_target_properties(crpropa-swig PROPERTIES COMPILE_FLAGS "-w")
-  set_target_properties(crpropa-swig PROPERTIES OUTPUT_NAME "_crpropa")
-  target_link_libraries(crpropa-swig crpropa ${Python_LIBRARIES} ${Python_LIBRARY})
-  add_dependencies(crpropa-swig crpropa-swig-wrapper)
-
-  install(DIRECTORY "${CMAKE_SOURCE_DIR}/python/crpropa" DESTINATION "${Python_INSTALL_PACKAGE_DIR}")
+  install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/python/crpropa" DESTINATION "${Python_INSTALL_PACKAGE_DIR}")
   install(FILES "${CMAKE_CURRENT_BINARY_DIR}/crpropa.py" DESTINATION "${Python_INSTALL_PACKAGE_DIR}/crpropa")
   install(TARGETS crpropa-swig LIBRARY DESTINATION "${Python_INSTALL_PACKAGE_DIR}/crpropa")
-  install(FILES ${CRPROPA_SWIG_INPUTS} DESTINATION share/crpropa/swig_interface)
+  install(FILES ${CRPROPA_SWIG_INPUTS} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/crpropa/swig_interface)
+
+  find_program(PYBIND11_STUBGEN_EXECUTABLE NAMES "pybind11-stubgen")
+	if(PYBIND11_STUBGEN_EXECUTABLE)
+		message(STATUS "Found pybind11-stubgen at ${PYBIND11_STUBGEN_EXECUTABLE}")
+		install(CODE "execute_process(COMMAND ${PYBIND11_STUBGEN_EXECUTABLE} --ignore-all-errors -o ${Python_SITELIB} crpropa)")
+    install(CODE "execute_process(COMMAND echo -- Generated python stubs over pybind11-stubgen for crpropa)")
+	endif()
 
 endif(ENABLE_PYTHON AND Python_FOUND)
 
 # ----------------------------------------------------------------------------
 # Install
 # ----------------------------------------------------------------------------
+
+# makes the binary directory visible to common.h, needed to have a last resort when searching for data
+add_definitions(-DCRPROPA_BINARY_DIR="${CMAKE_CURRENT_BINARY_DIR}")
 add_definitions(-DCRPROPA_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}")
-install(TARGETS crpropa DESTINATION lib)
-install(DIRECTORY include/ DESTINATION include FILES_MATCHING PATTERN "*.h")
-install(DIRECTORY ${CMAKE_BINARY_DIR}/include/ DESTINATION include FILES_MATCHING PATTERN "*.h")
-install(DIRECTORY ${CMAKE_BINARY_DIR}/data/ DESTINATION share/crpropa/ PATTERN ".git" EXCLUDE)
-install(DIRECTORY libs/kiss/include/ DESTINATION include)
+install(TARGETS crpropa DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.h")
+install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/ DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.h")
+install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data/ DESTINATION ${CMAKE_INSTALL_PREFIX}/share/crpropa/ PATTERN ".git" EXCLUDE)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/libs/kiss/include/ DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/libs/nanoflann/include/ DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 
 # ------------------------------------------------------------------
 # Documentation
@@ -589,11 +622,13 @@ if(BUILD_DOC AND DOXYGEN_FOUND AND SPHINX_EXECUTABLE)
   find_package_handle_standard_args(Sphinx
                                     "Failed to find sphinx-build executable"
                                     SPHINX_EXECUTABLE)
-  set(SPHINX_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/doc)
+  execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/doc "${CMAKE_CURRENT_BINARY_DIR}/doc-source")
+  execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_BINARY_DIR}/xml "${CMAKE_CURRENT_BINARY_DIR}/doc-source/xml")
+  set(SPHINX_SOURCE "${CMAKE_CURRENT_BINARY_DIR}/doc-source")
   set(SPHINX_BUILD ${CMAKE_CURRENT_BINARY_DIR}/doc)
   add_custom_target(doc
                     ${SPHINX_EXECUTABLE} -b html
-                    -Dbreathe_projects.CRPropa3=${CMAKE_CURRENT_BINARY_DIR}/xml
+                    -Dbreathe_projects.CRPropa3=xml
                     ${SPHINX_SOURCE} ${SPHINX_BUILD}
                     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                     COMMENT "Generating documentation with Sphinx")
@@ -606,89 +641,90 @@ endif(BUILD_DOC AND DOXYGEN_FOUND AND SPHINX_EXECUTABLE)
 # ----------------------------------------------------------------------------
 if(ENABLE_TESTING)
   enable_testing()
-  add_executable(testCore test/testCore.cpp)
-  target_link_libraries(testCore  crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
+
+  add_executable(testCore ${CMAKE_CURRENT_SOURCE_DIR}/test/testCore.cpp)
+  target_link_libraries(testCore crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
   add_test(testCore testCore)
 
-  add_executable(testVector3 test/testVector3.cpp)
+  add_executable(testVector3 ${CMAKE_CURRENT_SOURCE_DIR}/test/testVector3.cpp)
   target_link_libraries(testVector3 crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
   add_test(testVector3 testVector3)
 
-  add_executable(testModuleList test/testModuleList.cpp)
+  add_executable(testModuleList ${CMAKE_CURRENT_SOURCE_DIR}/test/testModuleList.cpp)
   target_link_libraries(testModuleList crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
   add_test(testModuleList testModuleList)
 
-  add_executable(testMagneticField test/testMagneticField.cpp)
+  add_executable(testMagneticField ${CMAKE_CURRENT_SOURCE_DIR}/test/testMagneticField.cpp)
   target_link_libraries(testMagneticField crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
   add_test(testMagneticField testMagneticField)
 
-  add_executable(testTurbulentField test/testTurbulentField.cpp)
+  add_executable(testTurbulentField ${CMAKE_CURRENT_SOURCE_DIR}/test/testTurbulentField.cpp)
   target_link_libraries(testTurbulentField crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
   add_test(testTurbulentField testTurbulentField)
 
-  add_executable(testAdvectionField test/testAdvectionField.cpp)
+  add_executable(testAdvectionField ${CMAKE_CURRENT_SOURCE_DIR}/test/testAdvectionField.cpp)
   target_link_libraries(testAdvectionField crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
   add_test(testAdvectionField testAdvectionField)
 
-  add_executable(testDensity test/testDensity.cpp)
+  add_executable(testDensity ${CMAKE_CURRENT_SOURCE_DIR}/test/testDensity.cpp)
   target_link_libraries(testDensity crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
   add_test(testDensity testDensity)
 
-  add_executable(testPropagation test/testPropagation.cpp)
+  add_executable(testPropagation ${CMAKE_CURRENT_SOURCE_DIR}/test/testPropagation.cpp)
   target_link_libraries(testPropagation crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
   add_test(testPropagation testPropagation)
 
-  add_executable(testBreakCondition test/testBreakCondition.cpp)
+  add_executable(testBreakCondition ${CMAKE_CURRENT_SOURCE_DIR}/test/testBreakCondition.cpp)
   target_link_libraries(testBreakCondition crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
   add_test(testBreakCondition testBreakCondition)
 
-  add_executable(testInteraction test/testInteraction.cpp)
+  add_executable(testInteraction ${CMAKE_CURRENT_SOURCE_DIR}/test/testInteraction.cpp)
   target_link_libraries(testInteraction crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
   add_test(testInteraction testInteraction)
 
-  add_executable(testSource test/testSource.cpp)
+  add_executable(testSource ${CMAKE_CURRENT_SOURCE_DIR}/test/testSource.cpp)
   target_link_libraries(testSource crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
   add_test(testSource testSource)
 
-  add_executable(testOutput test/testOutput.cpp)
+  add_executable(testOutput ${CMAKE_CURRENT_SOURCE_DIR}/test/testOutput.cpp)
   target_link_libraries(testOutput crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
   add_test(testOutput testOutput)
 
-  add_executable(testFunctionalGroups test/testFunctionalGroups.cpp)
+  add_executable(testFunctionalGroups ${CMAKE_CURRENT_SOURCE_DIR}/test/testFunctionalGroups.cpp)
   target_link_libraries(testFunctionalGroups crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
   add_test(testFunctionalGroups testFunctionalGroups)
 
-  add_executable(testAdiabaticCooling test/testAdiabaticCooling.cpp)
+  add_executable(testAdiabaticCooling ${CMAKE_CURRENT_SOURCE_DIR}/test/testAdiabaticCooling.cpp)
   target_link_libraries(testAdiabaticCooling crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
   add_test(testAdiabaticCooling testAdiabaticCooling)
 
-  add_executable(testCandidateSplitting test/testCandidateSplitting.cpp)
+  add_executable(testCandidateSplitting ${CMAKE_CURRENT_SOURCE_DIR}/test/testCandidateSplitting.cpp)
   target_link_libraries(testCandidateSplitting crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
   add_test(testCandidateSplitting testCandidateSplitting)
 
   if(WITH_GALACTIC_LENSES)
-    add_executable(testGalacticMagneticLens test/testMagneticLens.cpp)
+    add_executable(testGalacticMagneticLens ${CMAKE_CURRENT_SOURCE_DIR}/test/testMagneticLens.cpp)
     target_link_libraries(testGalacticMagneticLens crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
     add_test(testGalacticMagneticLens testGalacticMagneticLens)
   endif(WITH_GALACTIC_LENSES)
 
   # python tests
   if(ENABLE_PYTHON AND Python_FOUND)
-    CONFIGURE_FILE(test/testMagneticLensPythonInterface.py testMagneticLensPythonInterface.py COPYONLY)
+    CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/test/testMagneticLensPythonInterface.py ${CMAKE_CURRENT_BINARY_DIR}/testMagneticLensPythonInterface.py COPYONLY)
     if(numpyIncludePath AND WITH_GALACTIC_LENSES)
       add_test(testMagneticLensPythonInterface ${Python_EXECUTABLE} testMagneticLensPythonInterface.py)
     endif(numpyIncludePath AND WITH_GALACTIC_LENSES)
 
-    CONFIGURE_FILE(test/testSimulationExecution.py testSimulationExecution.py COPYONLY)
+    CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/test/testSimulationExecution.py ${CMAKE_CURRENT_BINARY_DIR}/testSimulationExecution.py COPYONLY)
     add_test(testSimulationExecution ${Python_EXECUTABLE} testSimulationExecution.py)
 
-    CONFIGURE_FILE(test/testDiffusionSDE.py testDiffusionSDE.py COPYONLY)
+    CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/test/testDiffusionSDE.py ${CMAKE_CURRENT_BINARY_DIR}/testDiffusionSDE.py COPYONLY)
     add_test(testDiffusionSDE ${Python_EXECUTABLE} testDiffusionSDE.py)
 
-    CONFIGURE_FILE(test/testMomentumDiffusion.py testMomentumDiffusion.py COPYONLY)
+    CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/test/testMomentumDiffusion.py ${CMAKE_CURRENT_BINARY_DIR}/testMomentumDiffusion.py COPYONLY)
     add_test(testMomentumDiffusion ${Python_EXECUTABLE} testMomentumDiffusion.py)
 
-    CONFIGURE_FILE(test/testPythonExtension.py testPythonExtension.py COPYONLY)
+    CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/test/testPythonExtension.py ${CMAKE_CURRENT_BINARY_DIR}/testPythonExtension.py COPYONLY)
     add_test(testPythonExtension ${Python_EXECUTABLE} testPythonExtension.py)
   endif(ENABLE_PYTHON AND Python_FOUND)
 

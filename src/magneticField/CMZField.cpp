@@ -192,7 +192,7 @@ Vector3d CMZField::getMCField(const Vector3d& pos) const {//Field in molecular c
         Bphi = - B1*exp(-z*z/Hc/Hc)*R/r;
     }
     else{
-        - B1*exp(-z*z/Hc/Hc)*R/r1*(3*r/r1- 2*r*r/r1*r1);
+        Bphi = - B1*exp(-z*z/Hc/Hc)*R/r1*(3*r/r1- 2*r*r/r1*r1);
     }
 
     b.x -= Bphi*sin(phi);

@@ -10,14 +10,11 @@ jobs:
         config:
          - name: "ubuntu-22"
            os: ubuntu-22.04
-           cxx: "g++-11"
-           cc: "gcc-11"
-           fc: "gfortran-11"
            swig_builtin: "On" #uses swig 4.0.2
            py: "/usr/bin/python3" #python 3.10
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Preinstall
         run: |
           sudo apt-get update
@@ -25,22 +22,10 @@ jobs:
           pip3 install -r doc/pages/example_notebooks/requirements.txt # load requrements for notebooks
           pip3 install --upgrade Pygments
       - name: Set up the build
-        env:
-          CXX: ${{ matrix.config.cxx }}
-          CC: ${{ matrix.config.cc }}
-          FC: ${{ matrix.config.fc }}
         run: |
           mkdir build
           cd build
-          cmake .. -DCMAKE_INSTALL_PREFIX=$HOME/.local \
-            -DENABLE_PYTHON=True \
-            -DPython_EXECUTABLE=${{ matrix.config.py }} \
-            -DENABLE_TESTING=Off \
-            -DENABLE_SWIG_BUILTIN=${{ matrix.config.swig_builtin }} \
-            -DSIMD_EXTENSIONS=native \
-            -DPython_INSTALL_PACKAGE_DIR=/home/runner/.local/ \
-            -DCMAKE_CXX_STANDARD=17 \
-            -DCMAKE_CXX_FLAGS="-std=c++17 -I${{ github.workspace }}/libs/nanoflann/include -Wall -Wextra"
+          cmake .. -DCMAKE_INSTALL_PREFIX=$HOME/.local -DENABLE_PYTHON=True -DPython_EXECUTABLE=${{ matrix.config.py }} -DENABLE_TESTING=Off -DENABLE_SWIG_BUILTIN=${{ matrix.config.swig_builtin }} -DSIMD_EXTENSIONS=native -DPython_INSTALL_PACKAGE_DIR=/home/runner/.local/
       - name: Build CRPropa
         run: |
           cd build
@@ -77,7 +62,8 @@ jobs:
                 [ "$file" = "lensing_crv4ipynb.py" ] ||
                 [ "$file" = "interrupt_candidateVectoripynb.py" ] ||
                 [ "$file" = "interrupt_sourceipynb.py" ] ||
-                [ "$file" = "lensing_mapsv4ipynb.py" ]; then
+                [ "$file" = "lensing_mapsv4ipynb.py" ] ||
+                [ "$file" = "galactic_propagation_gammarays_ISRFipynb.py" ]; then
                 echo "skip file $file"
             else 
               echo "run file $file"

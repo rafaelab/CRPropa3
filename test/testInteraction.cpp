@@ -14,16 +14,9 @@
 #include "crpropa/module/EMInverseComptonScattering.h"
 #include "crpropa/module/SynchrotronRadiation.h"
 #include "gtest/gtest.h"
+#include "kiss/path.h"
 
 #include <fstream>
-
-#if defined(__APPLE__) && defined(_LIBCPP_VERSION)
-  #include <filesystem>
-  namespace fs = std::__fs::filesystem;
-#else
-  #include <filesystem>
-  namespace fs = std::filesystem;
-#endif
 
 namespace crpropa {
 
@@ -48,7 +41,7 @@ TEST(ElectronPairProduction, allBackgrounds) {
 	epp.setPhotonField(irb);
 	irb = new IRB_Stecker16_lower();
 	epp.setPhotonField(irb);
-  irb = new IRB_Finke22();
+  	irb = new IRB_Finke22();
 	epp.setPhotonField(irb);
 }
 
@@ -570,7 +563,7 @@ TEST(PhotoPionProduction, allBackgrounds) {
 	ppp.setPhotonField(irb);
 	irb = new IRB_Stecker16_lower();
 	ppp.setPhotonField(irb);
-  irb = new IRB_Finke22();
+ 	irb = new IRB_Finke22();
 	ppp.setPhotonField(irb);
 	ref_ptr<PhotonField> urb = new URB_Protheroe96();
 	ppp.setPhotonField(urb);
@@ -718,16 +711,16 @@ TEST(EMPairProduction, allBackgrounds) {
 	em.setPhotonField(ebl);
 	ref_ptr<PhotonField> urb = new URB_Protheroe96();
 	em.setPhotonField(urb);
-  
-  fs::path dir = getDataPath("") + "Scaling/ISRF_Freudenreich98";
-  if (!fs::exists(dir)) {
-    std::cout << "Photon background tables not available" << std::endl;
-  } else {
-    ref_ptr<PhotonField> isrf = new ISRF_Freudenreich98(nullptr);
-    em.setPhotonField(isrf);
-  }
-  
-  ebl = new IRB_Stecker05();
+
+	std::string dir = getDataPath("") + "Scaling/ISRF_Freudenreich98";
+	if (!is_directory(dir)) {
+		std::cout << "Photon background tables not available" << std::endl;
+	} else {
+		ref_ptr<PhotonField> isrf = new ISRF_Freudenreich98(nullptr);
+		em.setPhotonField(isrf);
+	}
+	
+	ebl = new IRB_Stecker05();
 	em.setPhotonField(ebl);
 	ebl = new IRB_Franceschini08();
 	em.setPhotonField(ebl);
@@ -779,8 +772,7 @@ TEST(EMPairProduction, secondaries) {
 		for (int i = 0; i < 140; i++) { // loop over energies Ep = (1e10 - 1e23) eV
 			double Ep = pow(10, 9.05 + 0.1 * i) * eV;
 			Candidate c(22, Ep);
-			c.setCurrentStep(1e10 * Mpc);
-
+			c.setCurrentStep(1e4 * Mpc);
 			m.process(&c);
 
 			// pass if no interaction has ocurred (no tabulated rates)
@@ -801,7 +793,7 @@ TEST(EMPairProduction, secondaries) {
 			}
 
 			// test energy conservation 
-      EXPECT_NEAR(Ep, Etot, 1E-9);
+    	EXPECT_DOUBLE_EQ(Ep, Etot);
 		}
 	}
 }
@@ -833,8 +825,8 @@ TEST(EMDoublePairProduction, allBackgrounds) {
 	ref_ptr<PhotonField> urb = new URB_Protheroe96();
 	em.setPhotonField(urb);
   
-  fs::path dir = getDataPath("") + "Scaling/ISRF_Freudenreich98";
-  if (!fs::exists(dir)) {
+  std::string dir = getDataPath("") + "Scaling/ISRF_Freudenreich98";
+  if (!is_directory(dir)) {
     std::cout << "Photon background tables not available" << std::endl;
   } else {
     ref_ptr<PhotonField> isrf = new ISRF_Freudenreich98(nullptr);
@@ -948,8 +940,8 @@ TEST(EMTripletPairProduction, allBackgrounds) {
 	ref_ptr<PhotonField> urb = new URB_Protheroe96();
 	em.setPhotonField(urb);
   
-  fs::path dir = getDataPath("") + "Scaling/ISRF_Freudenreich98";
-  if (!fs::exists(dir)) {
+  std::string dir = getDataPath("") + "Scaling/ISRF_Freudenreich98";
+  if (!is_directory(dir)) {
     std::cout << "Photon background tables not available" << std::endl;
   } else {
     ref_ptr<PhotonField> isrf = new ISRF_Freudenreich98(nullptr);
@@ -1064,8 +1056,8 @@ TEST(EMInverseComptonScattering, allBackgrounds) {
 	ref_ptr<PhotonField> urb = new URB_Protheroe96();
 	em.setPhotonField(urb);
   
-  fs::path dir = getDataPath("") + "Scaling/ISRF_Freudenreich98";
-  if (!fs::exists(dir)) {
+  std::string dir = getDataPath("") + "Scaling/ISRF_Freudenreich98";
+  if (!is_directory(dir)) {
     std::cout << "Photon background tables not available" << std::endl;
   } else {
     ref_ptr<PhotonField> isrf = new ISRF_Freudenreich98(nullptr);
@@ -1335,6 +1327,7 @@ TEST(SynchrotronRadiation, PhotonEnergy) {
 	double brms = 1 * muG; 
 	SynchrotronRadiation sync(brms, true);
 	sync.setSecondaryThreshold(0.); // allow all secondaries for testing
+	sync.setMaximumSamples(1000); // reduce the amount of generated secondaries
 
 	double E = 1 * TeV;
 	Candidate c(11, E);
@@ -1350,10 +1343,13 @@ TEST(SynchrotronRadiation, PhotonEnergy) {
 
 	// check avg energy of the secondary photons 
 	double Esec = 0; 
+	double weightSum = 0;
 	for (size_t i = 0; i < c.secondaries.size(); i++) {
-		Esec += c.secondaries[i] -> current.getEnergy();
+		double weight = c.secondaries[i]->getWeight();
+		Esec += c.secondaries[i] -> current.getEnergy()*weight;
+		weightSum += weight;
 	}
-	Esec /= c.secondaries.size();
+	Esec /= weightSum;
 
 	EXPECT_NEAR(Esec, Ecrit, Ecrit);
 }

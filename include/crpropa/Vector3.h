@@ -1,5 +1,6 @@
 #ifndef CRPROPA_VECTOR3_H
 #define CRPROPA_VECTOR3_H
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION 
 
 #include <iostream>
 #include <cmath>
@@ -12,7 +13,6 @@
 #endif // CRPROPA_HAVE_PYTHON
 #include <unistd.h>
 
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION 
 
 namespace crpropa {
 
@@ -122,17 +122,17 @@ public:
 		return z;
 	}
 
-	// magnitude (2-norm) of the vector
+	/// magnitude (2-norm) of the vector
 	T getR() const {
 		return std::sqrt(x * x + y * y + z * z);
 	}
 
-	// square of magnitude of the vector
+	/// square of magnitude of the vector
 	T getR2() const {
 		return x * x + y * y + z * z;
 	}
 
-	// return the azimuth angle
+	/// return the azimuth angle
 	T getPhi() const {
 		T eps = std::numeric_limits < T > ::min();
 		if ((fabs(x) < eps) && (fabs(y) < eps))
@@ -141,7 +141,7 @@ public:
 			return std::atan2(y, x);
 	}
 
-	// return the zenith angle
+	/// return the zenith angle
 	T getTheta() const {
 		T eps = std::numeric_limits < T > ::min();
 		if ((fabs(x) < eps) && (fabs(y) < eps) && (fabs(z) < eps))
@@ -150,12 +150,12 @@ public:
 			return atan2((T) sqrt(x * x + y * y), z);
 	}
 
-	// return the unit-vector e_r
+	/// return the unit-vector e_r
 	Vector3<T> getUnitVector() const {
 		return *this / getR();
 	}
 
-	// return the unit-vector e_theta
+	/// return the unit-vector e_theta
 	Vector3<T> getUnitVectorTheta() const {
 		T theta = getTheta();
 		T phi = getPhi();
@@ -163,12 +163,12 @@ public:
 				-sin(theta));
 	}
 
-	// return the unit-vector e_phi
+	/// return the unit-vector e_phi
 	Vector3<T> getUnitVectorPhi() const {
 		return Vector3<T>(-sin(getPhi()), cos(getPhi()), 0);
 	}
 
-	// return the angle [0, pi] between the vectors
+	/// return the angle [0, pi] between the vectors
 	T getAngleTo(const Vector3<T> &v) const {
 		T cosdistance = dot(v) / v.getR() / getR();
 		// In some directions cosdistance is > 1 on some compilers
@@ -181,19 +181,19 @@ public:
 			return acos(cosdistance);
 	}
 
-	// return true if the angle between the vectors is smaller than a threshold
+	/// return true if the angle between the vectors is smaller than a threshold
 	bool isParallelTo(const Vector3<T> &v, T maxAngle) const {
 		return getAngleTo(v) < maxAngle;
 	}
 
-	// linear distance to a given vector
+	/// linear distance to a given vector
 	T getDistanceTo(const Vector3<T> &point) const {
 		Vector3<T> d = *this - point;
 		return d.getR();
 	}
 
-	// return the component parallel to a second vector
-	// 0 if the second vector has 0 magnitude
+	/// return the component parallel to a second vector
+	/// 0 if the second vector has 0 magnitude
 	Vector3<T> getParallelTo(const Vector3<T> &v) const {
 		T vmag = v.getR();
 		if (vmag == std::numeric_limits < T > ::min())
@@ -201,15 +201,15 @@ public:
 		return v * dot(v) / vmag;
 	}
 
-	// return the component perpendicular to a second vector
-	// 0 if the second vector has 0 magnitude
+	/// return the component perpendicular to a second vector
+	/// 0 if the second vector has 0 magnitude
 	Vector3<T> getPerpendicularTo(const Vector3<T> &v) const {
 		if (v.getR() == std::numeric_limits < T > ::min())
 			return Vector3<T>(0.);
 		return (*this) - getParallelTo(v);
 	}
 
-	// rotate the vector around a given axis by a given angle
+	/// rotate the vector around a given axis by a given angle
 	Vector3<T> getRotated(const Vector3<T> &axis, T angle) const {
 		Vector3<T> u = axis;
                 if (u.getR() != 0.)
@@ -225,7 +225,7 @@ public:
 		return Vector3<T>(dot(Rx), dot(Ry), dot(Rz));
 	}
 
-	// return vector with values limited to the range [lower, upper]
+	/// return vector with values limited to the range [lower, upper]
 	Vector3<T> clip(T lower, T upper) const {
 		Vector3<T> out;
 		out.x = std::max(lower, std::min(x, upper));
@@ -234,43 +234,43 @@ public:
 		return out;
 	}
 
-	// return vector with absolute values
+	/// return vector with absolute values
 	Vector3<T> abs() const {
 		return Vector3<T>(std::abs(x), std::abs(y), std::abs(z));
 	}
 
-	// return vector with floored values
+	/// return vector with floored values
 	Vector3<T> floor() const {
 		return Vector3<T>(std::floor(x), std::floor(y), std::floor(z));
 	}
 
-	// return vector with ceiled values
+	/// return vector with ceiled values
 	Vector3<T> ceil() const {
 		return Vector3<T>(std::ceil(x), std::ceil(y), std::ceil(z));
 	}
 
-	// minimum element
+	/// minimum element
 	T min() const {
 		return std::min(x, std::min(y, z));
 	}
 
-	// maximum element
+	/// maximum element
 	T max() const {
 		return std::max(x, std::max(y, z));
 	}
 
-	// dot product
+	/// dot product
 	T dot(const Vector3<T> &v) const {
 		return x * v.x + y * v.y + z * v.z;
 	}
 
-	// cross product
+	/// cross product
 	Vector3<T> cross(const Vector3<T> &v) const {
 		return Vector3<T>(y * v.z - v.y * z, z * v.x - v.z * x,
 				x * v.y - v.x * y);
 	}
 
-	// returns true if all elements of the two vectors are equal
+	/// returns true if all elements of the two vectors are equal
 	bool operator ==(const Vector3<T> &v) const {
 		if (x != v.x)
 			return false;
@@ -297,7 +297,7 @@ public:
 		return Vector3(x - f, y - f, z - f);
 	}
 
-	// element-wise multiplication
+	/// element-wise multiplication
 	Vector3<T> operator *(const Vector3<T> &v) const {
 		return Vector3(x * v.x, y * v.y, z * v.z);
 	}
@@ -306,7 +306,7 @@ public:
 		return Vector3(data[0] * v, data[1] * v, data[2] * v);
 	}
 
-	// element-wise division
+	/// element-wise division
 	Vector3<T> operator /(const Vector3<T> &v) const {
 		return Vector3(x / v.x, y / v.y, z / v.z);
 	}
@@ -315,7 +315,7 @@ public:
 		return Vector3(x / f, y / f, z / f);
 	}
 
-	// element-wise modulo operation
+	/// element-wise modulo operation
 	Vector3<T> operator %(const Vector3<T> &v) const {
 		return Vector3(fmod(x, v.x), fmod(y, v.y), fmod(z, v.z));
 	}
@@ -352,7 +352,7 @@ public:
 		return *this;
 	}
 
-	// element-wise multiplication
+	/// element-wise multiplication
 	Vector3<T> &operator *=(const Vector3<T> &v) {
 		data[0] *= v.x;
 		data[1] *= v.y;
@@ -367,7 +367,7 @@ public:
 		return *this;
 	}
 
-	// element-wise division
+	/// element-wise division
 	Vector3<T> &operator /=(const Vector3<T> &v) {
 		data[0] /= v.x;
 		data[1] /= v.y;
@@ -382,7 +382,7 @@ public:
 		return *this;
 	}
 
-	// element-wise modulo operation
+	/// element-wise modulo operation
 	Vector3<T> &operator %=(const Vector3<T> &v) {
 		data[0] = fmod(x, v.x);
 		data[1] = fmod(y, v.y);
@@ -420,7 +420,7 @@ public:
 	
 	const std::string getDescription() {
 		char buffer[256];
-		sprintf(buffer, "Vector(%.6G, %.6G, %.6G)", data[0], data[1], data[2]);
+		snprintf(buffer, 256, "Vector(%.6G, %.6G, %.6G)", data[0], data[1], data[2]);
 		return buffer;
 	}
 
@@ -447,7 +447,7 @@ public:
 		return 3;
 	}
 	
-	// initialize the vector from a numpy array
+	/// initialize the vector from a numpy array
 	Vector3(PyObject* inputObject) {
 		// check if input is a numpy array
 		if (!PyArray_Check(inputObject)) {

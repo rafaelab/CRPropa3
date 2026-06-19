@@ -17,6 +17,14 @@
 #include "sys/stat.h"
 #endif
 
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#endif
+
+#ifndef PATH_MAX
+#define PATH_MAX 4096
+#endif
+
 #include <stdexcept>
 #include <cstdio>
 
@@ -151,14 +159,26 @@ void append_file(const std::string &target, const std::string &source,
 	fclose(s);
 }
 
+// see https://stackoverflow.com/a/60250581
 std::string executable_path() {
-	char buf[1024];
+	#ifdef __APPLE__
+		char rawPathName[PATH_MAX];
+        char realPathName[PATH_MAX];
+        uint32_t rawPathSize = (uint32_t)sizeof(rawPathName);
 
-//#if linux
-	size_t len = readlink("/proc/self/exe", buf, sizeof(buf)-1);
-//#else
-//	size_t len = ::GetModuleFileName(NULL, buf, sizeof(buf)-1 );
-//#endif
+        if(!_NSGetExecutablePath(rawPathName, &rawPathSize)) {
+            realpath(rawPathName, realPathName);
+        }
+        return  std::string(realPathName) + "/";
+	#else
+	char buf[PATH_MAX];
+
+	#ifdef __linux__
+		size_t len = readlink("/proc/self/exe", buf, sizeof(buf)-1);
+	#elif defined(_WIN32)
+		size_t len = ::GetModuleFileName(NULL, buf, sizeof(buf)-1 );
+	#endif  // __linux__
+
 	for (size_t i = 1; i < len; i++) {
 		if (buf[len - 1] == path_seperator)
 			break;
@@ -166,4 +186,6 @@ std::string executable_path() {
 			len --;
 	}
 	return std::string(buf, len);
+
+	#endif // __APPLE__
 }

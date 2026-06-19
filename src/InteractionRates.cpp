@@ -2,24 +2,16 @@
 #include "crpropa/Units.h"
 #include "crpropa/Random.h"
 
-#include <nanoflann.hpp>
+#include "kiss/path.h"
 
 #include <vector>
 #include <string>
 #include <unordered_map>
 #include <fstream>
-#include <filesystem>
-
-#if defined(__APPLE__) && defined(_LIBCPP_VERSION)
-	namespace fs = std::__fs::filesystem;
-#else
-	namespace fs = std::filesystem;
-#endif
 
 namespace crpropa {
 
 InteractionRatesHomogeneous::InteractionRatesHomogeneous(std::string RateFile, std::string CumulativeRateFile) {
-	
 	this->ratesName = "interactionRatesHomogeneous";
 	this->isPositionDependent = false;
 
@@ -29,38 +21,8 @@ InteractionRatesHomogeneous::InteractionRatesHomogeneous(std::string RateFile, s
 		initCumulativeRate(CumulativeRateFile);
 }
 
-std::vector<double> InteractionRatesHomogeneous::getTabulatedEnergy() const {
-	return tabEnergy;
-}
-
-std::vector<double> InteractionRatesHomogeneous::getTabulatedRate() const {
-	return tabRate;
-}
-
-std::vector<double> InteractionRatesHomogeneous::getTabulatedE() const {
-	return tabE;
-}
-
-std::vector<double> InteractionRatesHomogeneous::getTabulateds() const {
-	return tabs;
-}
-
-std::vector<std::vector<double>> InteractionRatesHomogeneous::getTabulatedCDF() const {
-	return tabCDF;
-}
-
 double InteractionRatesHomogeneous::getProcessRate(const double E, const Vector3d &position) const {
-	if (!this->isPositionDependent) {
-		
-		// compute the interaction rate for the given candidate energy, E
-		double rate = interpolate(E, this->tabEnergy, this->tabRate);
-		return rate;
-		
-	} else {
-	
-	  throw std::runtime_error("Error in boolean isPositionDependent!");
-	  
-	}
+	return interpolate(E, this->tabEnergy, this->tabRate);
 }
 
 void InteractionRatesHomogeneous::loadPerformInteractionTabs(const Vector3d &position, std::vector<double> &tabE, std::vector<double> &tabs, std::vector<std::vector<double>> &tabCDF) const {
@@ -90,17 +52,16 @@ void InteractionRatesHomogeneous::setTabulatedCDF(std::vector<std::vector<double
 }
 
 void InteractionRatesHomogeneous::initRate(std::string filename){
-	if(!fs::is_regular_file(filename))
+	if(is_directory(filename))
 		throw std::runtime_error("InteractionRatesHomogeneous: The given filename " + filename + " is a directory!\
 			If you wanted to use position dependent photon fields instead, set the correct InteractionRates class first!");
 	
 	std::ifstream infile(filename.c_str());
+	if (!infile.good())
+		throw std::runtime_error("InteractionRatesHomogeneous: could not open file " + filename);
 
 	std::vector<double> tabEnergy;
 	std::vector<double> tabRate;
-		
-	if (!infile.good())
-		throw std::runtime_error("InteractionRatesHomogeneous: could not open file " + filename);
 
 	while (infile.good()) {
 		
@@ -123,18 +84,18 @@ void InteractionRatesHomogeneous::initRate(std::string filename){
 }
 
 void InteractionRatesHomogeneous::initCumulativeRate(std::string filename){
-	if(!fs::is_regular_file(filename))
+	if(is_directory(filename))
 		throw std::runtime_error("InteractionRatesHomogeneous: The given filename " + filename + " is a directory!\
 			If you wanted to use position dependent photon fields instead, set the correct InteractionRates class first!");
 
 	std::ifstream infile(filename.c_str());
 	
+	if (!infile.good())
+		throw std::runtime_error("InteractionRatesHomogeneous: could not open file " + filename);
+	
 	std::vector<double> tabE;
 	std::vector<double> tabs;
 	std::vector<std::vector<double>> tabCDF;
-	
-	if (!infile.good())
-		throw std::runtime_error("InteractionRatesHomogeneous: could not open file " + filename);
 	
 	// skip header
 	while (infile.peek() == '#')
@@ -183,42 +144,17 @@ InteractionRatesPositionDependent::InteractionRatesPositionDependent(
 }
 
 int InteractionRatesPositionDependent::findClosestGridPoint(const Vector3d &position) const {
-  
-  if (!tree) {
-	throw std::runtime_error("KD-Tree not initialized!");
-  }
-  
-  unsigned int closestIndex;
-  double closestDistSquared;
-  double queryPoint[3] = { position.x, position.y, position.z };
-  
-  this->tree->knnSearch(queryPoint, 1, &closestIndex, &closestDistSquared);
-  return this->cloud.ids[closestIndex];
-  
-}
-
-std::vector<double> InteractionRatesPositionDependent::getTabulatedEnergy() const {
-	return tabEnergy;
-}
-
-std::vector<std::vector<double>> InteractionRatesPositionDependent::getTabulatedRate() const {
-	return tabRate;
-}
-
-std::vector<double> InteractionRatesPositionDependent::getTabulatedE() const {
-	return tabE;
-}
-
-std::vector<std::vector<double>> InteractionRatesPositionDependent::getTabulateds() const {
-	return tabs;
-}
-
-std::vector<std::vector<std::vector<double>>> InteractionRatesPositionDependent::getTabulatedCDF() const {
-	return tabCDF;
-}
-
-std::unordered_map<int, Vector3d> InteractionRatesPositionDependent::getPhotonDict() const {
-	return photonDict;
+	if (!tree) {
+		throw std::runtime_error("KD-Tree not initialized!");
+	}
+	
+	unsigned int closestIndex;
+	double closestDistSquared;
+	double queryPoint[3] = { position.x, position.y, position.z };
+	
+	this->tree->knnSearch(queryPoint, 1, &closestIndex, &closestDistSquared);
+	return this->cloud.ids[closestIndex];
+	
 }
 
 std::vector<double> InteractionRatesPositionDependent::getClosestRate(const Vector3d &position) const {
@@ -237,19 +173,9 @@ std::vector<std::vector<double>> InteractionRatesPositionDependent::getClosestCD
 }
 
 double InteractionRatesPositionDependent::getProcessRate(const double E, const Vector3d &position) const {
-	if (!this->isPositionDependent) {
-	
-		throw std::runtime_error("Error in boolean isPositionDependent!");
-		
-	} else {
-	  
-	  std::vector<double> tabRate = this->getClosestRate(position);
-	  
-	  // compute the interaction rate for the given candidate energy, E
-	  double rate = interpolate(E, this->tabEnergy, tabRate);
-	  return rate;
-	  
-	}
+	std::vector<double> tabRate = this->getClosestRate(position);
+	// compute the interaction rate for the given candidate energy, E
+	return interpolate(E, this->tabEnergy, tabRate);
 }
 
 void InteractionRatesPositionDependent::loadPerformInteractionTabs(const Vector3d &position, std::vector<double> &tabE, std::vector<double> &tabs, std::vector<std::vector<double>> &tabCDF) const {
@@ -306,52 +232,42 @@ void InteractionRatesPositionDependent::setPhotonDict(std::unordered_map<int, Ve
 
 	this->tree = new KDTree(3, cloud, nanoflann::KDTreeSingleIndexAdaptorParams(maxLeafTree, flag, nThreads));
 	this->tree->buildIndex();
-
 }
 
 void InteractionRatesPositionDependent::setSurface(ref_ptr<Surface> surface) {
-		this->surface = surface;
-}
-
-ref_ptr<Surface> InteractionRatesPositionDependent::getSurface() const {
-		return this->surface;
+	this->surface = surface;
 }
 
 void InteractionRatesPositionDependent::initRate(std::string filepath){
-	if(!fs::is_directory(filepath))
-		throw std::runtime_error("InteractionRatesPositionDependent: The given path " + filepath + " is not a directory!\
+	if(!is_directory(filepath))
+		throw std::runtime_error("InteractionRatesPositionDependent: The given path " + filepath + " is not a directory or does not exist!\
 			If you wanted to use homogeneous photon fields instead, set the correct InteractionRates class first!");
 
 	std::vector<std::vector<double>> tabRate;
 		
-	fs::path dir = filepath;
 	std::unordered_map<int, Vector3d> photonDict;
 	int iFile = 0;
 	
-	if (!fs::exists(dir)) {
-			std::cout << "Photon tables not found in " << dir << std::endl;
-			return;
-	}
-	
-	for (auto const& dir_entry : fs::directory_iterator{dir}) {
+	std::vector<std::string> dirs;
+	if(!list_directory(filepath, dirs))
+		throw std::runtime_error("Could not find any files in " + filepath + "!\n");
+
+	for (auto const& filename : dirs) {
 		
 		// the input filename here should be a string
 		//check if it is correct, i.e. a proper filename string
-		std::string filename = dir_entry.path().string();
-		std::ifstream infile(filename.c_str());
+		std::ifstream infile(filename.c_str());		
+		if (!infile.good())
+			throw std::runtime_error("InteractionRatesPositionDependent: could not open file " + filename);
 		
 		std::vector<double> vecEnergy;
 		std::vector<double> vecRate;
-		
-		if (!infile.good())
-			throw
-			std::runtime_error("InteractionRatesPositionDependent: could not open file " + filename);
 		
 		double x, y, z;
 		std::string str;
 		std::stringstream ss;
 		
-		std::string filename_split = splitFilename(dir_entry.path().string());
+		std::string filename_split = splitFilename(filename);
 		ss << filename_split;
 		
 		int iLine = 0;
@@ -360,7 +276,7 @@ void InteractionRatesPositionDependent::initRate(std::string filepath){
 		
 		while (getline(ss, str, '_')) {
 			if (iLine == 3) {
-				x = -std::stod(str) * kpc;
+				x = std::stod(str) * kpc;
 			}
 			if (iLine == 4) {
 				y = std::stod(str) * kpc;
@@ -390,14 +306,13 @@ void InteractionRatesPositionDependent::initRate(std::string filepath){
 					vecRate.push_back(b / Mpc);
 				}
 			}
-			infile.ignore(std::numeric_limits < std::streamsize > ::max(), '\n');
+			infile.ignore(std::numeric_limits< std::streamsize >::max(), '\n');
 		}
 		
 		tabRate.push_back(vecRate);
 		
 		iFile = iFile + 1;
 		infile.close();
-		
 	}
 		
 	if (tabRate.empty())
@@ -408,28 +323,24 @@ void InteractionRatesPositionDependent::initRate(std::string filepath){
 }
 
 void InteractionRatesPositionDependent::initCumulativeRate(std::string filepath){
-	if(!fs::is_directory(filepath))
-		throw std::runtime_error("InteractionRatesPositionDependent: The given path " + filepath + " is not a directory!\
+	if(!is_directory(filepath))
+		throw std::runtime_error("InteractionRatesPositionDependent: The given path " + filepath + " is not a directory or does not exist!\
 			If you wanted to use homogeneous photon fields instead, set the correct InteractionRates class first!");
 
 	std::vector<std::vector<double>> tabs;
 	std::vector<std::vector<std::vector<double>>> tabCDF;
 	
-	fs::path dir = filepath;
 	int iFile = 0;
-	
-	if (!fs::exists(dir)) {
-			std::cout << "Photon tables not found in " << dir << std::endl;
-			return;
-	}
+	std::vector<std::string> dirs;
+	if(!list_directory(filepath, dirs))
+		throw std::runtime_error("Could not find any files in " + filepath + "!\n");
  
-	for (auto const& dir_entry : fs::directory_iterator{dir}) {
+	for (auto const& filename : dirs) {
 		
 		std::vector<double> vecE;
 		std::vector<double> vecs;
 		std::vector<std::vector<double>> vecCDF;
 		
-		std::string filename = dir_entry.path().string();
 		std::ifstream infile(filename.c_str());
 		
 		if (!infile.good())
@@ -439,7 +350,7 @@ void InteractionRatesPositionDependent::initCumulativeRate(std::string filepath)
 		std::string str;
 		std::stringstream ss;
 		
-		std::string filename_split = splitFilename(dir_entry.path().string());
+		std::string filename_split = splitFilename(filename);
 		ss << filename_split;
 		
 		int iLine = 0;
