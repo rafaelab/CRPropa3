@@ -1,4 +1,5 @@
 #include "crpropa/module/PhotoDisintegration.h"
+#include "crpropa/Common.h"
 #include "crpropa/Units.h"
 #include "crpropa/ParticleID.h"
 #include "crpropa/ParticleMass.h"
@@ -47,7 +48,7 @@ void PhotoDisintegration::initRate(std::string filename) {
 
 	// clear previously loaded interaction rates
 	pdRate.clear();
-	pdRate.resize(27 * 31);
+	pdRate.resize((NUCLEAR_ZMAX + 1) * NUCLEAR_NSTRIDE);
 
 	std::string line;
 	while (std::getline(infile, line)) {
@@ -62,7 +63,7 @@ void PhotoDisintegration::initRate(std::string filename) {
 		double r;
 		for (size_t i = 0; i < nlg; i++) {
 			lineStream >> r;
-			pdRate[Z * 31 + N].push_back(r / Mpc);
+			pdRate[Z * NUCLEAR_NSTRIDE + N].push_back(r / Mpc);
 		}
 	}
 	infile.close();
@@ -75,7 +76,7 @@ void PhotoDisintegration::initBranching(std::string filename) {
 
 	// clear previously loaded interaction rates
 	pdBranch.clear();
-	pdBranch.resize(27 * 31);
+	pdBranch.resize((NUCLEAR_ZMAX + 1) * NUCLEAR_NSTRIDE);
 
 	std::string line;
 	while (std::getline(infile, line)) {
@@ -97,7 +98,7 @@ void PhotoDisintegration::initBranching(std::string filename) {
 			branch.branchingRatio.push_back(r);
 		}
 
-		pdBranch[Z * 31 + N].push_back(branch);
+		pdBranch[Z * NUCLEAR_NSTRIDE + N].push_back(branch);
 	}
 
 	infile.close();
@@ -157,10 +158,10 @@ void PhotoDisintegration::process(Candidate *candidate) const {
 		int A = massNumber(id);
 		int Z = chargeNumber(id);
 		int N = A - Z;
-		size_t idx = Z * 31 + N;
+		size_t idx = Z * NUCLEAR_NSTRIDE + N;
 
 		// check if disintegration data available
-		if ((Z > 26) or (N > 30))
+		if ((Z > NUCLEAR_ZMAX) or (N > NUCLEAR_NMAX))
 			return;
 		if (pdRate[idx].size() == 0)
 			return;
@@ -278,10 +279,10 @@ double PhotoDisintegration::lossLength(int id, double gamma, double z) {
 	int A = massNumber(id);
 	int Z = chargeNumber(id);
 	int N = A - Z;
-	size_t idx = Z * 31 + N;
+	size_t idx = Z * NUCLEAR_NSTRIDE + N;
 
 	// check if disintegration data available
-	if ((Z > 26) or (N > 30))
+	if ((Z > NUCLEAR_ZMAX) or (N > NUCLEAR_NMAX))
 		return std::numeric_limits<double>::max();
 	const std::vector<double> &rate = pdRate[idx];
 	if (rate.size() == 0)

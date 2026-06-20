@@ -34,8 +34,8 @@ private:
 		std::vector<double> emissionProbability; // emission probability as function of nucleus Lorentz factor
 	};
 
-	std::vector<std::vector<double> > pdRate; // pdRate[Z * 31 + N] = total interaction rate
-	std::vector<std::vector<Branch> > pdBranch; // pdTable[Z * 31 + N] = branching ratios
+	std::vector<std::vector<double> > pdRate; // pdRate[Z * NUCLEAR_NSTRIDE + N] = total interaction rate
+	std::vector<std::vector<Branch> > pdBranch; // pdBranch[Z * NUCLEAR_NSTRIDE + N] = branching ratios
 	mutable std::map<int, std::vector<PhotonEmission> > pdPhoton; // map of emitted photon energies and photon emission probabilities
 
 	static const double lgmin; // minimum log10(Lorentz-factor)
