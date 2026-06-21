@@ -18,18 +18,23 @@ const double PhotoDisintegration::lgmin = 6;  // minimum log10(Lorentz-factor)
 const double PhotoDisintegration::lgmax = 14; // maximum log10(Lorentz-factor)
 const size_t PhotoDisintegration::nlg = 201;  // number of Lorentz-factor steps
 
-PhotoDisintegration::PhotoDisintegration(ref_ptr<PhotonField> f, bool havePhotons, double limit) {
-	setPhotonField(f);
+PhotoDisintegration::PhotoDisintegration(ref_ptr<PhotonField> f, bool havePhotons, double limit, bool superheavy) {
+	setPhotonField(f, superheavy);
 	this->havePhotons = havePhotons;
 	this->limit = limit;
 }
 
-void PhotoDisintegration::setPhotonField(ref_ptr<PhotonField> photonField) {
+void PhotoDisintegration::setPhotonField(ref_ptr<PhotonField> photonField, bool superheavy) {
 	this->photonField = photonField;
 	std::string fname = photonField->getFieldName();
 	setDescription("PhotoDisintegration: " + fname);
-	initRate(getDataPath("Photodisintegration/rate_" + fname + ".txt"));
-	initBranching(getDataPath("Photodisintegration/branching_" + fname + ".txt"));
+	if (superheavy) {
+		initRate(getDataPath("Photodisintegration/rate_" + fname + "_superheavy.txt"));
+		initBranching(getDataPath("Photodisintegration/branching_" + fname + "_superheavy.txt"));
+	} else {
+		initRate(getDataPath("Photodisintegration/rate_" + fname + ".txt"));
+		initBranching(getDataPath("Photodisintegration/branching_" + fname + ".txt"));
+	}
 	initPhotonEmission(getDataPath("Photodisintegration/photon_emission_" + fname.substr(0,3) + ".txt"));
 }
 
@@ -46,7 +51,6 @@ void PhotoDisintegration::initRate(std::string filename) {
 	if (not infile.good())
 		throw std::runtime_error("PhotoDisintegration: could not open file " + filename);
 
-	// clear previously loaded interaction rates
 	pdRate.clear();
 	pdRate.resize((NUCLEAR_ZMAX + 1) * NUCLEAR_NSTRIDE);
 
@@ -57,8 +61,7 @@ void PhotoDisintegration::initRate(std::string filename) {
 		std::stringstream lineStream(line);
 
 		int Z, N;
-		lineStream >> Z;
-		lineStream >> N;
+		lineStream >> Z >> N;
 
 		double r;
 		for (size_t i = 0; i < nlg; i++) {
@@ -74,7 +77,6 @@ void PhotoDisintegration::initBranching(std::string filename) {
 	if (not infile.good())
 		throw std::runtime_error("PhotoDisintegration: could not open file " + filename);
 
-	// clear previously loaded interaction rates
 	pdBranch.clear();
 	pdBranch.resize((NUCLEAR_ZMAX + 1) * NUCLEAR_NSTRIDE);
 
@@ -86,8 +88,7 @@ void PhotoDisintegration::initBranching(std::string filename) {
 		std::stringstream lineStream(line);
 
 		int Z, N;
-		lineStream >> Z;
-		lineStream >> N;
+		lineStream >> Z >> N;
 
 		Branch branch;
 		lineStream >> branch.channel;
