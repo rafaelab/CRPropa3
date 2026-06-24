@@ -273,14 +273,20 @@ if(ENABLE_TESTING)
 			FILES_MATCHING PATTERN "*.py"
 		)
 
-		# add python tests here, just copy paste the add_test statements and change test name and path
 		if(USE_CRPROPA_BUILTIN)
-			add_test(NAME testPluginPython COMMAND bash -c "cp --target-directory ${CMAKE_CURRENT_BINARY_DIR} ${crpropa_BINARY_DIR}/crpropa.py ${crpropa_BINARY_DIR}/_crpropa.so; \
-				${Python_EXECUTABLE} testPlugin.py"
-			)
-		else()
-			add_test(NAME testPluginPython COMMAND ${Python_EXECUTABLE} testPlugin.py)
+			if(NOT APPLE)
+				add_test(NAME moveCRPropaPlugin 
+					COMMAND cp --target-directory ${CMAKE_CURRENT_BINARY_DIR} ${crpropa_BINARY_DIR}/crpropa.py ${crpropa_BINARY_DIR}/_crpropa.so
+				)
+			else()
+				add_test(NAME moveCRPropaPlugin 
+					COMMAND cp ${crpropa_BINARY_DIR}/crpropa.py ${crpropa_BINARY_DIR}/_crpropa.so ${CMAKE_CURRENT_BINARY_DIR}
+				)
+			endif()
 		endif()
+
+		# add python tests here, just copy paste the add_test statements and change test name and path
+		add_test(NAME testPluginPython COMMAND ${Python_EXECUTABLE} testPlugin.py)
 	endif()
 
 endif()
