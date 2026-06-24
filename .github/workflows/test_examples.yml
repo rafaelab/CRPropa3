@@ -9,6 +9,7 @@ on:
       - "**.i"
       - "**/CMakeLists.txt"
       - "!plugin-template/**"
+      - "!test/**"
   pull_request:
     paths:
       - ".github/workflows/test_examples.yml"
@@ -18,6 +19,7 @@ on:
       - "**.i"
       - "**/CMakeLists.txt"
       - "!plugin-template/**"
+      - "!test/**"
 
 jobs:
   linux:
