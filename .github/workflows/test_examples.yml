@@ -8,7 +8,7 @@ on:
       - "**.py"
       - "**.i"
       - "**/CMakeLists.txt"
-      - "!plugin-template"
+      - "!plugin-template/**"
   pull_request:
     paths:
       - ".github/workflows/test_examples.yml"
@@ -17,7 +17,7 @@ on:
       - "**.py"
       - "**.i"
       - "**/CMakeLists.txt"
-      - "!plugin-template"
+      - "!plugin-template/**"
 
 jobs:
   linux:

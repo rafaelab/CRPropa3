@@ -11,8 +11,8 @@ on:
       - "**.py"
       - "**.i"
       - "**/CMakeLists.txt"
-      - "!plugin-template"
-      - "!doc"
+      - "!plugin-template/**"
+      - "!doc/**"
   release:
     types: [published]
   workflow_dispatch: 

@@ -8,8 +8,8 @@ on:
       - "**.py"
       - "**.i"
       - "**/CMakeLists.txt"
-      - "!plugin-template"
-      - "!doc"
+      - "!plugin-template/**"
+      - "!doc/**"
   pull_request:
     paths:
       - ".github/workflows/testing_ubuntu22.yml"
@@ -18,8 +18,8 @@ on:
       - "**.py"
       - "**.i"
       - "**/CMakeLists.txt"
-      - "!plugin-template"
-      - "!doc"
+      - "!plugin-template/**"
+      - "!doc/**"
 
 jobs:
   linux:
