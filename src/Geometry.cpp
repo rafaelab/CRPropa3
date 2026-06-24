@@ -27,11 +27,6 @@ std::string Plane::getDescription() const {
 	return ss.str();
 };
 
-bool Plane::isInside(const Vector3d& point) const {
-	// if the point is on the "positive" or "negative" side of the infinite plane
-	return distance(point) >= 0;
-}
-
 Vector3d Plane::normal(const Vector3d& point) const {
 	return n;
 }
@@ -48,10 +43,6 @@ double Sphere::distance(const Vector3d &point) const {
 Vector3d Sphere::normal(const Vector3d& point) const {
 	Vector3d d = point - center;
 	return d.getUnitVector();
-}
-
-bool Sphere::isInside(const Vector3d& point) const {
-	return (point - center).getR2() <= radius * radius;
 }
 
 std::string Sphere::getDescription() const {
@@ -116,10 +107,6 @@ Vector3d ParaxialBox::normal(const Vector3d& point) const {
 	}
 
 	return n;
-}
-
-bool ParaxialBox::isInside(const Vector3d& point) const {
-	return distance(point) >= 0;
 }
 
 std::string ParaxialBox::getDescription() const {

@@ -42,7 +42,7 @@ public:
 	 @param havePhotons		if true, add secondary photons as candidates
 	 @param thinning		weighted sampling of secondaries (0: all particles are tracked; 1: maximum thinning)
 	 @param limit			step size limit as fraction of mean free path
-	 @param surface			suface to enclose the grid nodes to be loaded
+	 @param surface  		Grid will be confined to `surface->distance(pos)<0`, so for example inside a closed surface
 	 */
 	EMInverseComptonScattering(ref_ptr<PhotonField> photonField, bool havePhotons = false, double thinning = 0, double limit = 0.1, ref_ptr<Surface> surface = nullptr);
 	
@@ -62,8 +62,9 @@ public:
 	 */
 	void setThinning(double thinning);
 	
-	/** Apply a surface that confine the position dependent photon field
-	 * @param surface closed surface to confine the grid nodes to be uploaded
+	/** Apply a surface that confine the position dependent photon field region.
+	 * The rates are initialized only for distances smaller then 0, so `surface->distance(pos)<0`
+	 * @param surface Grid will be confined to `surface->distance(pos)<0`, so for example inside a closed surface
 	 */
 	void setSurface(ref_ptr<Surface> surface);
 	ref_ptr<Surface> getSurface() const;

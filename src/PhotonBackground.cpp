@@ -244,7 +244,8 @@ TabularSpatialPhotonField::TabularSpatialPhotonField(std::string fieldName, ref_
 		
 		Vector3d vPos(x, y, z);
 		
-		if (getSurface() and !getSurface()->isInside(vPos))
+		// Continue when not "inside" surface
+		if (getSurface() && getSurface()->distance(vPos)>=0)
 			continue;
 		
 		photonDict[iFile] = vPos;

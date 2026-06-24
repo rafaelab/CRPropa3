@@ -289,7 +289,8 @@ void InteractionRatesPositionDependent::initRate(std::string filepath){
 		
 		Vector3d vPos(x, y, z);
 		
-		if (getSurface() and !getSurface()->isInside(vPos))
+		// continue when not "inside" surface
+		if (getSurface() && getSurface()->distance(vPos)>=0)
 			continue;
 		
 		photonDict[iFile] = vPos;
@@ -372,7 +373,8 @@ void InteractionRatesPositionDependent::initCumulativeRate(std::string filepath)
 		
 		Vector3d vPos(x, y, z);
 		
-		if (getSurface() and !getSurface()->isInside(vPos))
+		// continue when not "inside" surface
+		if (getSurface() && getSurface()->distance(vPos)>=0)
 			continue;
 		
 		// skip header
