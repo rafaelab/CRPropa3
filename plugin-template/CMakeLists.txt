@@ -2,12 +2,17 @@ cmake_minimum_required(VERSION 3.14)
 
 # set the version to whatever you want
 # also change the name
-project(myPlugin VERSION 1.0.0)
+project(myPlugin VERSION 1.0.0 LANGUAGES Fortran C CXX)
 
 # should be at least 17
 set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif(NOT CMAKE_BUILD_TYPE)
+message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
 
 # set other needed compiler flags:
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fdiagnostics-color=always")
