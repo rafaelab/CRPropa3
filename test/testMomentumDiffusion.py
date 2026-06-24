@@ -73,3 +73,6 @@ class MomentumDiffusion(unittest.TestCase):
         
         self.assertEqual(c.current.getEnergy(), E) #acts only on charged particles
         self.assertEqual(c.getNextStep(), 10)
+
+if __name__ == '__main__':
+    unittest.main()
