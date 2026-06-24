@@ -147,7 +147,7 @@ class testCrossLanguagePolymorphism(unittest.TestCase):
 		self.assertEqual(HIIDensity, massDensity.getHIIDensity(pos))
 		self.assertEqual(H2Density, massDensity.getH2Density(pos))
 
-	def testCustomPhotonField(self):
+	def testCustomPositionDependendPhotonField(self):
 		class CustomPhotonField(crp.PhotonField):
 			def __init__(self, density):
 				crp.PhotonField.__init__(self)
@@ -172,10 +172,10 @@ class testCrossLanguagePolymorphism(unittest.TestCase):
 		photonField = CustomPhotonField(photonDensity)
 		energy = 10*crp.GeV
 		z = 0
-		self.assertEqual(photonDensity, photonField.getPhotonDensity(energy, z))
+		self.assertEqual(photonDensity, photonField.getPhotonDensity(energy, z, 0))
 		self.assertEqual('testCustomPhotonField', photonField.getFieldName())
-		self.assertEqual(True, photonField.hasRedshiftDependence(), photonField.hasPositionDependence())
-		self.assertEqual(True, photonField.hasPositionDependence(), photonField.hasPositionDependence())
+		self.assertEqual(True, photonField.hasRedshiftDependence())
+		self.assertEqual(False, photonField.hasPositionDependence())
 		
 	def testCustomPhotonField(self):
 		class CustomPhotonField(crp.PhotonField):
@@ -251,13 +251,13 @@ class testVector3(unittest.TestCase):
 		v.x = 23.
 		self.assertEqual(v.x, 23.)
 
-	# # this test fails in some systems
-	# def testArrayInterface(self):
-	# 	# this test fails for some combinations of Python version and system
-	# 	v = crp.Vector3d(1., 2., 3.)
-	# 	self.assertEqual(2., np.mean(v) )
-	# 	x = np.ones(3)
-	# 	self.assertEqual(6., sum(v * x) )
+	# # this test fails currently with a seg fault due to how we implement the swig interface
+	# # def testArrayInterface(self):
+	# # 	this test fails for some combinations of Python version and system
+	# # 	v = crp.Vector3d(1., 2., 3.)
+	# # 	self.assertEqual(2., np.mean(v) )
+	# # 	x = np.ones(3)
+	# # 	self.assertEqual(6., sum(v * x) )
 
 	def testRepr(self):
 		v = crp.Vector3d(1., 2., 3.)
@@ -280,7 +280,7 @@ class testVector3(unittest.TestCase):
 		self.assertRaises(IndexError, v.__getitem__, 3)
 		self.assertRaises(IndexError, v.__setitem__, 3, 10)
 
-	# # This test is currently disabled because it fails on some systems.
+	# # this test fails currently with a seg fault due to how we implement the swig interface
 	# def testVector3dToArray(self): 
 	# 	v = crp.Vector3d(1., 2., 3.)
 	# 	a = np.array([v])
