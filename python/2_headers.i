@@ -249,7 +249,6 @@
 %implicitconv crpropa::ref_ptr<crpropa::Surface>;
 %template(SurfaceRefPtr) crpropa::ref_ptr<crpropa::Surface>;
 %feature("director") crpropa::Surface;
-%feature("director") crpropa::ClosedSurface;
 %include "crpropa/Geometry.h"
 
 %template(ModuleRefPtr) crpropa::ref_ptr<crpropa::Module>;
