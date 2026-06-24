@@ -9,11 +9,13 @@ All include should be in `include/myPlugin/`, so that the `myPlugin` folder can 
 minimum risk of overwriting any existing files in the install location.
 Additionally a file `include/myPlugin.h` should be provided where all header files in `include/myPlugin/` are included so the user has an easy way of including the whole project.
 
-The source files should be placed in `src/`.
+The source files should be placed in `src/`. They then need to be added after line 111 in the `CMakeLists.txt`.
 
 All files related to the python package (so the swig header and eventual python tools) should be placed in `python/`.
+Additional python tools like for example a `utils.py` or a `__main__.py` should be added to `python/myPlugin/`.
 
 Finally you should create tests that test if your code is working (technically and physically) to `test/`.
+You then need to add them into the test section in the `CMakeLists.txt` after line 259.
 
 ## Adjusting custom module name
 
