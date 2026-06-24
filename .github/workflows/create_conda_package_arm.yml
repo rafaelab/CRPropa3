@@ -5,14 +5,14 @@ on:
       - master
       - releases/**
     paths:
+      - ".github/workflows/create_conda_package_arm.yml"
       - "**.cpp"
       - "**.h"
       - "**.py"
       - "**.i"
       - "**/CMakeLists.txt"
-    paths-ignore:
-      - "plugin-template"
-      - "doc"
+      - "!plugin-template"
+      - "!doc"
   release:
     types: [published]
   workflow_dispatch:

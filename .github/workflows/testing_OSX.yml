@@ -2,24 +2,24 @@ name: crpropa-testing_OSX
 on:
   push:
     paths:
+      - ".github/workflows/testing_OSX.yml"
       - "**.cpp"
       - "**.h"
       - "**.py"
       - "**.i"
       - "**/CMakeLists.txt"
-    paths-ignore:
-      - "plugin-template"
-      - "doc"
+      - "!plugin-template"
+      - "!doc"
   pull_request:
     paths:
+      - ".github/workflows/testing_OSX.yml"
       - "**.cpp"
       - "**.h"
       - "**.py"
       - "**.i"
       - "**/CMakeLists.txt"
-    paths-ignore:
-      - "plugin-template"
-      - "doc"
+      - "!plugin-template"
+      - "!doc"
 
 
 jobs:
