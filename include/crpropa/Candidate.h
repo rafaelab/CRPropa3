@@ -81,7 +81,15 @@ public:
 
 	/** Checks if particle is still active */
 	bool isActive() const;
-	/** Sets particle active or unactive, in unactive state it is ignored by all modules */
+	/** Sets particle active or unactive
+	 * When the particle is set unactive it will first finish its current step,
+	 * only at the beginning of the next step the particle will be recognized as unactive
+	 * and the simulation for that particle will stop.
+	 * It might be possible that some modules additionally check if the particle is still active,
+	 * if that happens, it might allready be ignored in those modules during the same step,
+	 * this depends on the order the modules are added to ModuleList.
+	 * @param b  Activate state of particle, false=deactivated
+	 */
 	void setActive(bool b);
 
 	/** Sets trajectory length
