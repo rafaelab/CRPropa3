@@ -1,5 +1,23 @@
 name: crpropa-example-test
-on: [push, pull_request]
+on:
+  push:
+    paths:
+      - "**.cpp"
+      - "**.h"
+      - "**.py"
+      - "**.i"
+      - "**/CMakeLists.txt"
+    paths-ignore:
+      - "plugin-template"
+  pull_request:
+    paths:
+      - "**.cpp"
+      - "**.h"
+      - "**.py"
+      - "**.i"
+      - "**/CMakeLists.txt"
+    paths-ignore:
+      - "plugin-template"
 
 jobs:
   linux:

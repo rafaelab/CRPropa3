@@ -10,6 +10,9 @@ on:
       - "**.py"
       - "**.i"
       - "**/CMakeLists.txt"
+    paths-ignore:
+      - "plugin-template"
+      - "doc"
   release:
     types: [published]
   workflow_dispatch:

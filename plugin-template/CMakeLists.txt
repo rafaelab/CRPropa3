@@ -47,11 +47,11 @@ if(USE_CRPROPA_BUILTIN)
 		list(APPEND CMAKE_MODULE_PATH "${crpropa_SOURCE_DIR}/cmake")
 		
 		# set CMAKE_ARGS per set befor add_subdirectory (FORCE option overwrites existing entries):
-		set(ENABLE_GIT OFF CACHE BOOL "")
-		set(ENABLE_GALACTICMAGNETICLENS OFF CACHE BOOL "")
-		set(OMP_SCHEDULE "dynamic" CACHE STRING "")
-		set(FAST_WAVES ON CACHE BOOL "")
-		set(SIMD_EXTENSIONS "avx+fma" CACHE STRING "")
+		# set(ENABLE_GIT OFF CACHE BOOL "")
+		# set(ENABLE_GALACTICMAGNETICLENS OFF CACHE BOOL "")
+		# set(OMP_SCHEDULE "dynamic" CACHE STRING "")
+		# set(FAST_WAVES ON CACHE BOOL "")
+		# set(SIMD_EXTENSIONS "avx+fma" CACHE STRING "")
 		
 		FetchContent_MakeAvailable(crpropa)
 	endif()

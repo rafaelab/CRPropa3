@@ -1,5 +1,25 @@
 name: crpropa-testing_ubuntu24
-on: [push, pull_request]
+on:
+  push:
+    paths:
+      - "**.cpp"
+      - "**.h"
+      - "**.py"
+      - "**.i"
+      - "**/CMakeLists.txt"
+    paths-ignore:
+      - "plugin-template"
+      - "doc"
+  pull_request:
+    paths:
+      - "**.cpp"
+      - "**.h"
+      - "**.py"
+      - "**.i"
+      - "**/CMakeLists.txt"
+    paths-ignore:
+      - "plugin-template"
+      - "doc"
 
 jobs:
   x64:
