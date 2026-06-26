@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.14)
 
 # set the version to whatever you want
 # also change the name
-project(myPlugin VERSION 1.0.0 LANGUAGES Fortran C CXX)
+project(myPlugin VERSION 1.0.0 LANGUAGES C CXX)
 
 # should be at least 17
 set(CMAKE_CXX_STANDARD 17)
@@ -45,6 +45,8 @@ if(USE_CRPROPA_BUILTIN)
 		FetchContent_Declare(
 			crpropa
 			GIT_REPOSITORY "https://github.com/CRPropa/CRPropa3.git"
+			# # The GIT_TAG option enbales you to specify a commit hash or specific tag, 
+			# # see https://cmake.org/cmake/help/latest/module/ExternalProject.html#git
 			# GIT_TAG f5cf064cf60b8a4771deab6d963b01d44df13c3f
 		)
 		

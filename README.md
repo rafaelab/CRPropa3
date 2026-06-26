@@ -6,6 +6,7 @@ CRPropa
 [![Build: ubuntu24](https://github.com/CRPropa/CRPropa3/actions/workflows/testing_ubuntu24.yml/badge.svg)](https://github.com/CRPropa/CRPropa3/actions/workflows/testing_ubuntu24.yml)
 [![Build: ubuntu22](https://github.com/CRPropa/CRPropa3/actions/workflows/testing_ubuntu22.yml/badge.svg)](https://github.com/CRPropa/CRPropa3/actions/workflows/testing_ubuntu22.yml)
 [![Build: macos14](https://github.com/CRPropa/CRPropa3/actions/workflows/testing_OSX.yml/badge.svg)](https://github.com/CRPropa/CRPropa3/actions/workflows/testing_OSX.yml)
+[![plugin-template](https://github.com/CRPropa/CRPropa3/actions/workflows/testing_plugin-template.yml/badge.svg)](https://github.com/CRPropa/CRPropa3/actions/workflows/testing_plugin-template.yml)
 [![Examples](https://github.com/CRPropa/CRPropa3/actions/workflows/test_examples.yml/badge.svg)](https://github.com/CRPropa/CRPropa3/actions/workflows/test_examples.yml)
 
 ![Issues](https://img.shields.io/github/issues/crpropa/CRPropa3)
