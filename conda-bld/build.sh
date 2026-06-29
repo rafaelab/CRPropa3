@@ -1,3 +1,5 @@
+#!/bin/bash
+
 set -ex
 
 PYTHON_INCLUDE_DIR=$(${PYTHON} -c "import sysconfig; print(sysconfig.get_paths()['include'])")
@@ -13,7 +15,7 @@ cmake .. -G Ninja \
 	-DPython_INSTALL_PACKAGE_DIR="${SP_DIR}" \
 	-DCMAKE_INSTALL_PREFIX="${PREFIX}" \
 	-DBUILD_DOC=OFF \
-	-DDOWNLOAD_DATA=ON \
+	-DDOWNLOAD_DATA=OFF \
 	-DENABLE_COVERAGE=OFF \
 	-DENABLE_GIT=ON \
 	-DENABLE_HDF5=ON \
