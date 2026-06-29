@@ -61,7 +61,7 @@ class MomentumDiffusion(unittest.TestCase):
 		
 		bscal = self.momDif.calculateBScalar()
 		self.assertEqual(np.sqrt(2*self.Dpp), bscal)
-		ascal = self.momDif.calculateAScalar(p, Dpp)
+		ascal = self.momDif.calculateAScalar(p)
 		self.assertAlmostEqual(2/p*self.Dpp, ascal)
 	
 	def test_NeutralParticle(self):
@@ -73,3 +73,6 @@ class MomentumDiffusion(unittest.TestCase):
 		
 		self.assertEqual(c.current.getEnergy(), E) #acts only on charged particles
 		self.assertEqual(c.getNextStep(), 10)
+
+if __name__ == '__main__':
+	unittest.main()
