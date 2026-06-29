@@ -2,7 +2,8 @@
 
 mkdir -p  $PREFIX/share/crpropa &> /dev/null  # eliminate possible warning outputs
 cd $PREFIX/share/crpropa
-CRPROPA_DATAFILE_VER=$(cat CMakeLists.txt | grep --extended-regexp "set\( *CRPROPA_DATAFILE_VER +.+\)" | sed -E "s/set\( *CRPROPA_DATAFILE_VER +\"//g" | sed -E "s/\"\)//g")
+#define CRPROPA_DATA_VERSION "2024-04-30"
+CRPROPA_DATAFILE_VER=$(cat $PREFIX/include/crpropa/Version.h | grep --extended-regexp "#define +CRPROPA_DATA_VERSION +.+" | sed -E "s/#define +CRPROPA_DATA_VERSION +\"//g" | sed -E "s/\"//g")
 USERPWD=3juW9sntQX2IWBS
 
 # download data
