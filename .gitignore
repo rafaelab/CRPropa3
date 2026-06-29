@@ -27,3 +27,4 @@ cmake/CMakeFiles/
 *.dat
 *.ipynb_checkpoints
 *.idea
+.DS_Store

@@ -9,8 +9,6 @@ jobs:
         config:
           - name: "macos-14"
             os: macos-14 
-            cxx: "clang++"
-            cc: "clang"
             fc: "gfortran-14"
             swig_builtin: "On" #uses swig 4.0.2
             py: "/usr/bin/python3" # python 3.14
@@ -27,10 +25,7 @@ jobs:
          pip show numpy # cross-check numpy version for Python_NumPy_INCLUDE_DIR
      - name: Set up the build
        env:
-         CXX: ${{ matrix.config.cxx }}
-         CC: ${{ matrix.config.cc }}
-         FC: ${{ matrix.config.fc }}
-         CRPROPA_DATA_PATH: "/Users/runner/work/CRPropa3/CRPropa3/build/data"
+          FC: ${{ matrix.config.fc }}
        run: |
         mkdir build
         cd build

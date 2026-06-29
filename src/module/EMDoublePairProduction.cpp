@@ -1,14 +1,15 @@
 #include "crpropa/module/EMDoublePairProduction.h"
 #include "crpropa/Units.h"
 #include "crpropa/Random.h"
+#include "crpropa/Common.h"
 
-#include <fstream>
-#include <limits>
-#include <stdexcept>
+#include <vector>
+#include <cmath>
 
 namespace crpropa {
 
-EMDoublePairProduction::EMDoublePairProduction(ref_ptr<PhotonField> photonField, bool haveElectrons, double thinning, double limit) {
+EMDoublePairProduction::EMDoublePairProduction(ref_ptr<PhotonField> photonField, bool haveElectrons, double thinning, double limit, ref_ptr<Surface> surface) {
+	setSurface(surface);
 	setPhotonField(photonField);
 	setHaveElectrons(haveElectrons);
 	setLimit(limit);
@@ -16,10 +17,23 @@ EMDoublePairProduction::EMDoublePairProduction(ref_ptr<PhotonField> photonField,
 }
 
 void EMDoublePairProduction::setPhotonField(ref_ptr<PhotonField> photonField) {
+	
 	this->photonField = photonField;
 	std::string fname = photonField->getFieldName();
 	setDescription("EMDoublePairProduction: " + fname);
-	initRate(getDataPath("EMDoublePairProduction/rate_" + fname + ".txt"));
+	
+	// choose the right interaction rates for the used photon field
+	if (!this->photonField->hasPositionDependence()) {
+		this->interactionRates = new InteractionRatesHomogeneous(
+			getDataPath("EMDoublePairProduction/rate_" + fname + ".txt")
+		);
+	} else {
+		this->interactionRates = new InteractionRatesPositionDependent(
+			getDataPath("EMDoublePairProduction/"+fname+"/Rate/"),
+			"",
+			this->surface
+		);
+	}
 }
 
 void EMDoublePairProduction::setHaveElectrons(bool haveElectrons) {
@@ -34,37 +48,27 @@ void EMDoublePairProduction::setThinning(double thinning) {
 	this->thinning = thinning;
 }
 
-void EMDoublePairProduction::initRate(std::string filename) {
-	std::ifstream infile(filename.c_str());
-
-	if (!infile.good())
-		throw std::runtime_error("EMDoublePairProduction: could not open file " + filename);
-
-	// clear previously loaded interaction rates
-	tabEnergy.clear();
-	tabRate.clear();
-
-	while (infile.good()) {
-		if (infile.peek() != '#') {
-			double a, b;
-			infile >> a >> b;
-			if (infile) {
-				tabEnergy.push_back(pow(10, a) * eV);
-				tabRate.push_back(b / Mpc);
-			}
-		}
-		infile.ignore(std::numeric_limits < std::streamsize > ::max(), '\n');
-	}
-	infile.close();
+void EMDoublePairProduction::setSurface(ref_ptr<Surface> surface) {
+	this->surface = surface;
 }
 
+ref_ptr<Surface> EMDoublePairProduction::getSurface() const {
+	return this->surface;
+}
+
+void EMDoublePairProduction::setInteractionRates(ref_ptr<InteractionRates> intRates) {
+	this->interactionRates = intRates;
+}
+
+ref_ptr<InteractionRates> EMDoublePairProduction::getInteractionRates() const {
+	return this->interactionRates;
+}
+
+void EMDoublePairProduction::initRate(std::string path) {
+	this->interactionRates->initRate(path);
+}
 
 void EMDoublePairProduction::performInteraction(Candidate *candidate) const {
-	// the photon is lost after the interaction
-	candidate->setActive(false);
-
-	if (not haveElectrons)
-		return;
 
 	// Use assumption of Lee 96 arXiv:9604098
 	// Energy is equally shared between one e+e- pair, but take mass of second e+e- pair into account.
@@ -73,6 +77,12 @@ void EMDoublePairProduction::performInteraction(Candidate *candidate) const {
 	double E = candidate->current.getEnergy() * (1 + z);
 	double Ee = (E - 2 * mass_electron * c_squared) / 2;
 
+	// the photon is lost after the interaction
+	candidate->setActive(false);
+
+	if (not haveElectrons)
+		return;
+	
 	Random &random = Random::instance();
 	Vector3d pos = random.randomInterpolatedPosition(candidate->previous.getPosition(), candidate->current.getPosition());
 
@@ -89,6 +99,7 @@ void EMDoublePairProduction::performInteraction(Candidate *candidate) const {
 }
 
 void EMDoublePairProduction::process(Candidate *candidate) const {
+	
 	// check if photon
 	if (candidate->current.getId() != 22)
 		return;
@@ -96,13 +107,14 @@ void EMDoublePairProduction::process(Candidate *candidate) const {
 	// scale the electron energy instead of background photons
 	double z = candidate->getRedshift();
 	double E = (1 + z) * candidate->current.getEnergy();
-
-	// check if in tabulated energy range
-	if (E < tabEnergy.front() or (E > tabEnergy.back()))
-		return;
+	Vector3d position = candidate->current.getPosition();
 
 	// interaction rate
-	double rate = interpolate(E, tabEnergy, tabRate);
+	double rate = this->interactionRates->getProcessRate(E, position);
+		
+	if (rate < 0)
+		return;
+		
 	rate *= pow_integer<2>(1 + z) * photonField->getRedshiftScaling(z);
 
 	// check for interaction
