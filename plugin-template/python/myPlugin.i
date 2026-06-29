@@ -16,9 +16,4 @@
 %import (module="crpropa") "crpropa.i"
 
 /* include plugin parts to generate wrappers for */
-%include "myPlugin.h"
-
-
-
-
-
+%include "myPlugin/plugin.h"
