@@ -1,5 +1,27 @@
 name: crpropa-example-test
-on: [push, pull_request]
+on:
+  push:
+    paths:
+      - ".github/workflows/test_examples.yml"
+      - "**.cpp"
+      - "**.h"
+      - "**.py"
+      - "**.i"
+      - "**.ipynb"
+      - "**/CMakeLists.txt"
+      - "!plugin-template/**"
+      - "!test/**"
+  pull_request:
+    paths:
+      - ".github/workflows/test_examples.yml"
+      - "**.cpp"
+      - "**.h"
+      - "**.py"
+      - "**.i"
+      - "**.ipynb"
+      - "**/CMakeLists.txt"
+      - "!plugin-template/**"
+      - "!test/**"
 
 jobs:
   linux:

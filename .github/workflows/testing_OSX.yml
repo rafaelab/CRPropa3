@@ -1,5 +1,27 @@
 name: crpropa-testing_OSX
-on: [push, pull_request]
+on:
+  push:
+    paths:
+      - ".github/workflows/testing_OSX.yml"
+      - "**.cpp"
+      - "**.h"
+      - "**.py"
+      - "**.i"
+      - "**/CMakeLists.txt"
+      - "!plugin-template/**"
+      - "!doc/**"
+  pull_request:
+    paths:
+      - ".github/workflows/testing_OSX.yml"
+      - "**.cpp"
+      - "**.h"
+      - "**.py"
+      - "**.i"
+      - "**/CMakeLists.txt"
+      - "!plugin-template/**"
+      - "!doc/**"
+
+
 jobs:
   mac:
     runs-on: ${{ matrix.config.os }}
@@ -17,7 +39,7 @@ jobs:
        uses: actions/checkout@v6
      - name: Preinstall 
        run: | 
-         brew install hdf5 fftw cfitsio muparser libomp swig 
+         brew install hdf5 fftw cfitsio muparser libomp swig
          python3 -m venv venv
          source venv/bin/activate
          python -m pip install --upgrade pip

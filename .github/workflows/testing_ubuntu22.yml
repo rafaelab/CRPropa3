@@ -1,5 +1,25 @@
 name: crpropa-testing_ubuntu22
-on: [push, pull_request]
+on:
+  push:
+    paths:
+      - ".github/workflows/testing_ubuntu22.yml"
+      - "**.cpp"
+      - "**.h"
+      - "**.py"
+      - "**.i"
+      - "**/CMakeLists.txt"
+      - "!plugin-template/**"
+      - "!doc/**"
+  pull_request:
+    paths:
+      - ".github/workflows/testing_ubuntu22.yml"
+      - "**.cpp"
+      - "**.h"
+      - "**.py"
+      - "**.i"
+      - "**/CMakeLists.txt"
+      - "!plugin-template/**"
+      - "!doc/**"
 
 jobs:
   linux:
