@@ -78,7 +78,9 @@ jobs:
           cp doc/pages/example_notebooks/galactic_lensing/crpropa_output.txt "$runfolder"/
           cd "$runfolder"
           for file in *.py; do
-            if [ "$file" = "custom-photon-fieldipynb.py" ] || 
+            if [ "$file" = "custom-photon-fieldipynb.py" ] ||
+                [ "$file" = "01_field_generationipynb.py" ] ||
+                [ "$file" = "02_position_dependent_propagationipynb.py" ] ||
                 [ "$file" = "MHD_modelsipynb.py" ] || 
                 [ "$file" = "density_grid_samplingipynb.py" ] ||
                 [ "$file" = "lensing_crv4ipynb.py" ] ||
