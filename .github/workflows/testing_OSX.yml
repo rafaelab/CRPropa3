@@ -1,5 +1,27 @@
 name: crpropa-testing_OSX
-on: [push, pull_request]
+on:
+  push:
+    paths:
+      - ".github/workflows/testing_OSX.yml"
+      - "**.cpp"
+      - "**.h"
+      - "**.py"
+      - "**.i"
+      - "**/CMakeLists.txt"
+      - "!plugin-template/**"
+      - "!doc/**"
+  pull_request:
+    paths:
+      - ".github/workflows/testing_OSX.yml"
+      - "**.cpp"
+      - "**.h"
+      - "**.py"
+      - "**.i"
+      - "**/CMakeLists.txt"
+      - "!plugin-template/**"
+      - "!doc/**"
+
+
 jobs:
   mac:
     runs-on: ${{ matrix.config.os }}
@@ -9,17 +31,15 @@ jobs:
         config:
           - name: "macos-14"
             os: macos-14 
-            cxx: "clang++"
-            cc: "clang"
             fc: "gfortran-14"
             swig_builtin: "On" #uses swig 4.0.2
             py: "/usr/bin/python3" # python 3.14
     steps:
      - name: Checkout repository 
-       uses: actions/checkout@v4 
+       uses: actions/checkout@v6
      - name: Preinstall 
        run: | 
-         brew install hdf5 fftw cfitsio muparser libomp swig 
+         brew install hdf5 fftw cfitsio muparser libomp swig
          python3 -m venv venv
          source venv/bin/activate
          python -m pip install --upgrade pip
@@ -27,10 +47,7 @@ jobs:
          pip show numpy # cross-check numpy version for Python_NumPy_INCLUDE_DIR
      - name: Set up the build
        env:
-         CXX: ${{ matrix.config.cxx }}
-         CC: ${{ matrix.config.cc }}
-         FC: ${{ matrix.config.fc }}
-         CRPROPA_DATA_PATH: "/Users/runner/work/CRPropa3/CRPropa3/build/data"
+          FC: ${{ matrix.config.fc }}
        run: |
         mkdir build
         cd build
@@ -39,8 +56,6 @@ jobs:
           -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/venv \
           -DENABLE_PYTHON=True \
           -DPython_EXECUTABLE=$GITHUB_WORKSPACE/venv/bin/python \
-          -DCMAKE_CXX_STANDARD=17 \
-          -DCMAKE_CXX_FLAGS="-std=c++17 -stdlib=libc++" \
           -DENABLE_TESTING=On \
           -DENABLE_SWIG_BUILTIN=${{ matrix.config.swig_builtin }} \
           -DPython_INSTALL_PACKAGE_DIR=$GITHUB_WORKSPACE/venv/lib/python3.14/site-packages
@@ -57,7 +72,7 @@ jobs:
          ctest --output-on-failure --repeat until-pass:3
      - name: Archive test results
        if: always()
-       uses: actions/upload-artifact@v4
+       uses: actions/upload-artifact@v7
        with:
          name: "test-report_${{matrix.config.name}}"
          path: build/Testing/Temporary/LastTest.log

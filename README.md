@@ -1,11 +1,12 @@
 CRPropa
 ========
 
-![stable release](https://img.shields.io/badge/stable\_release-3.2.1-darkblue)
+![stable release](https://img.shields.io/badge/stable\_release-3.2.2-darkblue)
 
+[![Build: ubuntu24](https://github.com/CRPropa/CRPropa3/actions/workflows/testing_ubuntu24.yml/badge.svg)](https://github.com/CRPropa/CRPropa3/actions/workflows/testing_ubuntu24.yml)
 [![Build: ubuntu22](https://github.com/CRPropa/CRPropa3/actions/workflows/testing_ubuntu22.yml/badge.svg)](https://github.com/CRPropa/CRPropa3/actions/workflows/testing_ubuntu22.yml)
-[![Build: ubuntu20](https://github.com/CRPropa/CRPropa3/actions/workflows/testing_ubuntu24.yml/badge.svg)](https://github.com/CRPropa/CRPropa3/actions/workflows/testing_ubuntu24.yml)
 [![Build: macos14](https://github.com/CRPropa/CRPropa3/actions/workflows/testing_OSX.yml/badge.svg)](https://github.com/CRPropa/CRPropa3/actions/workflows/testing_OSX.yml)
+[![plugin-template](https://github.com/CRPropa/CRPropa3/actions/workflows/testing_plugin-template.yml/badge.svg)](https://github.com/CRPropa/CRPropa3/actions/workflows/testing_plugin-template.yml)
 [![Examples](https://github.com/CRPropa/CRPropa3/actions/workflows/test_examples.yml/badge.svg)](https://github.com/CRPropa/CRPropa3/actions/workflows/test_examples.yml)
 
 ![Issues](https://img.shields.io/github/issues/crpropa/CRPropa3)
@@ -37,12 +38,36 @@ Use the guest login and go to the CRPropa example via "VISPA Cluster" --> "Open 
 
 
 ## Installation and Documentation
-To install CRPropa, download and unzip either the
 
-* [latest release](https://github.com/CRPropa/CRPropa3/releases/latest) (recommended),
-* or [current development version](https://github.com/CRPropa/CRPropa3).
+CRPropa can be installed simply over its [conda package](https://crpropa.github.io/CRPropa3/pages/Installation) on every linux or macos system. For the most recent release simply use:
 
-Installation instructions, usage examples  and API documentation can be found on the [documentation web site of
+```sh
+conda install -c conda-forge crpropa::crpropa
+```
+
+For the current master you can use:
+
+```sh
+conda install -c conda-forge crpropa::crpropa==master
+```
+
+### Testing CRPropa
+
+You can test your CRPropa installation by just using:
+
+```sh
+testCRPropa
+```
+
+You can find the test logs at the following location:
+
+```sh
+$CONDA_PREFIX/share/crpropa/test/Testing/Temporary/
+```
+
+### Building from Source
+
+How to install from source, usage examples and API documentation can be found on the [documentation web site of
 CRPropa](https://crpropa.github.io/CRPropa3/).
 
 
@@ -83,3 +108,4 @@ Make sure to correctly cite the plugins when using them.
 | grplinst | Plasma Instabilities | <https://github.com/rafaelab/grplinst> |
 | monopole | Magnetic Monopole Studies | https://github.com/chchristie/monopole/tree/main |
 | ROOTOutputPlugin | Output into root file format | https://github.com/CRPropa/ROOTOutputPlugin |
+| Hadronic Interactions | Proton + Proton interactions | https://gitlab.ruhr-uni-bochum.de/doernjkj/hadronic-interaction-in-crpropa |

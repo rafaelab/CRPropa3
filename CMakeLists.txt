@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.14)
 
 project(CRPropa Fortran C CXX)
-set(CRPROPA_RELEASE_VERSION 3.2.1+)  # Update for new release
+set(CRPROPA_RELEASE_VERSION 3.2.2+)  # Update for new release
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
 set(CRPROPA_EXTRA_SOURCES)
@@ -56,7 +56,6 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif(NOT CMAKE_BUILD_TYPE)
 message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
-
 
 # ----------------------------------------------------------------------------
 # Version info from Git
@@ -145,6 +144,9 @@ endif(ENABLE_COVERAGE)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/libs/kiss)
 list(APPEND CRPROPA_EXTRA_LIBRARIES kiss)
 list(APPEND CRPROPA_EXTRA_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/libs/kiss/include)
+
+# nanoflann (provided)
+list(APPEND CRPROPA_EXTRA_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/libs/nanoflann/include)
 
 # HepID (provided)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/libs/HepPID)
@@ -290,13 +292,13 @@ if(APPLE OR USE_ABSOLUTE_RPATH)
   set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
   set(ABSOLUTE_RPATH "${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX}")
   if(NOT IS_ABSOLUTE ${ABSOLUTE_RPATH})
-    set(ABSOLUTE_RPATH ${CMAKE_CURRENT_BINARY_DIR}/${ABSOLUTE_RPATH})
+    set(ABSOLUTE_RPATH ${CMAKE_BINARY_DIR}/${ABSOLUTE_RPATH})
   endif()
 
   list(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${ABSOLUTE_RPATH}" isSystemDir)
   if("${isSystemDir}" STREQUAL "-1")
     message(STATUS "Use absolute RPATH ${ABSOLUTE_RPATH}")
-    set(CMAKE_INSTALL_RPATH "${ABSOLUTE_RPATH}")
+    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH}:${ABSOLUTE_RPATH}")
   endif("${isSystemDir}" STREQUAL "-1")
 endif()
 
@@ -353,6 +355,7 @@ add_library(crpropa SHARED
   ${CMAKE_CURRENT_SOURCE_DIR}/src/EmissionMap.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/Geometry.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/GridTools.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/InteractionRates.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/Module.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/ParticleID.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/ParticleMass.cpp
@@ -444,7 +447,10 @@ else()
   MESSAGE(STATUS "Build of documentation disabeled. Enable with BUILD_DOC=On")
 endif(BUILD_DOC)
 
-
+# Only add stdc++fs for older GCC (needed for Ubuntu 20)
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 10)
+    target_link_libraries(crpropa stdc++fs)
+endif()
 
 # ----------------------------------------------------------------------------
 # Python
@@ -457,6 +463,7 @@ find_package(Python 3.0 COMPONENTS Interpreter Development NumPy)
 
 if(ENABLE_PYTHON AND Python_FOUND)
   find_package(SWIG 3.0 REQUIRED)
+  include(UseSWIG)
   include_directories(${Python_INCLUDE_DIRS})
   add_definitions(-DCRPROPA_HAVE_PYTHON)
   list(APPEND CRPROPA_SWIG_DEFINES -DCRPROPA_HAVE_PYTHON)
@@ -514,6 +521,7 @@ if(ENABLE_PYTHON AND Python_FOUND)
 
   if(ENABLE_SWIG_BUILTIN)
     set(BUILTIN "-builtin")
+    list(APPEND CRPROPA_SWIG_DEFINES "-builtin")
     if(SWIG_VERSION VERSION_LESS 4.0.2)
         message(WARNING, "The SWIG builtin option should not be used with SWIG version below 4.0.2 due to https://github.com/swig/swig/issues/1595")
     endif()
@@ -523,34 +531,64 @@ if(ENABLE_PYTHON AND Python_FOUND)
 
   set(SWIG_INCLUDES)
   foreach(p in ${SWIG_INCLUDE_DIRECTORIES})
-    list(APPEND SWIG_INCLUDES -I${p})
+    list(APPEND SWIG_INCLUDES ${p})
   endforeach()
 
   file(GLOB_RECURSE CRPROPA_SWIG_INPUTS python/*.i)
-  set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/crpropa_wrap.cxx PROPERTIES GENERATED true)
-  add_custom_target(crpropa-swig-wrapper
-    COMMAND swig ${BUILTIN} -c++ -python -I${CMAKE_CURRENT_SOURCE_DIR}/include -I${CMAKE_CURRENT_SOURCE_DIR}/libs/HepPID/include ${SWIG_INCLUDES} ${CRPROPA_SWIG_DEFINES} -dirprot -o ${CMAKE_CURRENT_BINARY_DIR}/crpropa_wrap.cxx -outdir ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/python/crpropa${BUILTIN}.i
-    DEPENDS ${CRPROPA_SWIG_INPUTS} ${CRPROPA_INCLUDES} )
+
+  set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/python/crpropa${BUILTIN}.i
+    PROPERTIES
+    CPLUSPLUS ON
+    SWIG_MODULE_NAME "crpropa"
+    SWIG_FLAGS "${CRPROPA_SWIG_DEFINES};-dirprot;${CMAKE_SWIG_FLAGS}"
+    DEPENDS "${CRPROPA_SWIG_INPUTS};${CRPROPA_INCLUDES}"
+    OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}
+  )
+  
+  swig_add_library(crpropa-swig TYPE SHARED LANGUAGE python
+    SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/python/crpropa${BUILTIN}.i
+  )
+  
+  target_include_directories(crpropa-swig PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/libs/HepPID/include
+    ${SWIG_INCLUDES}
+  )
+  
+  target_link_libraries(crpropa-swig crpropa ${Python_LIBRARIES} ${Python_LIBRARY})
+  
+  set_target_properties(crpropa-swig PROPERTIES
+    PREFIX ""
+    OUTPUT_NAME "_crpropa"
+    SUFFIX ".so"
+  )
+
+  if(APPLE)
+    set_target_properties(crpropa-swig PROPERTIES
+      INSTALL_RPATH "@loader_path;@loader_path/../../${PYTHON_PROJECT}/.libs"
+    )
+    set_property(TARGET crpropa-swig APPEND PROPERTY
+      LINK_FLAGS "-flat_namespace -undefined suppress"
+    )
+  endif()
 
   if(BUILD_DOC AND DOXYGEN_FOUND)
-    add_dependencies(crpropa-swig-wrapper docstrings_from_doxy)
+    add_dependencies(crpropa-swig docstrings_from_doxy)
   endif(BUILD_DOC AND DOXYGEN_FOUND)
-
-  add_library(crpropa-swig MODULE ${CMAKE_CURRENT_BINARY_DIR}/crpropa_wrap.cxx)
-  set_target_properties(crpropa-swig PROPERTIES PREFIX "")
-  # disable warnings on automatically generated interface code
-  set_target_properties(crpropa-swig PROPERTIES COMPILE_FLAGS "-w")
-  set_target_properties(crpropa-swig PROPERTIES OUTPUT_NAME "_crpropa")
-  target_link_libraries(crpropa-swig crpropa ${Python_LIBRARIES} ${Python_LIBRARY})
-  add_dependencies(crpropa-swig crpropa-swig-wrapper)
 
   install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/python/crpropa" DESTINATION "${Python_INSTALL_PACKAGE_DIR}")
   install(FILES "${CMAKE_CURRENT_BINARY_DIR}/crpropa.py" DESTINATION "${Python_INSTALL_PACKAGE_DIR}/crpropa")
   install(TARGETS crpropa-swig LIBRARY DESTINATION "${Python_INSTALL_PACKAGE_DIR}/crpropa")
   install(FILES ${CRPROPA_SWIG_INPUTS} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/crpropa/swig_interface)
 
-endif(ENABLE_PYTHON AND Python_FOUND)
+  find_program(PYBIND11_STUBGEN_EXECUTABLE NAMES "pybind11-stubgen")
+	if(PYBIND11_STUBGEN_EXECUTABLE)
+		message(STATUS "Found pybind11-stubgen at ${PYBIND11_STUBGEN_EXECUTABLE}")
+		install(CODE "execute_process(COMMAND ${PYBIND11_STUBGEN_EXECUTABLE} --ignore-all-errors -o ${Python_SITELIB} crpropa)")
+    install(CODE "execute_process(COMMAND echo -- Generated python stubs over pybind11-stubgen for crpropa)")
+	endif()
 
+endif(ENABLE_PYTHON AND Python_FOUND)
 
 # ----------------------------------------------------------------------------
 # Install
@@ -564,6 +602,7 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION ${CMAKE_INSTA
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/ DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.h")
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data/ DESTINATION ${CMAKE_INSTALL_PREFIX}/share/crpropa/ PATTERN ".git" EXCLUDE)
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/libs/kiss/include/ DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/libs/nanoflann/include/ DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 
 # ------------------------------------------------------------------
 # Documentation

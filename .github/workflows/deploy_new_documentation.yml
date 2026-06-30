@@ -20,7 +20,7 @@ jobs:
     # define steps to take
     steps: 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Prerequirements
         run: |
           sudo apt-get update

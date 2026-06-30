@@ -1,6 +1,22 @@
 ## CRPropa vNext
 
 ### Bug fixes:
+
+### New features:
+* Improved plugin-template and added test to ensure the template is working
+
+### Interface changes:
+
+### Features that are deprecated and will be removed after this release
+
+### Removed features
+
+### New plugins and resources linked on the webpages
+
+
+## CRPropa 3.2.2
+
+### Bug fixes:
 * Fixed sign for exponential decay of magn. field strength with Galactic height in LogarithmicSpiralField
 * Fixed r term in source distribution for SNR and Pulsar
 * Fixed wrong mass inheritance for secondaries other than nuclei or electron/positron

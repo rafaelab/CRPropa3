@@ -25,7 +25,7 @@ author = u'The CRPropa Developers'
 # The short X.Y version
 version = u'3.2'
 # The full version, including alpha/beta/rc tags
-release = u'3.2.1'
+release = u'3.2.2'
 
 
 # -- General configuration ---------------------------------------------------

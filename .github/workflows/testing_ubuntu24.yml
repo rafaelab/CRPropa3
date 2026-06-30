@@ -1,5 +1,25 @@
 name: crpropa-testing_ubuntu24
-on: [push, pull_request]
+on:
+  push:
+    paths:
+      - ".github/workflows/testing_ubuntu24.yml"
+      - "**.cpp"
+      - "**.h"
+      - "**.py"
+      - "**.i"
+      - "**/CMakeLists.txt"
+      - "!plugin-template/**"
+      - "!doc/**"
+  pull_request:
+    paths:
+      - ".github/workflows/testing_ubuntu24.yml"
+      - "**.cpp"
+      - "**.h"
+      - "**.py"
+      - "**.i"
+      - "**/CMakeLists.txt"
+      - "!plugin-template/**"
+      - "!doc/**"
 
 jobs:
   x64:
@@ -10,24 +30,17 @@ jobs:
         config:
           - name: "ubuntu-24"
             os: ubuntu-24.04
-            cxx: "g++-14"
-            cc: "gcc-14"
-            fc: "gfortran-14"
             swig_builtin: "On" 
             py: "/usr/bin/python3" 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Preinstall
         run: |
           sudo apt-get update
           sudo apt-get install libmuparser-dev python-dev-is-python3 libhdf5-serial-dev libomp5 libomp-dev libfftw3-dev libcfitsio-dev lcov
           pip install numpy
       - name: Set up the build
-        env:
-          CXX: ${{ matrix.config.cxx }}
-          CC: ${{ matrix.config.cc }}
-          FC: ${{ matrix.config.fc }}
         run: |
           mkdir build
           cd build
@@ -42,7 +55,7 @@ jobs:
           ctest --output-on-failure --repeat until-pass:3
       - name: Archive test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: "test-report_${{matrix.config.os}}"
           path: build/Testing/Temporary/LastTest.log
@@ -54,14 +67,11 @@ jobs:
         config:
           - name: "ubuntu-24"
             os: ubuntu-24.04-arm
-            cxx: "g++-14"
-            cc: "gcc-14"
-            fc: "gfortran-14"
             swig_builtin: "On" 
             py: "/usr/bin/python3" 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Preinstall
         run: |
           sudo apt-get update
@@ -69,10 +79,6 @@ jobs:
           pip install numpy
           pip show numpy
       - name: Set up the build
-        env:
-          CXX: ${{ matrix.config.cxx }}
-          CC: ${{ matrix.config.cc }}
-          FC: ${{ matrix.config.fc }}
         run: |
           mkdir build
           cd build
@@ -87,7 +93,7 @@ jobs:
           ctest --output-on-failure --repeat until-pass:3
       - name: Archive test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: "test-report_${{matrix.config.os}}"
           path: build/Testing/Temporary/LastTest.log
