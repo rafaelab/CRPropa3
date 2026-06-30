@@ -14,13 +14,20 @@ curl -u $USERPWD:$USERPWD -O https://ruhr-uni-bochum.sciebo.de/public.php/webdav
 OS=$(uname)
 if [ $OS = "Linux" ]
 then
-	echo $(cat data-${CRPROPA_DATAFILE_VER}.tar.gz-CHECKSUM) | md5sum --check --status data-${CRPROPA_DATAFILE_VER}.tar.gz
+	if [ "$(cat data-${CRPROPA_DATAFILE_VER}.tar.gz-CHECKSUM)" = "$(md5sum data-${CRPROPA_DATAFILE_VER}.tar.gz)" ]
+	then
+		:
+	else
+		echo Checksums are not the same!
+		exit 1
+	fi
 elif [ $OS = "Darwin" ]
 then
 	if [ $(cat data-${CRPROPA_DATAFILE_VER}.tar.gz-CHECKSUM | cut -d ' ' -f 1) = $(md5 data-${CRPROPA_DATAFILE_VER}.tar.gz | cut -d ' ' -f 4) ]
 	then
 		:
 	else
+		echo Checksums are not the same!
 		exit 1
 	fi
 fi
