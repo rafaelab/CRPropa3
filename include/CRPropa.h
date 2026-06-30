@@ -9,6 +9,7 @@
 #include "crpropa/Geometry.h"
 #include "crpropa/Grid.h"
 #include "crpropa/GridTools.h"
+#include "crpropa/InteractionRates.h"
 #include "crpropa/Logging.h"
 #include "crpropa/Module.h"
 #include "crpropa/ModuleList.h"
@@ -148,10 +149,5 @@
  * @{ @brief Collection of helper functions and modules.
  * @}
  */
-
-
-
-
-
 
 #endif // CRPROPA_H

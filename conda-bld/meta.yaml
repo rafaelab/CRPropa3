@@ -31,7 +31,6 @@ requirements:
     - fftw
     - hdf5
     - muparser
-    - eigen
     # python requirements
     - python
     - numpy >=1.26,<3
@@ -41,7 +40,6 @@ requirements:
     - fftw
     - hdf5
     - muparser
-    - eigen
     # cmake required for tests
     - cmake
     # python requirements

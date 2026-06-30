@@ -1,11 +1,12 @@
 #ifndef CRPROPA_EMPAIRPRODUCTION_H
 #define CRPROPA_EMPAIRPRODUCTION_H
 
-#include <fstream>
-#include <cmath>
+#include <string>
 
 #include "crpropa/Module.h"
 #include "crpropa/PhotonBackground.h"
+#include "crpropa/Geometry.h"
+#include "crpropa/InteractionRates.h"
 
 
 namespace crpropa {
@@ -25,6 +26,7 @@ namespace crpropa {
  Thinning is available. A thinning of 0 means that all particles are tracked. 
  For the maximum thinning of 1, only a few representative particles are added to the list of secondaries.
  Note that for thinning>0 the output must contain the column "weights", which should be included in the post-processing.
+ The surface is defined to include the nodes of the grid contained within.
  */
 class EMPairProduction: public Module {
 private:
@@ -32,25 +34,19 @@ private:
 	bool haveElectrons;					// add secondary electrons to simulation
 	double limit;						// limit the step to a fraction of the mean free path
 	double thinning;					// factor of the thinning (0: no thinning, 1: maximum thinning)
+	ref_ptr<Surface> surface; // surface that includes the nodes in the photonField grid to be included
 	std::string interactionTag = "EMPP";
-
-	// tabulated interaction rate 1/lambda(E)
-	std::vector<double> tabEnergy;  //!< electron energy in [J]
-	std::vector<double> tabRate;  //!< interaction rate in [1/m]
-	
-	// tabulated CDF(s_kin, E) = cumulative differential interaction rate
-	std::vector<double> tabE;  //!< electron energy in [J]
-	std::vector<double> tabs;  //!< s_kin = s - m^2 in [J**2]
-	std::vector< std::vector<double> > tabCDF;  //!< cumulative interaction rate
-
+	ref_ptr<InteractionRates> interactionRates;
 public:
 	/** Constructor
+	 The object used to load, store and access to the interaction rates of the process is the interactionRates pointer.
 	 @param photonField		target photon field
 	 @param haveElectrons	if true, add secondary electrons as candidates
 	 @param thinning		weighted sampling of secondaries (0: all particles are tracked; 1: maximum thinning)
 	 @param limit			step size limit as fraction of mean free path
+	 @param surface  		Grid will be confined to `surface->distance(pos)<0`, so for example inside a closed surface
 	 */
-	EMPairProduction(ref_ptr<PhotonField> photonField, bool haveElectrons = false, double thinning = 0,double limit = 0.1);
+	EMPairProduction(ref_ptr<PhotonField> photonField, bool haveElectrons = false, double thinning = 0, double limit = 0.1, ref_ptr<Surface> surface = nullptr);
 
 	// set the target photon field
 	void setPhotonField(ref_ptr<PhotonField> photonField);
@@ -68,20 +64,43 @@ public:
 	 */
 	void setThinning(double thinning);
 
+	/** Apply a surface that confine the position dependent photon field region.
+	 * The rates are initialized only for distances smaller then 0, so `surface->distance(pos)<0`
+	 * @param surface Grid will be confined to `surface->distance(pos)<0`, so for example inside a closed surface
+	 */
+	void setSurface(ref_ptr<Surface> surface);
+	ref_ptr<Surface> getSurface() const;
+		
 	/** set a custom interaction tag to trace back this interaction
 	 * @param tag string that will be added to the candidate and output
-	 */	
+	 */
 	void setInteractionTag(std::string tag);
 	std::string getInteractionTag() const;
 
-	void initRate(std::string filename);
-	void initCumulativeRate(std::string filename);
-
+	/** set a custom interaction rate
+	 * With this function you can change the type of interaction rate,
+	 * if you would for example like to change from a homogeneous to a position
+	 * dependent interaction rate.
+	 * @param intRates ref_ptr to a InteractionRates class
+	 */
+	void setInteractionRates(ref_ptr<InteractionRates> intRates);
+	ref_ptr<InteractionRates> getInteractionRates() const;
+	
+	/** Loads the interaction rate
+	 * This function loads the interaction rate from a given file/folder.
+	 * @param path The name of the file/folder containing the interaction rates
+	 */
+	void initRate(std::string path);
+	
+	/** Loads the cumulative interaction rate
+	 * This function loads the interaction rate from a given file/folder.
+	 * @param path The name of the file/folder containing the interaction rates
+	 */
+	void initCumulativeRate(std::string path);
+		
 	void performInteraction(Candidate *candidate) const;
 	void process(Candidate *candidate) const;
 };
-/** @}*/
-
 
 } // namespace crpropa
 

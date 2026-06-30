@@ -3,9 +3,12 @@
 
 #include "crpropa/Common.h"
 #include "crpropa/Referenced.h"
+#include "crpropa/Vector3.h"
+#include "crpropa/Geometry.h"
 
 #include <vector>
 #include <string>
+#include <unordered_map>
 
 namespace crpropa {
 /**
@@ -18,45 +21,80 @@ namespace crpropa {
  @brief Abstract base class for photon fields.
  */
 class PhotonField: public Referenced {
+	
 public:
+	
+	/** Constructor
+	 * Sets the following values per default:
+	 * @var fieldName = "AbstractPhotonField";
+	 * @var isRedshiftDependent = false;
+	 * @var isPositionDependent = false;
+	 * @var surface = nullptr;
+	 */
 	PhotonField() {
 		this->fieldName = "AbstractPhotonField";
 		this->isRedshiftDependent = false;
+		this->isPositionDependent = false;
+		this->surface = nullptr;
 	}
-
+	
 	/**
 	 returns comoving photon density [1/m^3].
 	 multiply with (1+z^3) for physical number density.
 	 @param ePhoton		photon energy [J]
 	 @param z			redshift (if redshift dependent, default = 0.)
+	 @param pos			position (if position dependent, default = Vector3d(0,0,0))
 	 */
-	virtual double getPhotonDensity(double ePhoton, double z = 0.) const = 0;
-	virtual double getMinimumPhotonEnergy(double z) const = 0;
-	virtual double getMaximumPhotonEnergy(double z) const = 0;
-	virtual std::string getFieldName() const {
+	virtual double getPhotonDensity(double ePhoton, double z = 0., const Vector3d &pos = Vector3d(0.,0.,0.)) const = 0;
+	/** Returns the minimum photon energy
+	 * @param z  Redshift
+	 * @param pos  Position 
+	 */
+	virtual double getMinimumPhotonEnergy(double z, const Vector3d &pos = Vector3d(0.,0.,0.)) const = 0;
+	/** Returns the maximum photon energy
+	 * @param z  Redshift
+	 * @param pos  Position 
+	 */
+	virtual double getMaximumPhotonEnergy(double z, const Vector3d &pos = Vector3d(0.,0.,0.)) const = 0;
+	/// Returns name of the current used photon field
+	virtual inline std::string getFieldName() const {
 		return this->fieldName;
 	}
-
+	
 	/**
 	 returns overall comoving scaling factor
 	 (cf. CRPropa3-data/calc_scaling.py)
 	 @param z		redshift
 	 */
-	virtual double getRedshiftScaling(double z) const {
+	virtual inline double getRedshiftScaling(double z) const {
 		return 1.;
 	};
-
-	bool hasRedshiftDependence() const {
+	
+	/// Returns if the derived field has a redshift dependency or not
+	inline bool hasRedshiftDependence() const {
 		return this->isRedshiftDependent;
 	}
-
+	/// Returns if the derived field has a position dependency or not
+	inline bool hasPositionDependence() const {
+		return this->isPositionDependent;
+	}
+	/// Returns the set surface
+	inline ref_ptr<Surface> getSurface() const {
+		return this->surface;
+	}
+	/** Sets the name of the currently used photon field
+	 * @param fieldName  Name of the currently used photon field
+	 */
 	void setFieldName(std::string fieldName) {
 		this->fieldName = fieldName;
 	}
-
+	
 protected:
-	std::string fieldName;
-	bool isRedshiftDependent;
+	std::string fieldName;  /**< Name of the currently used field */
+	bool isRedshiftDependent;  /**< If photon field is redshift dependent */
+	bool isPositionDependent;  /**< If photon field is position dependent */
+	ref_ptr<Surface> surface;  /**< Currently used Surface */
+	
 };
 
 /**
@@ -66,28 +104,116 @@ protected:
  This class reads photon field data from files;
  The first file must be a list of photon energies [J], named fieldName_photonEnergy.txt
  The second file must be a list of comoving photon field densities [1/m^3], named fieldName_photonDensity.txt
- Optionally, a third file contains redshifts, named fieldName_redshift.txt
+ Optionally, a third file contains redshifts, named fieldName_redshift.txt.
  */
 class TabularPhotonField: public PhotonField {
-public:
-	TabularPhotonField(const std::string fieldName, const bool isRedshiftDependent = true);
+	public:
+		/** Constructor
+		 * @param fieldName  String field identifier
+		 * @param isRedshiftDependent  Whether or not the given field is redshift dependent
+		 */
+		TabularPhotonField(const std::string fieldName, const bool isRedshiftDependent = true);
 
-	double getPhotonDensity(double ePhoton, double z = 0.) const;
-	double getRedshiftScaling(double z) const;
-	double getMinimumPhotonEnergy(double z) const;
-	double getMaximumPhotonEnergy(double z) const;
+		/** Returns photon density dependend on energy, redshift and position
+		 * Returns the photon density for a specific photon energy, redshift and position
+		 * @param ePhoton  Photon energy
+		 * @param z  Redshift
+		 * @param pos  Position
+		 */
+		double getPhotonDensity(double ePhoton, double z = 0., const Vector3d &pos = Vector3d(0.,0.,0.)) const;
+		double getRedshiftScaling(double z) const;
+		/** Returns the minimum possible photon energy
+		 * Returns the minimum possible photon energy for a given redshift and position.
+		 * @param z  Redshift
+		 * @param pos Position
+		 */
+		double getMinimumPhotonEnergy(double z, const Vector3d &pos = Vector3d(0.,0.,0.)) const;
+		/** Returns the maximum possible photon energy
+		 * Returns the maximum possible photon energy for a given redshift and position.
+		 * @param z  Redshift
+		 * @param pos Position
+		 */
+		double getMaximumPhotonEnergy(double z, const Vector3d &pos = Vector3d(0.,0.,0.)) const;
 
-protected:
-	void readPhotonEnergy(std::string filePath);
-	void readPhotonDensity(std::string filePath);
-	void readRedshift(std::string filePath);
-	void initRedshiftScaling();
-	void checkInputData() const;
+	protected:
+		/** Reads the photon energies from the given folder
+		 * @param filePath  Path containing photon energy files
+		 */
+		void readPhotonEnergy(std::string filePath);
+		/** Reads the photon densities from the given folder
+		 * @param filePath  Path containing photon densitiy files
+		 */
+		void readPhotonDensity(std::string filePath);
+		/** Reads the photon redshift from the given folder
+		 * @param filePath  Path containing photon redshift files
+		 */
+		void readRedshift(std::string filePath);
+		/// Initializes the redshift scaling from the read photon redshift
+		void initRedshiftScaling();
+		/// Checks if read data is valid
+		void checkInputData() const;
 
-	std::vector<double> photonEnergies;
-	std::vector<double> photonDensity;
-	std::vector<double> redshifts;
-	std::vector<double> redshiftScalings;
+		std::vector<double> photonEnergies;
+		std::vector<double> photonDensity;
+		std::vector<double> redshifts;
+		std::vector<double> redshiftScalings;
+};
+
+/**
+ @class TabularSpatialPhotonField
+ @brief Position dependent photon field decorator for tabulated photon fields.
+
+ This class reads photon field data from files in the appropriate directory;
+ The first files must be lists of photon energies [J], named fieldName_photonEnergy.txt and contained in the subdirectory /photonEnegy/;
+ The second files must be lists of comoving photon field densities [1/m^3], named fieldName_photonDensity.txt and contained in the subdirectory /photonDensity/;
+ The generated files through the CRPropa procedure (https://crpropa.github.io/CRPropa3/pages/example_notebooks/custom_photonfield/custom-photon-field.html) have a different ordering: the energy bins from the larger to the lower.
+ No redshift dependence is available.
+ The surface is defined to include the nodes of the grid contained within.
+ */
+class TabularSpatialPhotonField: public PhotonField {
+	public:
+		TabularSpatialPhotonField(const std::string fieldName, ref_ptr<Surface> surface = nullptr);
+		
+		/** Returns photon density dependend on energy, redshift and position
+		 * Returns the photon density for a specific photon energy, redshift and position
+		 * @param ePhoton  Photon energy
+		 * @param z  Redshift
+		 * @param pos  Position
+		 */
+		double getPhotonDensity(double ePhoton = 0., double z = 0., const Vector3d &pos = Vector3d(0.,0.,0.)) const;
+		/** Returns the minimum possible photon energy
+		 * Returns the minimum possible photon energy for a given redshift and position.
+		 * @param z  Redshift
+		 * @param pos Position
+		 */
+		double getMinimumPhotonEnergy(double z, const Vector3d &pos = Vector3d(0.,0.,0.)) const;
+		/** Returns the maximum possible photon energy
+		 * Returns the maximum possible photon energy for a given redshift and position.
+		 * @param z  Redshift
+		 * @param pos Position
+		 */
+		double getMaximumPhotonEnergy(double z, const Vector3d &pos = Vector3d(0.,0.,0.)) const;
+
+	protected:
+		/** Reads the photon energies from the given folder
+		 * @param filePath  Path containing photon energy files
+		 */
+		std::vector<double> readPhotonEnergy(std::string filePath);
+		/** Reads the photon densities from the given folder
+		 * @param filePath  Path containing photon densitiy files
+		 */
+		std::vector<double> readPhotonDensity(std::string filePath);
+		/// Checks if read data is valid
+		void checkInputData() const;
+		
+		/** Apply a surface that confine the position dependent photon field
+		 * @param surface closed surface to confine the nodes of grid to be uploaded */
+		void setSurface(ref_ptr<Surface> surface);
+		
+		// assuming all the nodes in the grid have the same energy binning
+		std::vector<double> photonEnergies;
+		std::vector<std::vector<double>> photonDensity;
+		std::unordered_map<int, Vector3d> photonDict;
 };
 
 /**
@@ -288,15 +414,62 @@ public:
 };
 
 /**
+ @class ISRF
+ @brief Interstellar radiation field model by Freudenreich et al. (1998) implemented in Porter et al. (2017)
+ 
+ Source info:
+ DOI:
+ https://iopscience.iop.org/article/10.3847/1538-4357/aa844d
+ */
+class ISRF_Freudenreich98: public TabularSpatialPhotonField {
+public:
+	ISRF_Freudenreich98(ref_ptr<Surface> surface) : TabularSpatialPhotonField("ISRF_Freudenreich98", surface) {}
+};
+
+/**
+ @class ISRF
+ @brief Interstellar radiation field model by Robitaille et al. (2012) implemented in Porter et al. (2017)
+ 
+ Source info:
+ DOI:
+ https://iopscience.iop.org/article/10.3847/1538-4357/aa844d
+ */
+class ISRF_Robitaille12: public TabularSpatialPhotonField {
+public:
+	ISRF_Robitaille12(ref_ptr<Surface> surface) : TabularSpatialPhotonField("ISRF_Robitaille12", surface) {}
+};
+
+/**
  @class BlackbodyPhotonField
  @brief Photon field decorator for black body photon fields.
  */
 class BlackbodyPhotonField: public PhotonField {
 public:
+	/** Constructor
+	 * @param fieldName  String identifier of the desired field
+	 * @param blackbodyTemperatur  Blackbody temperature
+	 */
 	BlackbodyPhotonField(const std::string fieldName, const double blackbodyTemperature);
-	double getPhotonDensity(double ePhoton, double z = 0.) const;
-	double getMinimumPhotonEnergy(double z) const;
-	double getMaximumPhotonEnergy(double z) const;
+
+	/** Returns photon density dependend on energy, redshift and position
+	 * Returns the photon density for a specific photon energy, redshift and position
+	 * @param ePhoton  Photon energy
+	 * @param z  Redshift
+	 * @param pos  Position
+	 */
+	double getPhotonDensity(double ePhoton, double z = 0., const Vector3d &pos = Vector3d(0.,0.,0.)) const;
+	/** Returns the minimum possible photon energy
+	 * Returns the minimum possible photon energy for a given redshift and position.
+	 * @param z  Redshift
+	 * @param pos Position
+	 */
+	double getMinimumPhotonEnergy(double z, const Vector3d &pos = Vector3d(0.,0.,0.)) const;
+	/** Returns the maximum possible photon energy
+	 * Returns the maximum possible photon energy for a given redshift and position.
+	 * @param z  Redshift
+	 * @param pos Position
+	 */
+	double getMaximumPhotonEnergy(double z, const Vector3d &pos = Vector3d(0.,0.,0.)) const;
 	void setQuantile(double q);
 
 protected:

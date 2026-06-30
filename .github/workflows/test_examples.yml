@@ -1,5 +1,27 @@
 name: crpropa-example-test
-on: [push, pull_request]
+on:
+  push:
+    paths:
+      - ".github/workflows/test_examples.yml"
+      - "**.cpp"
+      - "**.h"
+      - "**.py"
+      - "**.i"
+      - "**.ipynb"
+      - "**/CMakeLists.txt"
+      - "!plugin-template/**"
+      - "!test/**"
+  pull_request:
+    paths:
+      - ".github/workflows/test_examples.yml"
+      - "**.cpp"
+      - "**.h"
+      - "**.py"
+      - "**.i"
+      - "**.ipynb"
+      - "**/CMakeLists.txt"
+      - "!plugin-template/**"
+      - "!test/**"
 
 jobs:
   linux:
@@ -10,9 +32,6 @@ jobs:
         config:
          - name: "ubuntu-22"
            os: ubuntu-22.04
-           cxx: "g++-11"
-           cc: "gcc-11"
-           fc: "gfortran-11"
            swig_builtin: "On" #uses swig 4.0.2
            py: "/usr/bin/python3" #python 3.10
     steps:
@@ -25,10 +44,6 @@ jobs:
           pip3 install -r doc/pages/example_notebooks/requirements.txt # load requrements for notebooks
           pip3 install --upgrade Pygments
       - name: Set up the build
-        env:
-          CXX: ${{ matrix.config.cxx }}
-          CC: ${{ matrix.config.cc }}
-          FC: ${{ matrix.config.fc }}
         run: |
           mkdir build
           cd build
@@ -66,7 +81,8 @@ jobs:
                 [ "$file" = "MHD_modelsipynb.py" ] || 
                 [ "$file" = "density_grid_samplingipynb.py" ] ||
                 [ "$file" = "interrupt_candidateVectoripynb.py" ] ||
-                [ "$file" = "interrupt_sourceipynb.py" ]; then
+                [ "$file" = "interrupt_sourceipynb.py" ] ||
+                [ "$file" = "galactic_propagation_gammarays_ISRFipynb.py" ]; then
                 echo "skip file $file"
             else 
               echo "run file $file"

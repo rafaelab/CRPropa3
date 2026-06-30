@@ -1,7 +1,12 @@
-#include "myPlugin.h"
+#include "myPlugin/plugin.h"
 
 #include <string>
 
+
+// also use the correct namespace in your .cpp files
+namespace myPlugin{
+
+// a global variable
 const std::string myPropertyName = "counter";
 
 // The parent's constructor need to be called on initialization!
@@ -22,6 +27,10 @@ void MyModule::process(crpropa::Candidate *candidate) const
 	}
 }
 
+}
+
+namespace crpropa{
+
 // ------------------------------------------------------------------
 // The parent's constructor need to be called on initialization!
 AddMyProperty::AddMyProperty() : crpropa::SourceFeature()
@@ -30,5 +39,7 @@ AddMyProperty::AddMyProperty() : crpropa::SourceFeature()
 }
 void AddMyProperty::prepareCandidate(crpropa::Candidate &candidate) const
 {
-	candidate.setProperty(myPropertyName, crpropa::Variant::fromUInt32(0));
+	candidate.setProperty(myPlugin::myPropertyName, crpropa::Variant::fromUInt32(0));
+}
+
 }
