@@ -1,0 +1,146 @@
+name: create_conda_package
+on:
+  push:
+    branches: 
+      - master
+      - releases/**
+    paths:
+      - ".github/workflows/create_conda_package_x64.yml"
+      - "**.cpp"
+      - "**.h"
+      - "**.py"
+      - "**.i"
+      - "**/CMakeLists.txt"
+      - "!plugin-template/**"
+      - "!doc/**"
+  release:
+    types: [published]
+  workflow_dispatch:
+  
+
+jobs:
+  arm:
+    if: github.repository=='CRPropa/CRPropa3'
+    runs-on: ubuntu-22.04-arm
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - name: Install Miniconda
+        run: |
+          set -ex
+          ldd --version
+          cd ~
+          wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-aarch64.sh &> /dev/null
+          sh Miniconda3-latest-Linux-aarch64.sh -b
+      - name: Install Additional Conda Packages
+        # the path is reseted in each new step:
+        run: |
+          source ~/miniconda3/bin/activate
+          set -ex
+          conda init &> /dev/null
+          conda update -n base conda -y &> /dev/null
+          conda install conda-build anaconda-client -y &> /dev/null
+      - name: Build Conda Package
+        env:
+          accountName: ${{ secrets.ANACONDA_ACCOUNTNAME }}
+          token: ${{ secrets.ANACONDA_TOKEN }}
+          FAST_WAVES: "OFF"
+          SIMD_EXTENSIONS: "none"
+        run: |
+          source ~/miniconda3/bin/activate
+          set -ex
+          conda init &> /dev/null
+          cd conda-bld
+          conda config --set anaconda_upload yes
+          export CRPROPA_VERSION=${GITHUB_REF_NAME,,}
+          conda build -m conda_build_config.yaml -c conda-forge . -k \
+            --user $accountName \
+            --token $token \
+            | tee build.log
+          if [ $(find ~/miniconda3/conda-bld/linux-aarch64 -name crpropa* -print -quit) ]; then echo Success! ; else exit 1; fi
+      - name: Archive Build Logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: "Anaconda_Build_ARM_Log"
+          path: conda-bld/build.log
+
+  x64:
+    if: github.repository=='CRPropa/CRPropa3'
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - name: Preinstall
+        run: |
+          set -ex
+          ldd --version
+          conda init &> /dev/null
+          conda update -n base conda -y &> /dev/null
+          conda install conda-build anaconda-client -y &> /dev/null
+      - name: Build Conda Package
+        env:
+          accountName: ${{ secrets.ANACONDA_ACCOUNTNAME }}
+          token: ${{ secrets.ANACONDA_TOKEN }}
+          FAST_WAVES: "ON"
+          SIMD_EXTENSIONS: "avx+fma"
+        run: |
+          set -ex
+          conda init &> /dev/null
+          cd conda-bld
+          conda config --set anaconda_upload yes
+          export CRPROPA_VERSION=${GITHUB_REF_NAME,,}
+          conda build -m conda_build_config.yaml -c conda-forge . -k \
+            --user $accountName \
+            --token $token \
+            | tee build.log
+          if [ $(find /usr/share/miniconda/conda-bld/linux-64 -name crpropa* -print -quit) ]; then echo Success! ; else exit 1; fi
+      - name: Archive Build Logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: "Anaconda_Build_x64_Log"
+          path: conda-bld/build.log
+
+  macos:
+    if: github.repository=='CRPropa/CRPropa3'
+    runs-on: macos-14
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - name: Install Miniconda
+        run: |
+          set -ex
+          cd ~
+          curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-arm64.sh &> /dev/null
+          sh Miniconda3-latest-MacOSX-arm64.sh -b
+      - name: Install Additional Conda Packages
+        run: |
+          source ~/miniconda3/bin/activate
+          set -ex
+          conda init &> /dev/null
+          conda update -n base conda -y &> /dev/null
+          conda install -c conda-forge conda-build anaconda-client -y &> /dev/null
+      - name: Build Conda Package
+        env:
+          accountName: ${{ secrets.ANACONDA_ACCOUNTNAME }}
+          token: ${{ secrets.ANACONDA_TOKEN }}
+          FAST_WAVES: "OFF"
+          SIMD_EXTENSIONS: "none"
+        run: |
+          source ~/miniconda3/bin/activate
+          set -ex
+          cd conda-bld
+          conda config --set anaconda_upload yes
+          export CRPROPA_VERSION=$(echo "$GITHUB_REF_NAME" | tr '[:upper:]' '[:lower:]')
+          conda build -m conda_build_config.yaml -c conda-forge . -k \
+            --user $accountName \
+            --token $token \
+            | tee build.log
+          if [ $(find ~/miniconda3/conda-bld/osx-arm64 -name crpropa* -print -quit) ]; then echo Success! ; else exit 1; fi
+      - name: Archive Build Logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: "Anaconda_Build_MACOS_Log"
+          path: conda-bld/build.log

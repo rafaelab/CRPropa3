@@ -3,6 +3,7 @@
 ### Bug fixes:
 
 ### New features:
+* Improved plugin-template and added test to ensure the template is working
 
 ### Interface changes:
 

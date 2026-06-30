@@ -41,6 +41,7 @@
 %ignore operator crpropa::ObserverFeature*;
 %ignore operator crpropa::MagneticField*;
 %ignore operator crpropa::PhotonField*;
+%ignore operator crpropa::InteractionRates*;
 %ignore operator crpropa::AdvectionField*;
 %ignore operator crpropa::ParticleCollector*;
 %ignore operator crpropa::Density*;
@@ -245,8 +246,9 @@
 %template(CandidateRefPtr) crpropa::ref_ptr<crpropa::Candidate>;
 %include "crpropa/Candidate.h"
 
+%implicitconv crpropa::ref_ptr<crpropa::Surface>;
+%template(SurfaceRefPtr) crpropa::ref_ptr<crpropa::Surface>;
 %feature("director") crpropa::Surface;
-%feature("director") crpropa::ClosedSurface;
 %include "crpropa/Geometry.h"
 
 %template(ModuleRefPtr) crpropa::ref_ptr<crpropa::Module>;
@@ -269,6 +271,11 @@
 %template(PhotonFieldRefPtr) crpropa::ref_ptr<crpropa::PhotonField>;
 %feature("director") crpropa::PhotonField;
 %include "crpropa/PhotonBackground.h"
+
+%implicitconv crpropa::ref_ptr<crpropa::InteractionRates>;
+%template(InteractionRatesRefPtr) crpropa::ref_ptr<crpropa::InteractionRates>;
+%feature("director") crpropa::InteractionRates;
+%include "crpropa/InteractionRates.h"
 
 %implicitconv crpropa::ref_ptr<crpropa::AdvectionField>;
 %template(AdvectionFieldRefPtr) crpropa::ref_ptr<crpropa::AdvectionField>;
@@ -401,8 +408,10 @@
 %template(IntSet) std::set<int>;
 %include "crpropa/module/Tools.h"
 
+%implicitconv crpropa::ref_ptr<crpropa::SourceInterface>;
 %template(SourceInterfaceRefPtr) crpropa::ref_ptr<crpropa::SourceInterface>;
 %feature("director") crpropa::SourceInterface;
+%implicitconv crpropa::ref_ptr<crpropa::SourceFeature>;
 %template(SourceFeatureRefPtr) crpropa::ref_ptr<crpropa::SourceFeature>;
 %feature("director") crpropa::SourceFeature;
 %include "crpropa/Source.h"
