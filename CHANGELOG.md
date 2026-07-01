@@ -4,6 +4,7 @@
 
 ### New features:
 * Improved plugin-template and added test to ensure the template is working
+* Added position-dependent photon fields
 
 ### Interface changes:
 
@@ -12,6 +13,7 @@
 ### Removed features
 
 ### New plugins and resources linked on the webpages
+* Spatial grids for ISRF photon field 
 
 
 ## CRPropa 3.2.2
