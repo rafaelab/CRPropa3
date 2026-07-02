@@ -1,16 +1,22 @@
 ## CRPropa vNext
 
 ### Bug fixes:
+* Fixed the secondariesFirst parameter not actually allowing secondary particles to be propagated before the primary
+* threshold calculation in PhotoPionProduction
 
 ### New features:
+
 * Improved plugin-template and added test to ensure the template is working
 * Added position-dependent photon fields
+* Secondaries are now distributed over multiple threads if OpenMP parallelisation is enabled
 
 ### Interface changes:
 
 ### Features that are deprecated and will be removed after this release
 
 ### Removed features
+
+* Galactic Magnetic Lenses and connected external libraries (HealpixBase, Eigen)
 
 ### New plugins and resources linked on the webpages
 * Spatial grids for ISRF photon field 
@@ -19,6 +25,7 @@
 ## CRPropa 3.2.2
 
 ### Bug fixes:
+
 * Fixed sign for exponential decay of magn. field strength with Galactic height in LogarithmicSpiralField
 * Fixed r term in source distribution for SNR and Pulsar
 * Fixed wrong mass inheritance for secondaries other than nuclei or electron/positron
@@ -28,30 +35,33 @@
 * Fixed Bphi component for r<=r1 in CMZField
 * Fixed several issues in Variant and Random
 * Fixed setExtends in PeriodicMagneticField
-* Fixed constantScaleBendover which was not initialized 
+* Fixed constantScaleBendover which was not initialized
 * Fixed issue when including CRPropa as a subproject by making all paths realtive to the current source and binary directory
 
 ### New features:
 
- * Added new backwards-compatible function particleMass that returns particle mass also for non-nuclei
- * Added the new Galactic magnetic field models from Unger&Farrar arXiv:2311.12120
- * Added EBL model from Finke et al. 2022
- * Added ReflectiveShell boundary condition
- * Added overridable getTime function to ObserverTimeEvolution which is called instead of detList. 
+* Added new backwards-compatible function particleMass that returns particle mass also for non-nuclei
+* Added the new Galactic magnetic field models from Unger&Farrar arXiv:2311.12120
+* Added EBL model from Finke et al. 2022
+* Added ReflectiveShell boundary condition
+* Added overridable getTime function to ObserverTimeEvolution which is called instead of detList.
   Old functionalities are preserved by adding old functions and setter/getter functions.
- * Added advanced cmake variable `CRPROPA_EXTRA_INCLUDES` that can be used to also get the normally
-   hidden include folders
+* Added advanced cmake variable `CRPROPA_EXTRA_INCLUDES` that can be used to also get the normally
+  hidden include folders
 
 
 ### Interface changes:
+
 * The next CRPropa relase will likely require support for the CXX 23 standard
 
 ### Features that are deprecated and will be removed after this release
+
 * Galactic Magnetic Lenses
 
 ### Removed features
-*  AMRMagneticField - underlying library (saga) is no longer supported.
-*  ObserverPoint: Use Observer1D instead.
+
+* AMRMagneticField - underlying library (saga) is no longer supported.
+* ObserverPoint: Use Observer1D instead.
 
 ### New plugins and resources linked on the webpages
 
@@ -59,10 +69,12 @@
 ## CRPropa 3.2.1
 
 ### Bug fixes:
+
 * Re-added ToroidalHaloField and LogarithmicSpiralField models. Note, that the class name was also corrected in spelling: TorroidalHaloField --> ToroidalHaloField
 * Synchronized signature of ParticleSplitting constructor
 
 ### New features:
+
 * New candidate property tagOrigin to trace back which source or which interaction created the candidate
 * New interface for massdistributions given on a Grid1f
 * Grids can be restricted to the volume without repetition (clipVolume parameter)
@@ -72,18 +84,22 @@
 * New advection fields for modeling diffusive shock acceleration at 1D planar, oblique and spherical shocks
 
 ### Interface changes:
+
 * Weight column in hdf-Output is now called "W", which is the same as for TextOutput.
 
 ### Features that are deprecated and will be removed after this release
+
 * ObserverPoint will be renamed into Observer1D.
 * AMRMagneticField - underlying library (saga) is no longer supported.
 
 ### Removed features
+
 * External extensions DINT and Eleca, which can be replaced with the
   EM*-modules combined with the thinning option for reasonable computation
   times.
 
 ### New plugins and resources linked on the webpages:
+
 * FieldlineIntegrator
 * grplinst
 * monopole
@@ -93,6 +109,7 @@
 ## CRPropa 3.2
 
 ### Bug fixes:
+
 * Fix of reflective boundary condition for scalar- and vectorgrids
   that showed asymmetry and discontinuities (See issue [#361]).
 * Fix in EMTripletPairProduction
@@ -105,6 +122,7 @@
   their parents weights as intial weights now.
 
 ### New features:
+
 * Add modules for first and second order Fermi acceleration
 * Make custom photon fields available in the PhotoPionProduction module.
 * Add tricubic- and nearest neighbour interpolation routines for scalar-
@@ -116,14 +134,17 @@
 * Updates in SNR and pulsar source distributions
 
 ### Interface changes:
+
 * Plane wave and grid turbulence models use same parameter convention now
 
 ### Features that are deprecated and will be removed after this release
+
 * External extensions DINT and Eleca, which can be replaced with the
   EM*-modules combined with the thinning option for reasonable computation
   times.
 
 ### New plugins and resources linked on the webpages:
+
 * Updated version of the CLUES EGMF models
 
 
@@ -143,7 +164,7 @@
 * Weighted sampling thinning of electromagnetic processes  (EMPairProduction,
   EMInverseComptonScattering, EMDoublePairProduction, EMTripletPairProduction).
 * Planck JF12b variant of the JF12Field. See arXiv:1601.00546. Thanks to
-	Mikhail Zotov for contributing.
+  Mikhail Zotov for contributing.
 * ParticleCollector can provide Candidates directly to ModuleList::run
 * Basic file versioning of the data archive in CMakeLists.txt
 * Python docstrings are generated automatically from doxygen documentation
@@ -201,56 +222,61 @@
 * Random seeds can be accessed from python (see pull request #263)
 * New galactic magnetic field model by Terral & Ferriere (2017) (see pull request #258)
 * Reimplementation of SOPHIA's photon field sampling used in
-PhotoPionProduction in c++, leading to a factor 2-3 speed up of the
-module (see pull request #260).
+  PhotoPionProduction in c++, leading to a factor 2-3 speed up of the
+  module (see pull request #260).
 * Introducing a method, sophiaEvent(onProton, Eprimary, Ephoton), to
-directly call SOPHIA's event generator from python (see pull request #260).
+  directly call SOPHIA's event generator from python (see pull request #260).
 
 
 ## CRPropa v3.1.5
 
 ### Bug fixes:
- * Fixed issue with secondaries in the PhotoPionProduction potentially relevant
-   for primary energies above approx. 10**21 eV (See issue [#225]).
- * Fix of azimuthal component of ArchimedeanSpiral Field (See commit 1f79e2c).
-   Thanks to Leander Schlegel for reporting and providing a patch.
+
+* Fixed issue with secondaries in the PhotoPionProduction potentially relevant
+  for primary energies above approx. 10**21 eV (See issue [#225]).
+* Fix of azimuthal component of ArchimedeanSpiral Field (See commit 1f79e2c).
+  Thanks to Leander Schlegel for reporting and providing a patch.
 
 ### New features:
- * The PropagatorBP implements the Boris-Push algorithm as as alternative to
-   the Cash-Karp integrator PropagatorCK. Thanks to Patrick Reichherzer for
-   this contribution.
- * A basic geometry system was added to e.g. restrict modules to a spatial region.
- * Candidates now have weights.
- * User can define custom candidate properties identified with a string (slow but sometimes handy).
- * Random seeds can be stored in output files. Please note that perfect
-   reproducibility of simulations is still not guaranteed when using multi
-   cores.
- * The 'ParticleCollector' allows in-memory storage of Candidates for
-   collective-processing during a simulation.
- * The SDE solver supports advection and adiabatic cooling.
- * A selection of models for mass distributions in our Galaxy as first step of
-   the development of a hadron-hadron interaction module was added.
-   Thanks to Julien Dörner for implementing these models.
- * Source distributions following the Galactic pulsar distribution and the
-   Galactic SNR distributions are available.
- * Turbulent magnetic fields can now be optionally helical
-   (initHelicalTurbulence) or obey the homogeneous turbulence theory
-   requirement (initTurbulenceWithBendover).
- * Modified JF12 Galactic magnetic field model with a truly solenoidal disk
-   spiral field and a smooth X field with parabolic field lines according to
-   Kleimann et al. (arXiv:1809.07528). Thanks to Timo Schorlepp for sharing
-   this code.
+
+* The PropagatorBP implements the Boris-Push algorithm as as alternative to
+  the Cash-Karp integrator PropagatorCK. Thanks to Patrick Reichherzer for
+  this contribution.
+* A basic geometry system was added to e.g. restrict modules to a spatial region.
+* Candidates now have weights.
+* User can define custom candidate properties identified with a string (slow but sometimes handy).
+* Random seeds can be stored in output files. Please note that perfect
+  reproducibility of simulations is still not guaranteed when using multi
+  cores.
+* The 'ParticleCollector' allows in-memory storage of Candidates for
+  collective-processing during a simulation.
+* The SDE solver supports advection and adiabatic cooling.
+* A selection of models for mass distributions in our Galaxy as first step of
+  the development of a hadron-hadron interaction module was added.
+  Thanks to Julien Dörner for implementing these models.
+* Source distributions following the Galactic pulsar distribution and the
+  Galactic SNR distributions are available.
+* Turbulent magnetic fields can now be optionally helical
+  (initHelicalTurbulence) or obey the homogeneous turbulence theory
+  requirement (initTurbulenceWithBendover).
+* Modified JF12 Galactic magnetic field model with a truly solenoidal disk
+  spiral field and a smooth X field with parabolic field lines according to
+  Kleimann et al. (arXiv:1809.07528). Thanks to Timo Schorlepp for sharing
+  this code.
 
 ### Features that are deprecated and will be removed after this release:
- * PhotonOutput1D is obsolete as the functionality is provided by the regular
-   output modules (See #211).
- * Future releases will use C++11 features. Outdated compilers will not be
-   supported anymore.
+
+* PhotonOutput1D is obsolete as the functionality is provided by the regular
+  output modules (See #211).
+* Future releases will use C++11 features. Outdated compilers will not be
+  supported anymore.
 
 ### New plugins and resources linked on the webpages:
- * ROOTOutput. This code has been moved from CRPropa to a plugin and is no
-   longer maintained by us. If you want to maintain this code, please contact
-   us.
- * Data for the constrained 'Hackstein' models of the local Universe using
-   initial conditions from the CLUES project. Thanks to Stefan Hackstein for
-   sharing.
+
+* ROOTOutput. This code has been moved from CRPropa to a plugin and is no
+  longer maintained by us. If you want to maintain this code, please contact
+  us.
+* Data for the constrained 'Hackstein' models of the local Universe using
+  initial conditions from the CLUES project. Thanks to Stefan Hackstein for
+  sharing.
+
