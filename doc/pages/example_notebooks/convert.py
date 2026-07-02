@@ -26,8 +26,6 @@ def convert_topython(fname):
 files = (
     'basics/basics.v4.ipynb',
     'galactic_backtracking/galactic_backtracking.v4.ipynb',
-    'galactic_lensing/lensing_cr.v4.ipynb',
-    'galactic_lensing/lensing_maps.v4.ipynb',
     'galactic_trajectories/galactic_trajectories.v4.ipynb',
     'secondaries/neutrinos.v4.ipynb',
     'secondaries/photons.v4.ipynb',
