@@ -256,9 +256,9 @@ void InteractionRatesPositionDependent::initRate(std::string filepath){
 		
 		// the input filename here should be a string
 		//check if it is correct, i.e. a proper filename string
-		std::ifstream infile(filename.c_str());		
+		std::ifstream infile(concat_path(filepath, filename).c_str());
 		if (!infile.good())
-			throw std::runtime_error("InteractionRatesPositionDependent: could not open file " + filename);
+			throw std::runtime_error("InteractionRatesPositionDependent: could not open file " + concat_path(filepath, filename));
 		
 		std::vector<double> vecEnergy;
 		std::vector<double> vecRate;
@@ -342,10 +342,10 @@ void InteractionRatesPositionDependent::initCumulativeRate(std::string filepath)
 		std::vector<double> vecs;
 		std::vector<std::vector<double>> vecCDF;
 		
-		std::ifstream infile(filename.c_str());
-		
+		std::ifstream infile(concat_path(filepath, filename).c_str());
+
 		if (!infile.good())
-			throw std::runtime_error("InteractionRatesPositionDependent: could not open file " + filename);
+			throw std::runtime_error("InteractionRatesPositionDependent: could not open file " + concat_path(filepath, filename));
 		
 		double x, y, z;
 		std::string str;

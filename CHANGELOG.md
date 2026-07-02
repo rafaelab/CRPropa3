@@ -7,6 +7,7 @@
 ### New features:
 
 * Improved plugin-template and added test to ensure the template is working
+* Added position-dependent photon fields
 * Secondaries are now distributed over multiple threads if OpenMP parallelisation is enabled
 
 ### Interface changes:
@@ -18,6 +19,7 @@
 * Galactic Magnetic Lenses and connected external libraries (HealpixBase, Eigen)
 
 ### New plugins and resources linked on the webpages
+* Spatial grids for ISRF photon field 
 
 
 ## CRPropa 3.2.2
