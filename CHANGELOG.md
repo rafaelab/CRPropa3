@@ -1,6 +1,7 @@
 ## CRPropa vNext
 
 ### Bug fixes:
+* threshold calculation in PhotoPionProduction
 
 ### New features:
 * Improved plugin-template and added test to ensure the template is working
