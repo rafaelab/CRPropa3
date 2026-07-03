@@ -142,6 +142,10 @@ class ICSSecondariesEnergyDistribution {
 		}
 };
 
+double EMInverseComptonScattering::getRate(double E, const Vector3d &position, double z) const {
+	return this->interactionRates->getProcessRate(E, position) * pow_integer<2>(1 + z) * photonField->getRedshiftScaling(z);
+}
+
 void EMInverseComptonScattering::performInteraction(Candidate *candidate) const {
 
 	// scale the particle energy instead of background photons
@@ -197,8 +201,7 @@ void EMInverseComptonScattering::process(Candidate *candidate) const {
 	Vector3d position = candidate->current.getPosition();
 	
 	// interaction rate
-	double rate = this->interactionRates->getProcessRate(E, position);
-	
+	double rate = getRate(E, position, z);
 	if (rate < 0)
 		return;
 	
