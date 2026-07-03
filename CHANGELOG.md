@@ -9,6 +9,7 @@
 * Improved plugin-template and added test to ensure the template is working
 * Added position-dependent photon fields
 * Secondaries are now distributed over multiple threads if OpenMP parallelisation is enabled
+* Exposed `getRate` function for electromagnetic interactions
 
 ### Interface changes:
 
