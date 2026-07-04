@@ -134,7 +134,7 @@ if(ENABLE_COVERAGE)
       )
     endif(ENABLE_TESTING)
 
-  else(LCOV_PATH AND GENHTML_PATH)
+  else()
     if(NOT LCOV_PATH)
       message(WARNING "lcov not found, coverage report generation  not possible!")
     endif(NOT LCOV_PATH)
