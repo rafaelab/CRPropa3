@@ -20,7 +20,7 @@ if(CMAKE_COMPILER_IS_GNUCXX AND NOT APPLE)
   message(STATUS "Use --as-needed linker flags!")
 endif(CMAKE_COMPILER_IS_GNUCXX AND NOT APPLE)
 
-SET(SIMD_EXTENSIONS "none" CACHE STRING "Choose which of the SIMD instruction set extensions your target CPU supports. Possible values are \"native\" (use everything that's supported by the CPU you're building on), \"none\", \"avx\", and \"avx+fma\".")
+set(SIMD_EXTENSIONS "none" CACHE STRING "Choose which of the SIMD instruction set extensions your target CPU supports. Possible values are \"native\" (use everything that's supported by the CPU you're building on), \"none\", \"avx\", and \"avx+fma\".")
 
 if(SIMD_EXTENSIONS STREQUAL "none")
   message("With SIMD_EXTENSIONS \"none\" tricubic interpolation of vector grids is not possible. You should set SIMD_EXTENSION to a compatible value (\"avx\", \"avx+fma\", or -- depending on the build CPU -- \"native\"). Trilinear interpolation is still possible.")
@@ -29,16 +29,16 @@ else()
 endif()
 
 if(SIMD_EXTENSIONS STREQUAL "avx")
-  SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -msse -msse2 -msse3 -msse4.1 -msse4.2 -mavx" )
+  set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -msse -msse2 -msse3 -msse4.1 -msse4.2 -mavx" )
 elseif(SIMD_EXTENSIONS STREQUAL "avx+fma")
-  SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -msse -msse2 -msse3 -msse4.1 -msse4.2 -mavx -mfma" )
+  set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -msse -msse2 -msse3 -msse4.1 -msse4.2 -mavx -mfma" )
 elseif(SIMD_EXTENSIONS STREQUAL "native")
-  SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -march=native" )
+  set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -march=native" )
 elseif(NOT SIMD_EXTENSIONS STREQUAL "none")
   message(SEND_ERROR "SIMD_EXTENSIONS must have one of these values: \"native\", \"none\", \"avx\", or \"avx+fma\".")
 endif()
 
-SET(FAST_WAVES OFF CACHE BOOL "Enable SIMD optimizations for PlaneWaveTurbulence. Requires that SIMD_EXTENSIONS is set to a compatible value (\"avx\", \"avx+fma\", or -- depending on the build CPU -- \"native\"). The build will fail if this option is set but SIMD_EXTENSIONS is not compatible, so you can adjust your settings.")
+set(FAST_WAVES OFF CACHE BOOL "Enable SIMD optimizations for PlaneWaveTurbulence. Requires that SIMD_EXTENSIONS is set to a compatible value (\"avx\", \"avx+fma\", or -- depending on the build CPU -- \"native\"). The build will fail if this option is set but SIMD_EXTENSIONS is not compatible, so you can adjust your settings.")
 if(FAST_WAVES)
   if(SIMD_EXTENSIONS STREQUAL "none")
     message(SEND_ERROR "Enabling FAST_WAVES while SIMD_EXTENSIONS is set to \"none\" won't work, since SIMD is required for FAST_WAVES. Please try disabling FAST_WAVES, or try using another option for SIMD_EXTENSIONS.")
@@ -48,9 +48,10 @@ if(FAST_WAVES)
 endif(FAST_WAVES)
 
 # Add build type for profiling
-SET(CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS} -ggdb -fno-omit-frame-pointer")
+set(CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS} -ggdb -fno-omit-frame-pointer")
+
 # Enable extra warnings on debug builds
-SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -Wextra")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -Wextra")
 
 # Set default build-type to release to enable performance improvements
 if(NOT CMAKE_BUILD_TYPE)
@@ -70,7 +71,7 @@ if(ENABLE_GIT)
   get_git_head_revision(GIT_REFSPEC GIT_SHA1)
   git_describe(GIT_DESC --tags)
 endif(ENABLE_GIT)
-IF(NOT ENABLE_GIT OR ("${GIT_SHA1}" STREQUAL "GITDIR-NOTFOUND"))
+if(NOT ENABLE_GIT OR ("${GIT_SHA1}" STREQUAL "GITDIR-NOTFOUND"))
   set(GIT_REFSPEC "")
   set(GIT_SHA1 "")
   set(GIT_DESC "${CRPROPA_RELEASE_VERSION}-no-git")
@@ -107,7 +108,7 @@ if(ENABLE_TESTING)
 endif(ENABLE_TESTING)
 
 #
-OPTION(ENABLE_COVERAGE "Add code for coverage analysis." OFF)
+option(ENABLE_COVERAGE "Add code for coverage analysis." OFF)
 if(ENABLE_COVERAGE)
   find_program(LCOV_PATH lcov)
   find_program(GENHTML_PATH genhtml)
@@ -118,7 +119,7 @@ if(ENABLE_COVERAGE)
     list(APPEND CRPROPA_EXTRA_LIBRARIES "-fprofile-arcs")
 
     if(ENABLE_TESTING)
-      SET(COVERAGE_LIBS "-coverage -lgcov")
+      set(COVERAGE_LIBS "-coverage -lgcov")
       add_custom_target(coverage_clean
         COMMAND ${LCOV_PATH} --directory ${CMAKE_CURRENT_BINARY_DIR} --zerocounters
       )
@@ -277,7 +278,7 @@ endif(APPLE)
 # ----------------------------------------------------------------------------
 # Download data files (interaction data, masses, decay data ...)
 # ----------------------------------------------------------------------------
-OPTION(DOWNLOAD_DATA "Download CRPropa data files" ON)
+option(DOWNLOAD_DATA "Download CRPropa data files" ON)
 if(DOWNLOAD_DATA)
   message("-- Downloading data files from sciebo ~ 73 MB")
   file(DOWNLOAD
@@ -396,7 +397,7 @@ option(BUILD_DOC "Enable building documentation from the source code" OFF)
 if(BUILD_DOC)
   find_package(Doxygen)
   if(DOXYGEN_FOUND)
-    MESSAGE(STATUS "Found Doxygen to build documentation")
+    message(STATUS "Found Doxygen to build documentation")
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/doc/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/doc/DoxygenLayout.xml ${CMAKE_CURRENT_BINARY_DIR}/DoxygenLayout.xml COPYONLY)
     add_custom_target(doxy ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} COMMENT "Generating API documentation with Doxygen" VERBATIM)
@@ -407,10 +408,10 @@ if(BUILD_DOC)
       DEPENDS doxy
     )
   else()
-    MESSAGE(STATUS "Doxygen not found: cannot build documentation")
+    message(STATUS "Doxygen not found: cannot build documentation")
   endif(DOXYGEN_FOUND)
 else()
-  MESSAGE(STATUS "Build of documentation disabeled. Enable with BUILD_DOC=On")
+  message(STATUS "Build of documentation disabeled. Enable with BUILD_DOC=On")
 endif(BUILD_DOC)
 
 # Only add stdc++fs for older GCC (needed for Ubuntu 20)
@@ -454,13 +455,13 @@ if(ENABLE_PYTHON AND Python_FOUND)
   
   # look for NumPy
   if(Python_NumPy_FOUND)
-  set(CMAKE_SWIG_FLAGS -DWITHNUMPY ${CRP})
-  list(APPEND CRPROPA_SWIG_DEFINES -DWITHNUMPY)
-  include_directories(${Python_NumPy_INCLUDE_DIRS})
-  message(STATUS "NumPy: Found!")
-  message(STATUS "  headers: ${Python_NumPy_INCLUDE_DIRS} (version ${Python_NumPy_VERSION})")
+    set(CMAKE_SWIG_FLAGS -DWITHNUMPY ${CRP})
+    list(APPEND CRPROPA_SWIG_DEFINES -DWITHNUMPY)
+    include_directories(${Python_NumPy_INCLUDE_DIRS})
+    message(STATUS "NumPy: Found!")
+    message(STATUS "  headers: ${Python_NumPy_INCLUDE_DIRS} (version ${Python_NumPy_VERSION})")
   elseif(Python_NumPy_FOUND)
-  message(STATUS "NumPy: NOT found!")
+    message(STATUS "NumPy: NOT found!")
   endif(Python_NumPy_FOUND)
   
   if(SWIG_VERSION VERSION_GREATER 4.0)
@@ -468,7 +469,7 @@ if(ENABLE_PYTHON AND Python_FOUND)
     list(APPEND CRPROPA_SWIG_DEFINES -doxygen)
   else()
     if(BUILD_DOC AND DOXYGEN_FOUND)
-      LIST(APPEND CRPROPA_SWIG_INPUTS ${CMAKE_CURRENT_BINARY_DIR}/docstrings_from_doxy.i)
+      list(APPEND CRPROPA_SWIG_INPUTS ${CMAKE_CURRENT_BINARY_DIR}/docstrings_from_doxy.i)
       list(APPEND CRPROPA_SWIG_DEFINES -DWITH_DOXYGEN)
       list(APPEND SWIG_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR})
     endif(BUILD_DOC AND DOXYGEN_FOUND)
@@ -568,30 +569,27 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/libs/nanoflann/include/ DESTINATIO
 # Documentation
 # ------------------------------------------------------------------
 
-find_program(SPHINX_EXECUTABLE
-             NAMES sphinx-build
-             DOC "Path to sphinx-build executable")
+find_program(SPHINX_EXECUTABLE NAMES sphinx-build DOC "Path to sphinx-build executable")
 
 if(BUILD_DOC AND NOT SPHINX_EXECUTABLE)
-  MESSAGE(STATUS "Sphinx not found: cannot build documentation")
+  message(STATUS "Sphinx not found: cannot build documentation")
 endif(BUILD_DOC AND NOT SPHINX_EXECUTABLE)
 
 if(BUILD_DOC AND DOXYGEN_FOUND AND SPHINX_EXECUTABLE)
-  MESSAGE(STATUS "Found Sphinx to build documentation")
+  message(STATUS "Found Sphinx to build documentation")
   include(FindPackageHandleStandardArgs)
-  find_package_handle_standard_args(Sphinx
-                                    "Failed to find sphinx-build executable"
-                                    SPHINX_EXECUTABLE)
+  find_package_handle_standard_args(Sphinx "Failed to find sphinx-build executable" SPHINX_EXECUTABLE)
   execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/doc "${CMAKE_CURRENT_BINARY_DIR}/doc-source")
   execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_BINARY_DIR}/xml "${CMAKE_CURRENT_BINARY_DIR}/doc-source/xml")
   set(SPHINX_SOURCE "${CMAKE_CURRENT_BINARY_DIR}/doc-source")
   set(SPHINX_BUILD ${CMAKE_CURRENT_BINARY_DIR}/doc)
   add_custom_target(doc
-                    ${SPHINX_EXECUTABLE} -b html
-                    -Dbreathe_projects.CRPropa3=xml
-                    ${SPHINX_SOURCE} ${SPHINX_BUILD}
-                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-                    COMMENT "Generating documentation with Sphinx")
+    ${SPHINX_EXECUTABLE} -b html
+    -Dbreathe_projects.CRPropa3=xml
+    ${SPHINX_SOURCE} ${SPHINX_BUILD}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    COMMENT "Generating documentation with Sphinx"
+  )
   add_dependencies(doc doxy)
 endif(BUILD_DOC AND DOXYGEN_FOUND AND SPHINX_EXECUTABLE)
 
@@ -599,6 +597,7 @@ endif(BUILD_DOC AND DOXYGEN_FOUND AND SPHINX_EXECUTABLE)
 # ----------------------------------------------------------------------------
 # Testing
 # ----------------------------------------------------------------------------
+
 if(ENABLE_TESTING)
   enable_testing()
 
@@ -664,16 +663,16 @@ if(ENABLE_TESTING)
 
   # python tests
   if(ENABLE_PYTHON AND Python_FOUND)
-    CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/test/testSimulationExecution.py ${CMAKE_CURRENT_BINARY_DIR}/testSimulationExecution.py COPYONLY)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test/testSimulationExecution.py ${CMAKE_CURRENT_BINARY_DIR}/testSimulationExecution.py COPYONLY)
     add_test(testSimulationExecution ${Python_EXECUTABLE} testSimulationExecution.py)
 
-    CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/test/testDiffusionSDE.py ${CMAKE_CURRENT_BINARY_DIR}/testDiffusionSDE.py COPYONLY)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test/testDiffusionSDE.py ${CMAKE_CURRENT_BINARY_DIR}/testDiffusionSDE.py COPYONLY)
     add_test(testDiffusionSDE ${Python_EXECUTABLE} testDiffusionSDE.py)
 
-    CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/test/testMomentumDiffusion.py ${CMAKE_CURRENT_BINARY_DIR}/testMomentumDiffusion.py COPYONLY)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test/testMomentumDiffusion.py ${CMAKE_CURRENT_BINARY_DIR}/testMomentumDiffusion.py COPYONLY)
     add_test(testMomentumDiffusion ${Python_EXECUTABLE} testMomentumDiffusion.py)
 
-    CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/test/testPythonExtension.py ${CMAKE_CURRENT_BINARY_DIR}/testPythonExtension.py COPYONLY)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test/testPythonExtension.py ${CMAKE_CURRENT_BINARY_DIR}/testPythonExtension.py COPYONLY)
     add_test(testPythonExtension ${Python_EXECUTABLE} testPythonExtension.py)
   endif(ENABLE_PYTHON AND Python_FOUND)
 
