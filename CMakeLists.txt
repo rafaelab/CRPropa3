@@ -12,6 +12,8 @@ set(CRPROPA_EXTRA_INCLUDES)
 set(CRPROPA_EXTRA_LIBRARIES)
 set(CRPROPA_SWIG_DEFINES)
 set(CRPROPA_SWIG_INPUTS)
+set(CRPROPA_BUNDLED_LIBRARY_TARGETS)
+set(CRPROPA_BUNDLED_INCLUDE_DIRS)
 
 if(CMAKE_COMPILER_IS_GNUCXX AND NOT APPLE)
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--as-needed")
@@ -64,7 +66,7 @@ message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
 # ----------------------------------------------------------------------------
 # Embed the information about CRPropa version into the binaries for easier
 # debugging with a reproducibility in mind
-option(ENABLE_GIT "Embedding information about CRPropa version from git" ON)
+option(ENABLE_GIT "Embedding information about CRPropa version from git" On)
 
 if(ENABLE_GIT)
   include(GetGitRevisionDescription)
@@ -89,10 +91,12 @@ list(APPEND CRPROPA_EXTRA_INCLUDES "${CMAKE_CURRENT_BINARY_DIR}/include")
 
 # googletest (provided, see https://code.google.com/p/googletest/wiki/FAQ
 #     Why is it not recommended use a pre-compiled copy of Google Test?)
-option(ENABLE_TESTING "Build tests and enable test target" ON)
+option(ENABLE_TESTING "Build tests and enable test target" On)
 if(ENABLE_TESTING)
   include_directories(${CMAKE_CURRENT_SOURCE_DIR}/libs/gtest/include)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/libs/gtest)
+  list(APPEND CRPROPA_BUNDLED_LIBRARY_TARGETS gtest gtest_main)
+  list(APPEND CRPROPA_BUNDLED_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/libs/gtest/include)
   if(APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGTEST_USE_OWN_TR1_TUPLE=1")
   endif(APPLE)
@@ -108,7 +112,7 @@ if(ENABLE_TESTING)
 endif(ENABLE_TESTING)
 
 #
-option(ENABLE_COVERAGE "Add code for coverage analysis." OFF)
+option(ENABLE_COVERAGE "Add code for coverage analysis." Off)
 if(ENABLE_COVERAGE)
   find_program(LCOV_PATH lcov)
   find_program(GENHTML_PATH genhtml)
@@ -148,14 +152,19 @@ endif(ENABLE_COVERAGE)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/libs/kiss)
 list(APPEND CRPROPA_EXTRA_LIBRARIES kiss)
 list(APPEND CRPROPA_EXTRA_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/libs/kiss/include)
+list(APPEND CRPROPA_BUNDLED_LIBRARY_TARGETS kiss)
+list(APPEND CRPROPA_BUNDLED_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/libs/kiss/include)
 
 # nanoflann (provided)
 list(APPEND CRPROPA_EXTRA_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/libs/nanoflann/include)
+list(APPEND CRPROPA_BUNDLED_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/libs/nanoflann/include)
 
 # HepID (provided)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/libs/HepPID)
 list(APPEND CRPROPA_EXTRA_LIBRARIES HepPID)
 list(APPEND CRPROPA_EXTRA_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/libs/HepPID/include)
+list(APPEND CRPROPA_BUNDLED_LIBRARY_TARGETS HepPID)
+list(APPEND CRPROPA_BUNDLED_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/libs/HepPID/include)
 
 # SOPHIA (provided)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/libs/sophia)
@@ -163,7 +172,7 @@ list(APPEND CRPROPA_EXTRA_LIBRARIES sophia gfortran)
 list(APPEND CRPROPA_EXTRA_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/libs/sophia)
 
 # OpenMP (optional for shared memory multiprocessing)
-option(ENABLE_OPENMP "OpenMP for multithreading" ON)
+option(ENABLE_OPENMP "OpenMP for multithreading" On)
 if(ENABLE_OPENMP)
   include(FindOpenMP)
   if(OPENMP_FOUND)
@@ -196,13 +205,13 @@ if(FFTW3F_FOUND)
 endif(FFTW3F_FOUND)
 
 # Quimby (optional for SPH magnetic fields)
-option(ENABLE_QUIMBY "Quimby Support" OFF)
+option(ENABLE_QUIMBY "Quimby Support" Off)
 if(ENABLE_QUIMBY)
   find_package(Quimby)
   if(QUIMBY_FOUND)
     list(APPEND CRPROPA_EXTRA_INCLUDES ${QUIMBY_INCLUDE_DIR})
     list(APPEND CRPROPA_EXTRA_LIBRARIES ${QUIMBY_LIBRARY})
-    add_definitions (-DCRPROPA_HAVE_QUIMBY)
+    add_definitions(-DCRPROPA_HAVE_QUIMBY)
     list(APPEND CRPROPA_SWIG_DEFINES -DCRPROPA_HAVE_QUIMBY)
     list(APPEND SWIG_INCLUDE_DIRECTORIES ${QUIMBY_INCLUDE_DIR}/../share/quimby)
     list(APPEND SWIG_INCLUDE_DIRECTORIES ${QUIMBY_INCLUDE_DIR})
@@ -214,7 +223,7 @@ find_package(muParser)
 if(MUPARSER_FOUND)
   list(APPEND CRPROPA_EXTRA_INCLUDES ${MUPARSER_INCLUDE_DIR})
   list(APPEND CRPROPA_EXTRA_LIBRARIES ${MUPARSER_LIBRARY})
-  add_definitions (-DCRPROPA_HAVE_MUPARSER)
+  add_definitions(-DCRPROPA_HAVE_MUPARSER)
   list(APPEND CRPROPA_SWIG_DEFINES -DCRPROPA_HAVE_MUPARSER)
   list(APPEND SWIG_INCLUDE_DIRECTORIES ${MUPARSER_INCLUDE_DIR})
 endif(MUPARSER_FOUND)
@@ -222,18 +231,18 @@ endif(MUPARSER_FOUND)
 # zlib / zstream-cpp (optional for compressed output files)
 find_package(ZLIB)
 if(ZLIB_FOUND)
-  list(APPEND CRPROPA_EXTRA_INCLUDES ${ZLIB_INCLUDE_DIRS})
-  list(APPEND CRPROPA_EXTRA_INCLUDES "${CMAKE_CURRENT_SOURCE_DIR}/libs/zstream-cpp")
+	list(APPEND CRPROPA_BUNDLED_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/libs/zstream-cpp/include)
   list(APPEND CRPROPA_EXTRA_LIBRARIES ${ZLIB_LIBRARIES})
-  add_definitions (-DCRPROPA_HAVE_ZLIB)
-  list(APPEND CRPROPA_SWIG_DEFINES -DCRPROPA_HAVE_ZLIB)
-  list(APPEND SWIG_INCLUDE_DIRECTORIES ${ZLIB_INCLUDE_DIRS})
+  list(APPEND CRPROPA_EXTRA_INCLUDES "${CMAKE_CURRENT_SOURCE_DIR}/libs/zstream-cpp/include")
+	add_definitions(-DCRPROPA_HAVE_ZLIB)
+	list(APPEND CRPROPA_SWIG_DEFINES -DCRPROPA_HAVE_ZLIB)
+	list(APPEND SWIG_INCLUDE_DIRECTORIES ${ZLIB_INCLUDE_DIRS})
 endif(ZLIB_FOUND)
 
 # HDF5 (optional for HDF5 output files)
-option(ENABLE_HDF5 "HDF5 Support" ON)
+option(ENABLE_HDF5 "HDF5 Support" On)
 if(ENABLE_HDF5)
-  find_package( HDF5 COMPONENTS C )
+  find_package(HDF5 COMPONENTS C)
   if(HDF5_FOUND)
     # parallel version requires MPI which is not supported in CRPropa
     if(NOT HDF5_IS_PARALLEL)
@@ -242,8 +251,6 @@ if(ENABLE_HDF5)
       add_definitions (-DCRPROPA_HAVE_HDF5)
       list(APPEND CRPROPA_SWIG_DEFINES -DCRPROPA_HAVE_HDF5)
       list(APPEND SWIG_INCLUDE_DIRECTORIES ${HDF5_INCLUDE_DIRS})
-      #string(REPLACE " " " -I" HDF5_INCLUDE_DIRS_SWIG ${HDF5_INCLUDE_DIRS})
-      #list(APPEND CRPROPA_SWIG_DEFINES -I${HDF5_INCLUDE_DIRS_SWIG})
     endif(NOT HDF5_IS_PARALLEL)
   endif(HDF5_FOUND)
 endif(ENABLE_HDF5)
@@ -252,33 +259,54 @@ endif(ENABLE_HDF5)
 # ----------------------------------------------------------------------------
 # Fix Apple RPATH
 # ----------------------------------------------------------------------------
-set(CMAKE_MACOSX_RPATH 1)
-option(USE_ABSOLUTE_RPATH "Add absolute rpath to all libraries and executables" ON)
-if(APPLE OR USE_ABSOLUTE_RPATH)
-  set(CMAKE_SKIP_BUILD_RPATH  FALSE)
-  set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
-  set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-  set(ABSOLUTE_RPATH "${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX}")
-  if(NOT IS_ABSOLUTE ${ABSOLUTE_RPATH})
-    set(ABSOLUTE_RPATH ${CMAKE_BINARY_DIR}/${ABSOLUTE_RPATH})
-  endif()
 
-  list(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${ABSOLUTE_RPATH}" isSystemDir)
-  if("${isSystemDir}" STREQUAL "-1")
-    message(STATUS "Use absolute RPATH ${ABSOLUTE_RPATH}")
-    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH}:${ABSOLUTE_RPATH}")
-  endif("${isSystemDir}" STREQUAL "-1")
+# set(CMAKE_MACOSX_RPATH 1)
+# option(USE_ABSOLUTE_RPATH "Add absolute rpath to all libraries and executables" On)
+# if(APPLE OR USE_ABSOLUTE_RPATH)
+#   set(CMAKE_SKIP_BUILD_RPATH  False)
+#   set(CMAKE_BUILD_WITH_INSTALL_RPATH False)
+#   set(CMAKE_INSTALL_RPATH_USE_LINK_PATH True)
+#   set(ABSOLUTE_RPATH "${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX}")
+#   if(NOT IS_ABSOLUTE ${ABSOLUTE_RPATH})
+#     set(ABSOLUTE_RPATH ${CMAKE_BINARY_DIR}/${ABSOLUTE_RPATH})
+#   endif()
+
+#   list(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${ABSOLUTE_RPATH}" isSystemDir)
+#   if("${isSystemDir}" STREQUAL "-1")
+#     message(STATUS "Use absolute RPATH ${ABSOLUTE_RPATH}")
+#     set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH}:${ABSOLUTE_RPATH}")
+#   endif("${isSystemDir}" STREQUAL "-1")
+# endif()
+
+# # Fix for linker error on mac, Issue: #147
+# if(APPLE)
+#   add_definitions(-arch x86_64)
+# endif(APPLE)
+
+
+# for relative paths GNU-style
+include(GNUInstallDirs)
+
+file(RELATIVE_PATH _rpath_rel "${CMAKE_INSTALL_FULL_BINDIR}" "${CMAKE_INSTALL_FULL_LIBDIR}")
+if(APPLE)
+  set(_rpath_origin "@loader_path")
+else()
+  set(_rpath_origin "$ORIGIN")
 endif()
 
-# Fix for linker error on mac, Issue: #147
-if(APPLE)
-  add_definitions(-arch x86_64)
-endif(APPLE)
+# CMake emits the correct platform separator itself with lib beside the binary; second: bin -> lib.
+set(CMAKE_INSTALL_RPATH "${_rpath_origin}" "${_rpath_origin}/${_rpath_rel}")
+
+# Build tree keeps its own rpath so tests run against freshly built libs.
+set(CMAKE_BUILD_WITH_INSTALL_RPATH False)
+
+
 
 # ----------------------------------------------------------------------------
 # Download data files (interaction data, masses, decay data ...)
 # ----------------------------------------------------------------------------
-option(DOWNLOAD_DATA "Download CRPropa data files" ON)
+
+option(DOWNLOAD_DATA "Download CRPropa data files" On)
 if(DOWNLOAD_DATA)
   message("-- Downloading data files from sciebo ~ 73 MB")
   file(DOWNLOAD
@@ -287,7 +315,7 @@ if(DOWNLOAD_DATA)
     USERPWD "3juW9sntQX2IWBS")
   file(STRINGS ${CMAKE_CURRENT_BINARY_DIR}/data-${CRPROPA_DATAFILE_VER}.tar.gz-CHECKSUM DATA_CHECKSUM LIMIT_COUNT 1 LENGTH_MINIMUM 32 LENGTH_MAXIMUM 32)
   file(DOWNLOAD
-  https://ruhr-uni-bochum.sciebo.de/public.php/webdav/data-${CRPROPA_DATAFILE_VER}.tar.gz
+    https://ruhr-uni-bochum.sciebo.de/public.php/webdav/data-${CRPROPA_DATAFILE_VER}.tar.gz
     ${CMAKE_CURRENT_BINARY_DIR}/data-${CRPROPA_DATAFILE_VER}.tar.gz
     USERPWD "3juW9sntQX2IWBS"
     EXPECTED_MD5 "${DATA_CHECKSUM}")
@@ -300,13 +328,13 @@ if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/data-${CRPROPA_DATAFILE_VER}.tar.gz)
   execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory data-${CRPROPA_DATAFILE_VER}/data data/ WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
   execute_process(COMMAND ${CMAKE_COMMAND} -E remove_directory data-${CRPROPA_DATAFILE_VER}/ WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 else()
-  message(WARNING "CRPropa data file not found at ${CMAKE_CURRENT_BINARY_DIR}/data-${CRPROPA_DATAFILE_VER}.tar.gz
-CRPropa should compile, but will likely not work properly! Please install data file manually, or use the automatic download which is enabled by default.")
+  message(WARNING "CRPropa data file not found at ${CMAKE_CURRENT_BINARY_DIR}/data-${CRPROPA_DATAFILE_VER}.tar.gz CRPropa should compile, but will likely not work properly! Please install data file manually, or use the automatic download which is enabled by default.")
 endif()
 
 # ----------------------------------------------------------------------------
 # Library and Binary
 # ----------------------------------------------------------------------------
+
 file(GLOB_RECURSE CRPROPA_INCLUDES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} include/*.h)
 # set CRPROPA_EXTRA_INCLUDES as cache variable to hand it over when used as subproject
 set(CRPROPA_EXTRA_INCLUDES "${CRPROPA_EXTRA_INCLUDES}" CACHE STRING "The include paths of the extra libraries that are needed." FORCE)
@@ -392,7 +420,7 @@ target_link_libraries(crpropa ${CRPROPA_EXTRA_LIBRARIES})
 #------------------------------------------------------------------
 # Doxygen ; xml data is used for sphinx site and python docstrings
 #------------------------------------------------------------------
-option(BUILD_DOC "Enable building documentation from the source code" OFF)
+option(BUILD_DOC "Enable building documentation from the source code" Off)
 
 if(BUILD_DOC)
   find_package(Doxygen)
@@ -422,7 +450,7 @@ endif()
 # ----------------------------------------------------------------------------
 # Python
 # ----------------------------------------------------------------------------
-option(ENABLE_PYTHON "Create python library via SWIG" ON)
+option(ENABLE_PYTHON "Create python library via SWIG" On)
 
 set(Python_FIND_VIRTUALENV "FIRST")
 set(Python_FIND_STRATEGY "LOCATION")
@@ -432,8 +460,8 @@ if(ENABLE_PYTHON AND Python_FOUND)
   find_package(SWIG 3.0 REQUIRED)
   include(UseSWIG)
   include_directories(${Python_INCLUDE_DIRS})
-  add_definitions(-DCRPROPA_HAVE_PYTHON)
-  list(APPEND CRPROPA_SWIG_DEFINES -DCRPROPA_HAVE_PYTHON)
+  add_definitions(-DCRPROPA_HAVE_PYTHOn)
+  list(APPEND CRPROPA_SWIG_DEFINES -DCRPROPA_HAVE_PYTHOn)
 
   # print Python info in detail
   message(STATUS "Python: Found!")
@@ -476,7 +504,7 @@ if(ENABLE_PYTHON AND Python_FOUND)
   endif(SWIG_VERSION VERSION_GREATER 4.0)
 
   # use SWIG's builtin (maybe should be abandoned if everything will be tested and working with -builtin)
-  option(ENABLE_SWIG_BUILTIN "Use SWIG builtin option" ON)
+  option(ENABLE_SWIG_BUILTIN "Use SWIG builtin option" On)
 
   if(ENABLE_SWIG_BUILTIN)
     set(BUILTIN "-builtin")
@@ -556,14 +584,19 @@ endif(ENABLE_PYTHON AND Python_FOUND)
 # makes the binary directory visible to common.h, needed to have a last resort when searching for data
 add_definitions(-DCRPROPA_BINARY_DIR="${CMAKE_CURRENT_BINARY_DIR}")
 add_definitions(-DCRPROPA_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}")
-install(TARGETS crpropa DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+install(TARGETS crpropa ${CRPROPA_BUNDLED_LIBRARY_TARGETS}
+	RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+	LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+	ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+)
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.h")
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/ DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.h")
 if(DOWNLOAD_DATA)
   install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data/ DESTINATION ${CMAKE_INSTALL_PREFIX}/share/crpropa/ PATTERN ".git" EXCLUDE)
 endif()
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/libs/kiss/include/ DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/libs/nanoflann/include/ DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
+foreach(CRPROPA_BUNDLED_INCLUDE_DIR IN LISTS CRPROPA_BUNDLED_INCLUDE_DIRS)
+	install(DIRECTORY ${CRPROPA_BUNDLED_INCLUDE_DIR}/ DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.h" PATTERN "*.hh" PATTERN "*.hpp" PATTERN "*.hxx")
+endforeach()
 
 # ------------------------------------------------------------------
 # Documentation
