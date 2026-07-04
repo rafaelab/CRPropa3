@@ -632,81 +632,44 @@ endif(BUILD_DOC AND DOXYGEN_FOUND AND SPHINX_EXECUTABLE)
 # ----------------------------------------------------------------------------
 
 if(ENABLE_TESTING)
+
   enable_testing()
 
-  add_executable(testCore ${CMAKE_CURRENT_SOURCE_DIR}/test/testCore.cpp)
-  target_link_libraries(testCore crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
-  add_test(testCore testCore)
+  function(addTest testName)
+    add_executable(${testName} ${CMAKE_CURRENT_SOURCE_DIR}/test/${testName}.cpp)
+    target_link_libraries(${testName} PRIVATE crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
+    add_test(NAME ${testName} COMMAND ${testName})
+  endfunction()
 
-  add_executable(testVector3 ${CMAKE_CURRENT_SOURCE_DIR}/test/testVector3.cpp)
-  target_link_libraries(testVector3 crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
-  add_test(testVector3 testVector3)
-
-  add_executable(testModuleList ${CMAKE_CURRENT_SOURCE_DIR}/test/testModuleList.cpp)
-  target_link_libraries(testModuleList crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
-  add_test(testModuleList testModuleList)
-
-  add_executable(testMagneticField ${CMAKE_CURRENT_SOURCE_DIR}/test/testMagneticField.cpp)
-  target_link_libraries(testMagneticField crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
-  add_test(testMagneticField testMagneticField)
-
-  add_executable(testTurbulentField ${CMAKE_CURRENT_SOURCE_DIR}/test/testTurbulentField.cpp)
-  target_link_libraries(testTurbulentField crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
-  add_test(testTurbulentField testTurbulentField)
-
-  add_executable(testAdvectionField ${CMAKE_CURRENT_SOURCE_DIR}/test/testAdvectionField.cpp)
-  target_link_libraries(testAdvectionField crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
-  add_test(testAdvectionField testAdvectionField)
-
-  add_executable(testDensity ${CMAKE_CURRENT_SOURCE_DIR}/test/testDensity.cpp)
-  target_link_libraries(testDensity crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
-  add_test(testDensity testDensity)
-
-  add_executable(testPropagation ${CMAKE_CURRENT_SOURCE_DIR}/test/testPropagation.cpp)
-  target_link_libraries(testPropagation crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
-  add_test(testPropagation testPropagation)
-
-  add_executable(testBreakCondition ${CMAKE_CURRENT_SOURCE_DIR}/test/testBreakCondition.cpp)
-  target_link_libraries(testBreakCondition crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
-  add_test(testBreakCondition testBreakCondition)
-
-  add_executable(testInteraction ${CMAKE_CURRENT_SOURCE_DIR}/test/testInteraction.cpp)
-  target_link_libraries(testInteraction crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
-  add_test(testInteraction testInteraction)
-
-  add_executable(testSource ${CMAKE_CURRENT_SOURCE_DIR}/test/testSource.cpp)
-  target_link_libraries(testSource crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
-  add_test(testSource testSource)
-
-  add_executable(testOutput ${CMAKE_CURRENT_SOURCE_DIR}/test/testOutput.cpp)
-  target_link_libraries(testOutput crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
-  add_test(testOutput testOutput)
-
-  add_executable(testFunctionalGroups ${CMAKE_CURRENT_SOURCE_DIR}/test/testFunctionalGroups.cpp)
-  target_link_libraries(testFunctionalGroups crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
-  add_test(testFunctionalGroups testFunctionalGroups)
-
-  add_executable(testAdiabaticCooling ${CMAKE_CURRENT_SOURCE_DIR}/test/testAdiabaticCooling.cpp)
-  target_link_libraries(testAdiabaticCooling crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
-  add_test(testAdiabaticCooling testAdiabaticCooling)
-
-  add_executable(testCandidateSplitting ${CMAKE_CURRENT_SOURCE_DIR}/test/testCandidateSplitting.cpp)
-  target_link_libraries(testCandidateSplitting crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
-  add_test(testCandidateSplitting testCandidateSplitting)
+  addTest(testCore)
+  addTest(testVector3)
+  addTest(testModuleList)
+  addTest(testMagneticField)
+  addTest(testTurbulentField)
+  addTest(testAdvectionField)
+  addTest(testDensity)
+  addTest(testPropagation)
+  addTest(testBreakCondition)
+  addTest(testInteraction)
+  addTest(testSource)
+  addTest(testOutput)
+  addTest(testFunctionalGroups)
+  addTest(testAdiabaticCooling)
+  addTest(testCandidateSplitting)
 
   # python tests
   if(ENABLE_PYTHON AND Python_FOUND)
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test/testSimulationExecution.py ${CMAKE_CURRENT_BINARY_DIR}/testSimulationExecution.py COPYONLY)
-    add_test(testSimulationExecution ${Python_EXECUTABLE} testSimulationExecution.py)
 
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test/testDiffusionSDE.py ${CMAKE_CURRENT_BINARY_DIR}/testDiffusionSDE.py COPYONLY)
-    add_test(testDiffusionSDE ${Python_EXECUTABLE} testDiffusionSDE.py)
+    function(addTestPy testName)
+      configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test/${testName}.py ${CMAKE_CURRENT_BINARY_DIR}/${testName}.py COPYONLY)
+      add_test(NAME ${testName} COMMAND ${Python_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/${testName}.py)
+    endfunction()
 
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test/testMomentumDiffusion.py ${CMAKE_CURRENT_BINARY_DIR}/testMomentumDiffusion.py COPYONLY)
-    add_test(testMomentumDiffusion ${Python_EXECUTABLE} testMomentumDiffusion.py)
+    addTestPy(testSimulationExecution)
+    addTestPy(testDiffusionSDE)
+    addTestPy(testMomentumDiffusion)
+    addTestPy(testPythonExtension)
 
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test/testPythonExtension.py ${CMAKE_CURRENT_BINARY_DIR}/testPythonExtension.py COPYONLY)
-    add_test(testPythonExtension ${Python_EXECUTABLE} testPythonExtension.py)
   endif(ENABLE_PYTHON AND Python_FOUND)
 
 endif(ENABLE_TESTING)
