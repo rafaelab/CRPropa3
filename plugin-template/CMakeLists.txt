@@ -4,7 +4,10 @@ cmake_minimum_required(VERSION 3.14)
 set(pluginName "myPlugin")
 
 # set the version to whatever you want
-project(${pluginName} VERSION 1.0.0 LANGUAGES Fortran C CXX)
+project(${pluginName} 
+	VERSION 1.0.0 
+	LANGUAGES Fortran C CXX
+)
 
 
 
@@ -311,17 +314,6 @@ endif(ENABLE_PYTHON)
 if(ENABLE_TESTING)
 	enable_testing()
 
-	if(NOT TARGET gtest)
-		add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/libs/gtest)
-	endif(NOT TARGET gtest)
-
-	# googletest (provided, see https://code.google.com/p/googletest/wiki/FAQ
-	#     Why is it not recommended use a pre-compiled copy of Google Test?)
-	# Here are only the apple fixes for gtest
-	if(APPLE)
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGTEST_USE_OWN_TR1_TUPLE=1")
-	endif(APPLE)
-
 	# temporary workaround for newer clang versions due to its handling of unwinding
 	#   see: https://github.com/google/googletest/issues/3062
 	if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
@@ -330,10 +322,30 @@ if(ENABLE_TESTING)
 		endif (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 15)
 	endif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
 
+	# googletest (provided, see https://code.google.com/p/googletest/wiki/FAQ
+	#     Why is it not recommended use a pre-compiled copy of Google Test?)
+	# Here are only the apple fixes for gtest
+	if(APPLE)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGTEST_USE_OWN_TR1_TUPLE=1")
+	endif(APPLE)
+
+	# gtest ships with CRPropa, so its headers and libraries follow CRPropa's paths:
+	if(USE_OWN_CRPROPA)
+		# gtest is built together with CRPropa (see FetchContent above); use its targets directly
+		set(GTEST_INCLUDE_DIR ${CRPropa_SOURCE_DIR}/libs/gtest/include)
+		set(GTEST_LIBRARIES gtest gtest_main)
+	else()
+		# headers sit under the CRPropa include dir (gtest/), libraries next to (install) or under lib/ (build tree) libcrpropa
+		set(GTEST_INCLUDE_DIR ${CRPropa_INCLUDE_DIR})
+		find_library(GTEST_LIBRARY NAMES gtest HINTS ${CRPropa_LIBRARY_DIR} ${CRPropa_LIBRARY_DIR}/lib)
+		find_library(GTEST_MAIN_LIBRARY NAMES gtest_main HINTS ${CRPropa_LIBRARY_DIR} ${CRPropa_LIBRARY_DIR}/lib)
+		set(GTEST_LIBRARIES ${GTEST_LIBRARY} ${GTEST_MAIN_LIBRARY})
+	endif(USE_OWN_CRPROPA)
+
 	# first add the cpp tests:
 	add_executable(testPluginCPP ${CMAKE_CURRENT_SOURCE_DIR}/test/testPlugin.cpp)
-	target_include_directories(testPluginCPP PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/libs/gtest/include)
-	target_link_libraries(testPluginCPP ${pluginName} gtest gtest_main pthread)
+	target_include_directories(testPluginCPP PRIVATE ${GTEST_INCLUDE_DIR})
+	target_link_libraries(testPluginCPP ${pluginName} ${GTEST_LIBRARIES} pthread)
 	add_test(testPluginCPP testPluginCPP)
 
 	if(ENABLE_PYTHON AND Python_FOUND)

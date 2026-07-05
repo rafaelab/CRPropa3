@@ -20,6 +20,7 @@
 # - `CRPropa_FOUND`: whether all required pieces were located
 # - `CRPropa_INCLUDE_DIR`: directory containing CRPropa.h
 # - `CRPropa_LIBRARY`: the crpropa shared library
+# - `CRPropa_LIBRARY_DIR`: directory containing the crpropa shared library
 # - `CRPropa_SWIG_PATH`: directory containing the SWIG interface files
 # - `CRPropa_SWIG_INTERFACE_FILE`: full path to the selected SWIG interface file
 # - `CRPropa_VERSION`: detected version (best effort; may be empty)
@@ -83,6 +84,9 @@ find_library(CRPropa_LIBRARY
 	PATHS ${CRPropa_SYSTEM_PATHS}
 	PATH_SUFFIXES lib lib64
 )
+if(CRPropa_LIBRARY)
+	get_filename_component(CRPropa_LIBRARY_DIR "${CRPropa_LIBRARY}" DIRECTORY)
+endif(CRPropa_LIBRARY)
 
 # SWIG interface directory
 find_path(CRPropa_SWIG_PATH
@@ -190,12 +194,14 @@ if(CRPropa_FOUND AND NOT TARGET CRPropa::CRPropa)
 	set_target_properties(CRPropa::CRPropa PROPERTIES
 		IMPORTED_LOCATION "${CRPropa_LIBRARY}"
 		INTERFACE_INCLUDE_DIRECTORIES "${CRPropa_INCLUDE_DIR}"
+		INTERFACE_LINK_DIRECTORIES "${CRPropa_LIBRARY_DIR}"
 	)
 endif()
 
 if(CRPropa_FOUND AND NOT CRPropa_FIND_QUIETLY)
 	message(STATUS "CRPropa include path: ${CRPropa_INCLUDE_DIR}")
 	message(STATUS "CRPropa library: ${CRPropa_LIBRARY}")
+	message(STATUS "CRPropa library path: ${CRPropa_LIBRARY_DIR}")
 	message(STATUS "CRPropa SWIG interface file: ${CRPropa_SWIG_INTERFACE_FILE}")
 	if(CRPropa_VERSION)
 		message(STATUS "CRPropa version: ${CRPropa_VERSION}")
