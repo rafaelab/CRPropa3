@@ -1,7 +1,7 @@
 # Plugin template
 
 To create your own CRPropa modules in C++ we recommend using plugins. 
-Plugins are programs that can be installed as a separate modules. They allow users to extend CRPropa capabilities without having to modify and reinstall CRPropa. 
+Plugins are programs that can be installed as separate modules. They allow users to extend CRPropa capabilities without having to modify and reinstall CRPropa. 
 They can be used, for example, to implement a new physical interaction, a complex magnetic field structure, or a unique observer.
 Here, we provide a template to create such a plugin. 
 
