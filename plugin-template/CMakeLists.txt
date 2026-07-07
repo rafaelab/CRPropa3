@@ -94,8 +94,7 @@ if(ENABLE_PYTHON)
 	endif(Python_FOUND)
 
 	if(Python_NumPy_FOUND)
-		set(CMAKE_SWIG_FLAGS -DWITHNUMPY ${CRP})
-		list(APPEND CRPropa_SWIG_DEFINES -DWITHNUMPY)
+		set(CMAKE_SWIG_FLAGS -DWITHNUMPY)
 		include_directories(${Python_NumPy_INCLUDE_DIRS})
 		message(STATUS "NumPy headers: ${Python_NumPy_INCLUDE_DIRS} (version ${Python_NumPy_VERSION})")
 	else()
@@ -150,7 +149,7 @@ if(USE_OWN_CRPROPA)
 		FetchContent_Declare(
 			crpropa
 			GIT_REPOSITORY "https://github.com/CRPropa/CRPropa3.git"
-			# # The GIT_TAG option enbales you to specify a commit hash or specific tag, see:
+			# # The GIT_TAG option enables you to specify a commit hash or specific tag, see:
 			# #   https://cmake.org/cmake/help/latest/module/ExternalProject.html#git
 			# GIT_TAG f5cf064cf60b8a4771deab6d963b01d44df13c3f
 		)
@@ -194,7 +193,7 @@ add_library(${pluginName} SHARED
 	${${pluginName}_EXTRA_SOURCES}
 )
 
-# the plugin's own headers plus any extra includes (e.g. CRPropa's)
+# the plugin's own headers plus any extra includes (e.g. CRPropa's CMakeLists.txt)
 target_include_directories(${pluginName} PUBLIC
 	${CMAKE_CURRENT_SOURCE_DIR}/include
 	${${pluginName}_EXTRA_INCLUDES}
@@ -234,7 +233,7 @@ if(ENABLE_PYTHON)
 		set(Python_INSTALL_PACKAGE_DIR "${Python_SITELIB}" CACHE PATH "folder in which the python package is installed")
 		message(STATUS "  package install directory: ${Python_INSTALL_PACKAGE_DIR}")
 
-		set(CMAKE_SWIG_FLAGS -DWITHNUMPY ${CRP})
+		set(CMAKE_SWIG_FLAGS -DWITHNUMPY)
 		list(APPEND ${pluginName}_SWIG_DEFINES -DWITHNUMPY)
 		list(APPEND ${pluginName}_SWIG_DEFINES -doxygen)
 
@@ -293,14 +292,6 @@ if(ENABLE_PYTHON)
 			set_property(TARGET ${pluginName}-swig APPEND PROPERTY LINK_FLAGS "-flat_namespace -undefined suppress")
 		endif(APPLE)
 
-		# # if you prefer PyBind (instead of SWIG)
-		# find_program(PYBIND11_STUBGEN_EXECUTABLE NAMES "pybind11-stubgen")
-		# if(PYBIND11_STUBGEN_EXECUTABLE)
-		# 	message(STATUS "Found pybind11-stubgen at ${PYBIND11_STUBGEN_EXECUTABLE}")
-		# 	install(CODE "execute_process(COMMAND ${PYBIND11_STUBGEN_EXECUTABLE} --ignore-all-errors -o ${Python_SITELIB} ${pluginName})")
-		# 	install(CODE "execute_process(COMMAND echo -- Generated python stubs over pybind11-stubgen for ${pluginName})")
-		# endif(PYBIND11_STUBGEN_EXECUTABLE)
-
 	endif(Python_FOUND)
 
 endif(ENABLE_PYTHON)
@@ -318,7 +309,7 @@ if(ENABLE_TESTING)
 	#   see: https://github.com/google/googletest/issues/3062
 	if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
 		if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 15)
-			add_definitions(-DCRPROPA_TESTS_SKIP_EXCEPTIONS)
+			add_definitions(-D${pluginName}_TESTS_SKIP_EXCEPTIONS)
 		endif (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 15)
 	endif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
 
@@ -393,3 +384,13 @@ if(ENABLE_PYTHON AND Python_FOUND)
 	install(TARGETS ${pluginName}-swig LIBRARY DESTINATION "${Python_INSTALL_PACKAGE_DIR}/${pluginName}")
 	install(FILES ${${pluginName}_SWIG_INPUTS} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${pluginName}/swig_interface)
 endif(ENABLE_PYTHON AND Python_FOUND)
+
+
+
+# if you prefer PyBind (instead of SWIG)
+find_program(PYBIND11_STUBGEN_EXECUTABLE NAMES "pybind11-stubgen")
+if(PYBIND11_STUBGEN_EXECUTABLE)
+	message(STATUS "Found pybind11-stubgen at ${PYBIND11_STUBGEN_EXECUTABLE}")
+	install(CODE "execute_process(COMMAND ${PYBIND11_STUBGEN_EXECUTABLE} --ignore-all-errors -o ${Python_SITELIB} ${pluginName})")
+	install(CODE "execute_process(COMMAND echo -- Generated python stubs over pybind11-stubgen for ${pluginName})")
+endif(PYBIND11_STUBGEN_EXECUTABLE)
