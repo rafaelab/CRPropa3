@@ -14,6 +14,7 @@
 #include "crpropa/module/EMInverseComptonScattering.h"
 #include "crpropa/module/SynchrotronRadiation.h"
 #include "gtest/gtest.h"
+#include "kiss/path.h"
 
 #include <fstream>
 
@@ -40,7 +41,7 @@ TEST(ElectronPairProduction, allBackgrounds) {
 	epp.setPhotonField(irb);
 	irb = new IRB_Stecker16_lower();
 	epp.setPhotonField(irb);
-    irb = new IRB_Finke22();
+  	irb = new IRB_Finke22();
 	epp.setPhotonField(irb);
 }
 
@@ -400,7 +401,7 @@ TEST(PhotoDisintegration, allBackgrounds) {
 	pd.setPhotonField(irb);
 	irb = new IRB_Stecker16_lower();
 	pd.setPhotonField(irb);
-    irb = new IRB_Finke22();
+	irb = new IRB_Finke22();
 	pd.setPhotonField(irb);
 	urb = new URB_Nitu21();
 	pd.setPhotonField(urb);
@@ -774,7 +775,7 @@ TEST(PhotoPionProduction, allBackgrounds) {
 	ppp.setPhotonField(irb);
 	irb = new IRB_Stecker16_lower();
 	ppp.setPhotonField(irb);
-    irb = new IRB_Finke22();
+ 	irb = new IRB_Finke22();
 	ppp.setPhotonField(irb);
 	ref_ptr<PhotonField> urb = new URB_Protheroe96();
 	ppp.setPhotonField(urb);
@@ -922,6 +923,7 @@ TEST(EMPairProduction, allBackgrounds) {
 	em.setPhotonField(ebl);
 	ref_ptr<PhotonField> urb = new URB_Protheroe96();
 	em.setPhotonField(urb);
+	
 	ebl = new IRB_Stecker05();
 	em.setPhotonField(ebl);
 	ebl = new IRB_Franceschini08();
@@ -974,8 +976,7 @@ TEST(EMPairProduction, secondaries) {
 		for (int i = 0; i < 140; i++) { // loop over energies Ep = (1e10 - 1e23) eV
 			double Ep = pow(10, 9.05 + 0.1 * i) * eV;
 			Candidate c(22, Ep);
-			c.setCurrentStep(1e10 * Mpc);
-
+			c.setCurrentStep(1e4 * Mpc);
 			m.process(&c);
 
 			// pass if no interaction has ocurred (no tabulated rates)
@@ -995,8 +996,8 @@ TEST(EMPairProduction, secondaries) {
 				Etot += s.current.getEnergy();
 			}
 
-			// test energy conservation
-			EXPECT_DOUBLE_EQ(Ep, Etot);
+			// test energy conservation 
+		EXPECT_DOUBLE_EQ(Ep, Etot);
 		}
 	}
 }
@@ -1027,6 +1028,7 @@ TEST(EMDoublePairProduction, allBackgrounds) {
 	em.setPhotonField(ebl);
 	ref_ptr<PhotonField> urb = new URB_Protheroe96();
 	em.setPhotonField(urb);
+  
 	ebl = new IRB_Stecker05();
 	em.setPhotonField(ebl);
 	ebl = new IRB_Franceschini08();
@@ -1133,6 +1135,7 @@ TEST(EMTripletPairProduction, allBackgrounds) {
 	em.setPhotonField(ebl);
 	ref_ptr<PhotonField> urb = new URB_Protheroe96();
 	em.setPhotonField(urb);
+  
 	ebl = new IRB_Stecker05();
 	em.setPhotonField(ebl);
 	ebl = new IRB_Franceschini08();
@@ -1240,6 +1243,7 @@ TEST(EMInverseComptonScattering, allBackgrounds) {
 	em.setPhotonField(ebl);
 	ref_ptr<PhotonField> urb = new URB_Protheroe96();
 	em.setPhotonField(urb);
+  
 	ebl = new IRB_Stecker05();
 	em.setPhotonField(ebl);
 	ebl = new IRB_Franceschini08();

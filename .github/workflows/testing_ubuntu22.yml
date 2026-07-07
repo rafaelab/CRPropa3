@@ -1,5 +1,25 @@
 name: crpropa-testing_ubuntu22
-on: [push, pull_request]
+on:
+  push:
+    paths:
+      - ".github/workflows/testing_ubuntu22.yml"
+      - "**.cpp"
+      - "**.h"
+      - "**.py"
+      - "**.i"
+      - "**/CMakeLists.txt"
+      - "!plugin-template/**"
+      - "!doc/**"
+  pull_request:
+    paths:
+      - ".github/workflows/testing_ubuntu22.yml"
+      - "**.cpp"
+      - "**.h"
+      - "**.py"
+      - "**.i"
+      - "**/CMakeLists.txt"
+      - "!plugin-template/**"
+      - "!doc/**"
 
 jobs:
   linux:
@@ -10,9 +30,6 @@ jobs:
         config:
          - name: "ubuntu-22"
            os: ubuntu-22.04
-           cxx: "g++-11"
-           cc: "gcc-11"
-           fc: "gfortran-11"
            swig_builtin: "On" #uses swig 4.0.2
            py: "/usr/bin/python3" #python 3.10
     steps:
@@ -26,10 +43,6 @@ jobs:
           pip install numpy 
           pip show numpy
       - name: Set up the build
-        env:
-          CXX: ${{ matrix.config.cxx }}
-          CC: ${{ matrix.config.cc }}
-          FC: ${{ matrix.config.fc }}
         run: |
           mkdir build
           cd build
@@ -48,4 +61,3 @@ jobs:
         with:
           name: "test-report_${{matrix.config.name}}"
           path: build/Testing/Temporary/LastTest.log
-  

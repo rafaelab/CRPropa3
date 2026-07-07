@@ -3,8 +3,6 @@
 #include "kiss/logger.h"
 #include "crpropa/Geometry.h"
 
-#include <iostream>
-
 namespace crpropa {
 
 // Plane ------------------------------------------------------------------
@@ -33,7 +31,6 @@ Vector3d Plane::normal(const Vector3d& point) const {
 	return n;
 }
 
-
 // Sphere ------------------------------------------------------------------
 Sphere::Sphere(const Vector3d& _center, double _radius) : center(_center), radius(_radius) {
 };
@@ -51,8 +48,8 @@ Vector3d Sphere::normal(const Vector3d& point) const {
 std::string Sphere::getDescription() const {
 	std::stringstream ss;
 	ss << "Sphere: " << std::endl
-			<< "   Center: " << center << std::endl
-			<< "   Radius: " << radius << std::endl;
+		<< "   Center: " << center << std::endl
+		<< "   Radius: " << radius << std::endl;
 	return ss.str();
 };
 
@@ -115,10 +112,9 @@ Vector3d ParaxialBox::normal(const Vector3d& point) const {
 std::string ParaxialBox::getDescription() const {
 	std::stringstream ss;
 	ss << "ParaxialBox: " << std::endl
-		 << "   corner: " << corner << std::endl
-		 << "     size: " << size << std::endl;
+		<< "   corner: " << corner << std::endl
+		<< "     size: " << size << std::endl;
 	return ss.str();
 };
-
 
 } // namespace
