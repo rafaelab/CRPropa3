@@ -387,7 +387,6 @@ endif(ENABLE_PYTHON AND Python_FOUND)
 
 
 
-# if you prefer PyBind (instead of SWIG)
 find_program(PYBIND11_STUBGEN_EXECUTABLE NAMES "pybind11-stubgen")
 if(PYBIND11_STUBGEN_EXECUTABLE)
 	message(STATUS "Found pybind11-stubgen at ${PYBIND11_STUBGEN_EXECUTABLE}")
