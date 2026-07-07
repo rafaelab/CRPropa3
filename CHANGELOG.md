@@ -1,7 +1,8 @@
 ## CRPropa vNext
 
 ### Bug fixes:
-* Fixed the secondariesFirst parameter not actually allowing secondary particles to be propagated before the primary threshold calculation in PhotoPionProduction
+* Fixed the secondariesFirst parameter not actually allowing secondary particles to be propagated before the primary 
+* Threshold calculation in PhotoPionProduction
 * Bug fixed when generating python binding for variants with some specific compilers (e.g., clang-llvm 21).
 
 ### New features:
