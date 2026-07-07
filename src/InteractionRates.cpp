@@ -11,14 +11,14 @@
 
 namespace crpropa {
 
-InteractionRatesHomogeneous::InteractionRatesHomogeneous(std::string RateFile, std::string CumulativeRateFile) {
+InteractionRatesHomogeneous::InteractionRatesHomogeneous(std::string rateFile, std::string cumulativeRateFile) {
 	this->ratesName = "interactionRatesHomogeneous";
 	this->isPositionDependent = false;
 
-	if (RateFile!="")
-		initRate(RateFile);
-	if (CumulativeRateFile!="")
-		initCumulativeRate(CumulativeRateFile);
+	if (rateFile != "")
+		initRate(rateFile);
+	if (cumulativeRateFile != "")
+		initCumulativeRate(cumulativeRateFile);
 }
 
 double InteractionRatesHomogeneous::getProcessRate(const double E, const Vector3d &position) const {
@@ -131,16 +131,16 @@ void InteractionRatesHomogeneous::initCumulativeRate(std::string filename){
 
 
 InteractionRatesPositionDependent::InteractionRatesPositionDependent(
-	std::string RateFilePath, std::string CumulativeRateFilePath, ref_ptr<Surface> surface) {
+	std::string rateFilePath, std::string cumulativeRateFilePath, ref_ptr<Surface> surface) {
 	
 	this->ratesName = "interactionRatesPositionDependent";
 	this->isPositionDependent = true;
 	this->surface = surface;
 
-	if (RateFilePath!="")
-		initRate(RateFilePath);
-	if (CumulativeRateFilePath!="")
-		initCumulativeRate(CumulativeRateFilePath);
+	if (rateFilePath != "")
+		initRate(rateFilePath);
+	if (cumulativeRateFilePath != "")
+		initCumulativeRate(cumulativeRateFilePath);
 }
 
 int InteractionRatesPositionDependent::findClosestGridPoint(const Vector3d &position) const {
@@ -335,7 +335,7 @@ void InteractionRatesPositionDependent::initCumulativeRate(std::string filepath)
 	std::vector<std::string> dirs;
 	if(!list_directory(filepath, dirs))
 		throw std::runtime_error("Could not find any files in " + filepath + "!\n");
- 
+
 	for (auto const& filename : dirs) {
 		
 		std::vector<double> vecE;

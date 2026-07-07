@@ -72,6 +72,10 @@ void EMTripletPairProduction::initCumulativeRate(std::string path) {
 	this->interactionRates->initCumulativeRate(path);
 }
 
+double EMTripletPairProduction::getRate(double E, const Vector3d &position, double z) const {
+	return this->interactionRates->getProcessRate(E, position) * pow_integer<2>(1 + z) * photonField->getRedshiftScaling(z);
+}
+
 void EMTripletPairProduction::performInteraction(Candidate *candidate) const {
 	
 	// scale the particle energy instead of background photons
@@ -130,13 +134,11 @@ void EMTripletPairProduction::process(Candidate *candidate) const {
 	double E = (1 + z) * candidate->current.getEnergy();
 	Vector3d position = candidate->current.getPosition();
 	
-	double scaling = pow_integer<2>(1 + z) * photonField->getRedshiftScaling(z);
-	double rate = this->interactionRates->getProcessRate(E, position);
-	
+	// interaction rate
+	double rate = getRate(E, position, z);
 	if (rate < 0)
 		return;
 	
-	rate *= scaling;
 	
 	// run this loop at least once to limit the step size
 	double step = candidate->getCurrentStep();

@@ -11,6 +11,8 @@
 * Added position-dependent photon fields
 * Secondaries are now distributed over multiple threads if OpenMP parallelisation is enabled
 * Advanced CMake finder for CRPropa, to be used with plugins.
+* Exposed `getRate` function for electromagnetic interactions
+
 
 ### Interface changes:
 

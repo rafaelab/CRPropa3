@@ -97,6 +97,16 @@ public:
 	 * @param path The name of the file/folder containing the interaction rates
 	 */
 	void initCumulativeRate(std::string path);
+
+	/**
+	 * Get the interaction rate for a given energy, position, and redshift.
+	 * For now, this function uses a redshift scaling factor for the interaction rate.
+	 * Future releases will include a more accurate treatment of the redshift evolution of the photon field.
+	 * @param E Energy of the primary particle
+	 * @param position Position of the primary particle
+	 * @param z Redshift of the primary particle
+	 */
+	double getRate(double E, const Vector3d &position = Vector3d(0.), double z = 0) const;
 		
 	void performInteraction(Candidate *candidate) const;
 	void process(Candidate *candidate) const;
