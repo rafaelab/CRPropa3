@@ -48,7 +48,7 @@ jobs:
           cd plugin-template
           mkdir build
           cd build
-          cmake .. -DENABLE_PYTHON=True -DENABLE_TESTING=On -DENABLE_SWIG_BUILTIN=${{ matrix.config.swig_builtin }} -DSIMD_EXTENSIONS="none" -DUSE_CRPROPA_BUILTIN=ON 
+          cmake .. -DENABLE_PYTHON=True -DENABLE_TESTING=On -DENABLE_SWIG_BUILTIN=${{ matrix.config.swig_builtin }} -DSIMD_EXTENSIONS="none" -DUSE_OWN_CRPROPA=ON 
       - name: Build CRPropa
         run: |
           cd plugin-template/build
@@ -94,7 +94,7 @@ jobs:
           cd plugin-template
           mkdir build
           cd build
-          cmake .. -DENABLE_PYTHON=True -DENABLE_TESTING=On -DENABLE_SWIG_BUILTIN=${{ matrix.config.swig_builtin }} -DSIMD_EXTENSIONS="none" -DUSE_CRPROPA_BUILTIN=ON 
+          cmake .. -DENABLE_PYTHON=True -DENABLE_TESTING=On -DENABLE_SWIG_BUILTIN=${{ matrix.config.swig_builtin }} -DSIMD_EXTENSIONS="none" -DUSE_OWN_CRPROPA=ON 
       - name: Build CRPropa
         run: |
           cd plugin-template/build
@@ -152,7 +152,7 @@ jobs:
           -DENABLE_TESTING=On \
           -DENABLE_SWIG_BUILTIN=${{ matrix.config.swig_builtin }} \
           -DPython_INSTALL_PACKAGE_DIR=$GITHUB_WORKSPACE/venv/lib/python3.14/site-packages \
-          -DUSE_CRPROPA_BUILTIN=ON
+          -DUSE_OWN_CRPROPA=ON
 
       - name: Build CRPropa
         run: |
