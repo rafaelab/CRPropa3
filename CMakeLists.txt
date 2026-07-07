@@ -260,30 +260,6 @@ endif(ENABLE_HDF5)
 # Fix Apple RPATH
 # ----------------------------------------------------------------------------
 
-# set(CMAKE_MACOSX_RPATH 1)
-# option(USE_ABSOLUTE_RPATH "Add absolute rpath to all libraries and executables" On)
-# if(APPLE OR USE_ABSOLUTE_RPATH)
-#   set(CMAKE_SKIP_BUILD_RPATH  False)
-#   set(CMAKE_BUILD_WITH_INSTALL_RPATH False)
-#   set(CMAKE_INSTALL_RPATH_USE_LINK_PATH True)
-#   set(ABSOLUTE_RPATH "${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX}")
-#   if(NOT IS_ABSOLUTE ${ABSOLUTE_RPATH})
-#     set(ABSOLUTE_RPATH ${CMAKE_BINARY_DIR}/${ABSOLUTE_RPATH})
-#   endif()
-
-#   list(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${ABSOLUTE_RPATH}" isSystemDir)
-#   if("${isSystemDir}" STREQUAL "-1")
-#     message(STATUS "Use absolute RPATH ${ABSOLUTE_RPATH}")
-#     set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH}:${ABSOLUTE_RPATH}")
-#   endif("${isSystemDir}" STREQUAL "-1")
-# endif()
-
-# # Fix for linker error on mac, Issue: #147
-# if(APPLE)
-#   add_definitions(-arch x86_64)
-# endif(APPLE)
-
-
 # for relative paths GNU-style
 include(GNUInstallDirs)
 
@@ -483,7 +459,7 @@ if(ENABLE_PYTHON AND Python_FOUND)
   
   # look for NumPy
   if(Python_NumPy_FOUND)
-    set(CMAKE_SWIG_FLAGS -DWITHNUMPY ${CRP})
+    set(CMAKE_SWIG_FLAGS -DWITHNUMPY)
     list(APPEND CRPROPA_SWIG_DEFINES -DWITHNUMPY)
     include_directories(${Python_NumPy_INCLUDE_DIRS})
     message(STATUS "NumPy: Found!")
@@ -597,6 +573,15 @@ endif()
 foreach(CRPROPA_BUNDLED_INCLUDE_DIR IN LISTS CRPROPA_BUNDLED_INCLUDE_DIRS)
 	install(DIRECTORY ${CRPROPA_BUNDLED_INCLUDE_DIR}/ DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.h" PATTERN "*.hh" PATTERN "*.hpp" PATTERN "*.hxx")
 endforeach()
+
+if(ENABLE_PYTHON AND Python_FOUND)
+  find_program(PYBIND11_STUBGEN_EXECUTABLE NAMES "pybind11-stubgen")
+	if(PYBIND11_STUBGEN_EXECUTABLE)
+		message(STATUS "Found pybind11-stubgen at ${PYBIND11_STUBGEN_EXECUTABLE}")
+		install(CODE "execute_process(COMMAND ${PYBIND11_STUBGEN_EXECUTABLE} --ignore-all-errors -o ${Python_SITELIB} crpropa)")
+    install(CODE "execute_process(COMMAND echo -- Generated python stubs over pybind11-stubgen for crpropa)")
+	endif()
+endif()
 
 # ------------------------------------------------------------------
 # Documentation
