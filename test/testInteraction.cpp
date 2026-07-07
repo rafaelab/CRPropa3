@@ -321,6 +321,62 @@ TEST(NuclearDecay, interactionTag) {
 	EXPECT_TRUE(decay.getInteractionTag() == "myTag");
 }
 
+TEST(NuclearDecay, superheavy_stableHeavyNucleusIsNoOp) {
+	// Zn-68 (Z=30, N=38) is a stable nucleus and has no entry in
+	// nuclear_decay.txt even in the extended (Z<=82) table.
+	// process() must hit the empty-vector guard and return without
+	// touching the candidate.
+	NuclearDecay d;
+	Candidate c(nucleusId(68, 30), 80 * EeV);  // Zn-68, Z=30
+	c.setCurrentStep(100 * Mpc);
+	int id_before = c.current.getId();
+	double E_before = c.current.getEnergy();
+	d.process(&c);
+	EXPECT_EQ(id_before, c.current.getId());
+	EXPECT_DOUBLE_EQ(E_before, c.current.getEnergy());
+	EXPECT_TRUE(c.isActive());
+}
+
+TEST(NuclearDecay, superheavy_beyondZmaxSkippedSilently) {
+	// Nuclei with Z > NUCLEAR_ZMAX (82) must be caught by the hard bounds guard
+	// in process() before any array access, leaving the candidate unchanged.
+	NuclearDecay d;
+	Candidate c(nucleusId(209, 83), 80 * EeV);  // Bi-209, Z=83
+	c.setCurrentStep(100 * Mpc);
+	int id_before = c.current.getId();
+	double E_before = c.current.getEnergy();
+	d.process(&c);
+	EXPECT_EQ(id_before, c.current.getId());
+	EXPECT_DOUBLE_EQ(E_before, c.current.getEnergy());
+	EXPECT_TRUE(c.isActive());
+}
+
+
+TEST(NuclearDecay, superheavy_unstableHeavyNucleusDecays) {
+	// Co-56 (Z=27, N=29) beta+ decays to stable Fe-56 (Z=26, N=30).
+	// tau_rest ~ 13.9 Mdays; at 1 EeV the decay length is ~2 Mpc so it
+	// decays well within a 100 Mpc step.
+	// This test is skipped when the extended nuclear_decay.txt (Z<=82) is not
+	// loaded; it can stochastically fail at energies where the decay length
+	// exceeds the step, but the chosen energy makes that vanishingly unlikely.
+	NuclearDecay d(true, false, false);  // enable electrons so positron is produced
+	int co56 = nucleusId(56, 27);
+	if (d.meanFreePath(co56, 1e7) == std::numeric_limits<double>::max())
+		return;  // extended file not deployed
+
+	Candidate c(co56, 1e18 * eV);
+	c.setCurrentStep(100 * Mpc);
+	double gamma = c.current.getLorentzFactor();
+	d.process(&c);
+
+	// Fe-56 is the only stable beta+ daughter of Co-56
+	EXPECT_EQ(nucleusId(56, 26), c.current.getId());
+	// Lorentz factor conserved across beta+ decay (nuclear recoil negligible)
+	EXPECT_DOUBLE_EQ(gamma, c.current.getLorentzFactor());
+	// Positron secondary from beta+ decay
+	EXPECT_GE(c.secondaries.size(), 1);
+}
+
 // PhotoDisintegration --------------------------------------------------------
 TEST(PhotoDisintegration, allBackgrounds) {
 	// Test if interaction data files are loaded.
@@ -505,6 +561,162 @@ TEST(PhotoDisintegration, interactionTag) {
 	// test custom tag
 	pd.setInteractionTag("myTag");
 	EXPECT_TRUE(pd.getInteractionTag() == "myTag");
+}
+
+// PhotoDisintegration - Superheavy extension ---------------------------------
+namespace {
+// Returns true when the CMB superheavy rate file is present on this system.
+// Tests guarded by this helper are skipped (early return) when the extended
+// TALYS 1.9 data files have not yet been installed.
+bool superheavyFilesPresent() {
+	std::string path = getDataPath("Photodisintegration/rate_CMB_superheavy.txt");
+	std::ifstream f(path.c_str());
+	return f.good();
+}
+} // anonymous namespace
+
+
+TEST(PhotoDisintegration, superheavy_standardTablesSkipHeavyNuclei) {
+	// With standard tables (superheavy=false), nuclei with Z > 26 have no
+	// entries in the TALYS 1.8 rate files.  The empty-rate guard in process()
+	// must silently skip them, leaving the candidate unchanged.
+	ref_ptr<PhotonField> cmb = new CMB();
+	PhotoDisintegration pd(cmb, false, 0.1, false);
+	Candidate c;
+	c.current.setId(nucleusId(58, 28));  // Ni-58, Z=28
+	c.current.setEnergy(200 * EeV);
+	c.setCurrentStep(1000 * Mpc);
+	int id_before = c.current.getId();
+	double E_before = c.current.getEnergy();
+	pd.process(&c);
+	EXPECT_EQ(id_before, c.current.getId());
+	EXPECT_DOUBLE_EQ(E_before, c.current.getEnergy());
+}
+
+TEST(PhotoDisintegration, superheavy_boundsGuardZmax) {
+	// Nuclei with Z > NUCLEAR_ZMAX (82) must be caught by the hard bounds
+	// guard in both process() and lossLength() before any array access.
+	// The candidate must be left completely unchanged by process().
+	ref_ptr<PhotonField> cmb = new CMB();
+	PhotoDisintegration pd(cmb);
+	// Bi-209: Z=83 > NUCLEAR_ZMAX=82
+	Candidate c;
+	c.current.setId(nucleusId(209, 83));
+	c.current.setEnergy(200 * EeV);
+	c.setCurrentStep(1000 * Mpc);
+	int id_before = c.current.getId();
+	double E_before = c.current.getEnergy();
+	pd.process(&c);
+	EXPECT_EQ(id_before, c.current.getId());
+	EXPECT_DOUBLE_EQ(E_before, c.current.getEnergy());
+}
+
+TEST(PhotoDisintegration, superheavy_boundsGuardNmax) {
+	// Nuclei with N > NUCLEAR_NMAX (132) must be caught by the hard bounds
+	// guard in process() before any array access.
+	ref_ptr<PhotonField> cmb = new CMB();
+	PhotoDisintegration pd(cmb);
+	// H-134: Z=1, N=133 > NUCLEAR_NMAX=132
+	Candidate c;
+	c.current.setId(nucleusId(134, 1));
+	c.current.setEnergy(200 * EeV);
+	c.setCurrentStep(1000 * Mpc);
+	int id_before = c.current.getId();
+	double E_before = c.current.getEnergy();
+	pd.process(&c);
+	EXPECT_EQ(id_before, c.current.getId());
+	EXPECT_DOUBLE_EQ(E_before, c.current.getEnergy());
+}
+
+
+TEST(PhotoDisintegration, superheavy_lead) {
+	// Test if a Pb-208 nucleus photo-disintegrates at least once over 1 Gpc
+	// using the superheavy CMB tables.  A, Z, and energy conservation are
+	// verified across all interactions in the step.
+	// This test can stochastically fail.
+	if (!superheavyFilesPresent())
+		return;
+
+	ref_ptr<PhotonField> cmb = new CMB();
+	PhotoDisintegration pd(cmb, false, 0.1, true);
+	Candidate c;
+	int id = nucleusId(208, 82);
+	c.current.setId(id);
+	// Energy chosen so log10(gamma) ~ 10 for Pb-208, above the CMB threshold.
+	c.current.setEnergy(2000 * EeV);
+	c.setCurrentStep(1000 * Mpc);
+	pd.process(&c);
+
+	EXPECT_LT(c.current.getEnergy(), 2000 * EeV);
+	EXPECT_GT(c.secondaries.size(), 0);
+
+	double E = c.current.getEnergy();
+	id = c.current.getId();
+	int A = massNumber(id);
+	int Z = chargeNumber(id);
+	for (size_t i = 0; i < c.secondaries.size(); i++) {
+		E  += (*c.secondaries[i]).current.getEnergy();
+		id  = (*c.secondaries[i]).current.getId();
+		A  += massNumber(id);
+		Z  += chargeNumber(id);
+	}
+	// nucleon number conserved
+	EXPECT_EQ(208, A);
+	// proton number conserved
+	EXPECT_EQ(82, Z);
+	// energy conserved (EXPECT_NEAR: multiple interactions accumulate ~1e-12 J rounding)
+	EXPECT_NEAR(2000 * EeV, E, 1e-9);
+}
+
+TEST(PhotoDisintegration, superheavy_allHeavyIsotopes) {
+	// With superheavy=true, processing any nucleus in Z=27..NUCLEAR_ZMAX must
+	// not crash, even for isotopes whose slots are empty in the rate table.
+	if (!superheavyFilesPresent())
+		return;
+
+	ref_ptr<PhotonField> cmb = new CMB();
+	PhotoDisintegration pd(cmb, false, 0.1, true);
+	Candidate c;
+	c.setCurrentStep(10 * Mpc);
+	for (int Z = 27; Z <= NUCLEAR_ZMAX; Z++) {
+		for (int N = 1; N <= 30; N++) {
+			c.current.setId(nucleusId(Z + N, Z));
+			c.current.setEnergy(80 * EeV);
+			pd.process(&c);
+		}
+	}
+}
+
+TEST(PhotoDisintegration, superheavy_setPhotonFieldReloads) {
+	// setPhotonField(field, true/false) must swap between superheavy and standard
+	// tables.  Pb-208 (only in superheavy tables) is used as the discriminating
+	// nucleus: with standard tables it has no rate so it must not limit the next
+	// step; with superheavy tables it has a rate so it must limit the next step.
+	if (!superheavyFilesPresent())
+		return;
+
+	ref_ptr<PhotonField> cmb = new CMB();
+	PhotoDisintegration pd(cmb);  // start with standard tables
+
+	// Standard: Pb-208 has no rate — step must not be limited
+	Candidate c_std(nucleusId(208, 82), 2000 * EeV);
+	c_std.setNextStep(std::numeric_limits<double>::max());
+	pd.process(&c_std);
+	EXPECT_DOUBLE_EQ(c_std.getNextStep(), std::numeric_limits<double>::max());
+
+	// Switch to superheavy: Pb-208 now has a rate — step must be limited
+	pd.setPhotonField(cmb, true);
+	Candidate c_shv(nucleusId(208, 82), 2000 * EeV);
+	c_shv.setNextStep(std::numeric_limits<double>::max());
+	pd.process(&c_shv);
+	EXPECT_LT(c_shv.getNextStep(), std::numeric_limits<double>::max());
+
+	// Switch back to standard: step no longer limited for Pb-208
+	pd.setPhotonField(cmb, false);
+	Candidate c_back(nucleusId(208, 82), 2000 * EeV);
+	c_back.setNextStep(std::numeric_limits<double>::max());
+	pd.process(&c_back);
+	EXPECT_DOUBLE_EQ(c_back.getNextStep(), std::numeric_limits<double>::max());
 }
 
 // ElasticScattering ----------------------------------------------------------
