@@ -720,6 +720,70 @@ TEST(PhotoDisintegration, superheavy_setPhotonFieldReloads) {
 	EXPECT_DOUBLE_EQ(c_back.getNextStep(), std::numeric_limits<double>::max());
 }
 
+TEST(PhotoDisintegration, superheavy_overlapRatesConsistent) {
+	// Nuclei common to both the standard rate tables and the superheavy 
+	// tables must yield consistent energy loss lengths (within 1%).
+	// The cross sections branches for A<=12 are using the same existing
+	// data since CRPropa 2.0
+	if (!superheavyFilesPresent()) return;
+	ref_ptr<PhotonField> cmb = new CMB();
+	ref_ptr<PhotonField> irb = new IRB_Gilmore12();
+	PhotoDisintegration pd_cmb_std(cmb);
+	PhotoDisintegration pd_cmb_shv(cmb, false, 0.1, true);
+	PhotoDisintegration pd_irb_std(irb);
+	PhotoDisintegration pd_irb_shv(irb, false, 0.1, true);
+
+	// Excluded from this comparison:
+	//   A<12  — cross section tables unchanged;
+	//   N-14  — intrinsic ~1.77% cross-section difference reflected in
+	//           the rate tables itself; outlier as all other nuclei agree
+	//           to within <0.025%.
+	struct Nucleus { int A, Z; } nuclei[] = {
+		{12, 6}, 
+		{16, 8}, 
+		{20, 10},
+		{24, 12},
+		{28, 14},
+		{40, 20},
+		{56, 26},
+	};
+
+	// Sweep log10(gamma) = 6..11 using the sum of CMB + IRB rates.
+	// Above lg=11 both datasets begin to diverge due to extrapolation, so the
+	// range is capped there, suitable for most cosmic ray applications.
+	// Tolerance is 0.1%: actual deviations for the listed nuclei are <0.025%,
+	// giving a 4x margin.
+	const int nSteps = 126;
+	const double lgMin = 6.0, lgMax = 11.0;
+	const double llMax = std::numeric_limits<double>::max();
+
+	for (auto &nuc : nuclei) {
+		int id = nucleusId(nuc.A, nuc.Z);
+		double sumRatio = 0;
+		int nValid = 0;
+		for (int i = 0; i < nSteps; i++) {
+			double gamma = pow(10, lgMin + (lgMax - lgMin) * i / (nSteps - 1));
+			double ll_cmb_std = pd_cmb_std.lossLength(id, gamma);
+			double ll_cmb_shv = pd_cmb_shv.lossLength(id, gamma);
+			double ll_irb_std = pd_irb_std.lossLength(id, gamma);
+			double ll_irb_shv = pd_irb_shv.lossLength(id, gamma);
+			double rate_std = (ll_cmb_std < llMax ? 1/ll_cmb_std : 0)
+			                + (ll_irb_std < llMax ? 1/ll_irb_std : 0);
+			double rate_shv = (ll_cmb_shv < llMax ? 1/ll_cmb_shv : 0)
+			                + (ll_irb_shv < llMax ? 1/ll_irb_shv : 0);
+			if (rate_std == 0 || rate_shv == 0) continue;
+			sumRatio += rate_std / rate_shv;
+			nValid++;
+		}
+		if (nValid == 0) continue;
+		double meanRatio = sumRatio / nValid;
+		EXPECT_GT(meanRatio, 0.999) << "A=" << nuc.A << " Z=" << nuc.Z
+		                            << " mean ratio=" << meanRatio << " over " << nValid << " boosts";
+		EXPECT_LT(meanRatio, 1.001) << "A=" << nuc.A << " Z=" << nuc.Z
+		                            << " mean ratio=" << meanRatio << " over " << nValid << " boosts";
+	}
+}
+
 // ElasticScattering ----------------------------------------------------------
 TEST(ElasticScattering, allBackgrounds) {
 	// Test if interaction data files are loaded.
