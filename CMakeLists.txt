@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.14)
 
 project(CRPropa Fortran C CXX)
 set(CRPROPA_RELEASE_VERSION 3.2.2+)  # Update for new release
-set(CRPROPA_DATAFILE_VER "2026-06-26")  # Version of data files
+set(CRPROPA_DATAFILE_VER "2026-07-08")  # Version of data files
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
