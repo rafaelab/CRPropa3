@@ -91,24 +91,12 @@ if(ENABLE_PYTHON)
 		message(STATUS "Python headers: ${Python_INCLUDE_DIRS}")
 		message(STATUS "Python library: ${Python_LIBRARY}")
 		message(STATUS "Python site-packages: ${Python_SITE_PACKAGES}")
+		add_definitions(-D${pluginName}_HAVE_PYTHON)
 	endif(Python_FOUND)
-
-	if(Python_NumPy_FOUND)
-		set(CMAKE_SWIG_FLAGS -DWITHNUMPY)
-		include_directories(${Python_NumPy_INCLUDE_DIRS})
-		message(STATUS "NumPy headers: ${Python_NumPy_INCLUDE_DIRS} (version ${Python_NumPy_VERSION})")
-	else()
-		message(STATUS "NumPy: NOT FOUND.")
-		message(STATUS "The code might work just fine without NumPy, but some features in Python might not be straightfoward to use.")
-	endif(Python_NumPy_FOUND)
-
-	#  use Python_INSTALL_PACKAGE_DIR if provided; otherwise, install in Python_SITELIB
-	set(Python_INSTALL_PACKAGE_DIR "${Python_SITELIB}" CACHE PATH "folder in which the python package is installed")
-	message(STATUS "  package install directory: ${Python_INSTALL_PACKAGE_DIR}")
-
 
 	# find SWIG
 	find_package(SWIG REQUIRED)
+	include(UseSWIG) 
 
 	# only support versions of SWIG higher than 4.0
 	if(SWIG_VERSION VERSION_LESS 4.0)
@@ -119,9 +107,23 @@ if(ENABLE_PYTHON)
 	if(SWIG_FOUND)
 		message(STATUS "SWIG installation directory: ${SWIG_DIR}")
 		message(STATUS "SWIG executable: ${SWIG_EXECUTABLE}")
+		list(APPEND ${pluginName}_SWIG_DEFINES -D${pluginName}_HAVE_PYTHON)
 	else()
 		message(STATUS "SWIG: NOT FOUND (cannot build with Python bindings)")
 	endif(SWIG_FOUND)
+	
+	# find NumPy
+	if(Python_NumPy_FOUND)
+		include_directories(${Python_NumPy_INCLUDE_DIRS})
+		message(STATUS "NumPy headers: ${Python_NumPy_INCLUDE_DIRS} (version ${Python_NumPy_VERSION})")
+	else()
+		message(STATUS "NumPy: NOT FOUND.")
+		message(STATUS "The code might work just fine without NumPy, but some features in Python might not be straightfoward to use.")
+	endif(Python_NumPy_FOUND)
+
+	#  use Python_INSTALL_PACKAGE_DIR if provided; otherwise, install in Python_SITELIB
+	set(Python_INSTALL_PACKAGE_DIR "${Python_SITELIB}" CACHE PATH "folder in which the python package is installed")
+	message(STATUS "  package install directory: ${Python_INSTALL_PACKAGE_DIR}")
 
 endif(ENABLE_PYTHON)
 
@@ -205,38 +207,6 @@ target_link_libraries(${pluginName} ${${pluginName}_EXTRA_LIBRARIES})
 # Python interface, this part should work basically fully automated.
 if(ENABLE_PYTHON)
 	if(Python_FOUND)
-		find_package(SWIG 3.0 REQUIRED)
-		include(UseSWIG) 
-		add_definitions(-D${pluginName}_HAVE_PYTHON)
-		list(APPEND ${pluginName}_SWIG_DEFINES -D${pluginName}_HAVE_PYTHON)
-
-		# print Python info in detail
-		if(NOT USE_OWN_CRPROPA)
-			message(STATUS "Python: Found!")
-			message(STATUS "  version ${Python_VERSION}")
-			message(STATUS "  executable: ${Python_EXECUTABLE}")
-			message(STATUS "  libraries: ${Python_LIBRARIES}")
-			message(STATUS "  headers: ${Python_INCLUDE_DIRS}")
-			message(STATUS "  site packages: ${Python_SITELIB}")
-			if(Python_Development_FOUND)
-				message(STATUS "  development libraries: Found!")
-			else()
-				message(STATUS "  development libraries: NOT found!")
-			endif(Python_Development_FOUND)
-
-			# numpy is required, otherwise Python_FOUND = false
-			message(STATUS "NumPy: Found!")
-			message(STATUS "  headers: ${Python_NumPy_INCLUDE_DIRS} (version ${Python_NumPy_VERSION})")
-		endif(NOT USE_OWN_CRPROPA)
-
-		#  use Python_INSTALL_PACKAGE_DIR if provided; otherwise, install in Python_SITELIB
-		set(Python_INSTALL_PACKAGE_DIR "${Python_SITELIB}" CACHE PATH "folder in which the python package is installed")
-		message(STATUS "  package install directory: ${Python_INSTALL_PACKAGE_DIR}")
-
-		set(CMAKE_SWIG_FLAGS -DWITHNUMPY)
-		list(APPEND ${pluginName}_SWIG_DEFINES -DWITHNUMPY)
-		list(APPEND ${pluginName}_SWIG_DEFINES -doxygen)
-
 		# use SWIG's builtin (maybe should be abandoned if everything will be tested and working with -builtin)
 		option(ENABLE_SWIG_BUILTIN "Use SWIG builtin option" On)
 
@@ -305,6 +275,7 @@ endif(ENABLE_PYTHON)
 if(ENABLE_TESTING)
 	enable_testing()
 
+
 	# temporary workaround for newer clang versions due to its handling of unwinding
 	#   see: https://github.com/google/googletest/issues/3062
 	if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
@@ -333,13 +304,24 @@ if(ENABLE_TESTING)
 		set(GTEST_LIBRARIES ${GTEST_LIBRARY} ${GTEST_MAIN_LIBRARY})
 	endif(USE_OWN_CRPROPA)
 
+	# function to create C++ tests, which are compiled and linked against gtest and the plugin
+	function(addTest testName)
+		add_executable(${testName} ${CMAKE_CURRENT_SOURCE_DIR}/test/${testName}.cpp)
+		target_link_libraries(${testName} PRIVATE crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
+		add_test(NAME ${testName} COMMAND ${testName})
+	endfunction()
+
 	# first add the cpp tests:
-	add_executable(testPluginCPP ${CMAKE_CURRENT_SOURCE_DIR}/test/testPlugin.cpp)
-	target_include_directories(testPluginCPP PRIVATE ${GTEST_INCLUDE_DIR})
-	target_link_libraries(testPluginCPP ${pluginName} ${GTEST_LIBRARIES} pthread)
-	add_test(testPluginCPP testPluginCPP)
+	# add_executable(testPluginCPP ${CMAKE_CURRENT_SOURCE_DIR}/test/testPlugin.cpp)
+	addTest(testPluginCPP)
+
+	# target_include_directories(testPluginCPP PRIVATE ${GTEST_INCLUDE_DIR})
+	# target_link_libraries(testPluginCPP ${pluginName} ${GTEST_LIBRARIES} pthread)
+	# add_test(testPluginCPP testPluginCPP)
+
 
 	if(ENABLE_PYTHON AND Python_FOUND)
+
 		file(
 			COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/
 			DESTINATION  ${CMAKE_CURRENT_BINARY_DIR}
@@ -360,10 +342,17 @@ if(ENABLE_TESTING)
 			)
 		endif(USE_OWN_CRPROPA)
 
+
+		function(addTestPy testName)
+			configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test/${testName}.py ${CMAKE_CURRENT_BINARY_DIR}/${testName}.py COPYONLY)
+			add_test(NAME ${testName} COMMAND ${Python_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/${testName}.py)
+		endfunction()
+
 		# add python tests here, just copy paste the add_test statements and change test name and path
-		add_test(NAME testPluginPython COMMAND ${Python_EXECUTABLE} testPlugin.py)
+		# add_test(NAME testPluginPython COMMAND ${Python_EXECUTABLE} testPlugin.py)
+		addTestPy(testPluginPy)
 		if(USE_OWN_CRPROPA)
-			set_tests_properties(testPluginPython PROPERTIES DEPENDS moveCRPropaPlugin)
+			set_tests_properties(testPluginPy PROPERTIES DEPENDS moveCRPropaPlugin)
 		endif(USE_OWN_CRPROPA)
 	endif(ENABLE_PYTHON AND Python_FOUND)
 
