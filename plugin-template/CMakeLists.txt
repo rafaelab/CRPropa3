@@ -294,8 +294,18 @@ if(ENABLE_TESTING)
 	# look for gtest and gtest_main targets (provided by CRPropa when building it in-tree)
 	# if not found, try to find installed gtest or fetch it from github (ensures compatibility with CRPropa < 3.3)
 	set(${pluginName}_GTEST_LIBRARIES)
+	set(${pluginName}_GTEST_INCLUDE_DIRS)
 	if(TARGET gtest AND TARGET gtest_main)
 		set(${pluginName}_GTEST_LIBRARIES gtest gtest_main)
+		foreach(gtestIncludeCandidate
+			"${CRPropa_SOURCE_DIR}/libs/gtest/include"
+			"${crpropa_SOURCE_DIR}/libs/gtest/include"
+		)
+			if(EXISTS "${gtestIncludeCandidate}/gtest/gtest.h")
+				list(APPEND ${pluginName}_GTEST_INCLUDE_DIRS "${gtestIncludeCandidate}")
+				break()
+			endif()
+		endforeach()
 	else()
 		find_package(GTest QUIET)
 		if(TARGET GTest::gtest AND TARGET GTest::gtest_main)
@@ -303,58 +313,21 @@ if(ENABLE_TESTING)
 		elseif(TARGET GTest::GTest AND TARGET GTest::Main)
 			set(${pluginName}_GTEST_LIBRARIES GTest::GTest GTest::Main)
 		else()
-			find_path(GTEST_INCLUDE_DIR
-				NAMES gtest/gtest.h
-				HINTS
-					${CRPropa_INCLUDE_DIR}
-					${CRPropa_INSTALL_PREFIX}/include
-					${CRPropa_INSTALL_PREFIX}/libs/gtest/include
+			include(FetchContent)
+			FetchContent_Declare(
+				googletest
+				GIT_REPOSITORY https://github.com/google/googletest.git
+				# GIT_TAG v1.14.0
 			)
-			find_library(GTEST_LIBRARY
-				NAMES gtest
-				HINTS
-					${CRPropa_LIBRARY_DIR}
-					${CRPropa_LIBRARY_DIR}/lib
-					${CRPropa_INSTALL_PREFIX}/lib
-					${CRPropa_INSTALL_PREFIX}/libs/gtest
-			)
-			find_library(GTEST_MAIN_LIBRARY
-				NAMES gtest_main
-				HINTS
-					${CRPropa_LIBRARY_DIR}
-					${CRPropa_LIBRARY_DIR}/lib
-					${CRPropa_INSTALL_PREFIX}/lib
-					${CRPropa_INSTALL_PREFIX}/libs/gtest
-			)
-			if(GTEST_INCLUDE_DIR AND GTEST_LIBRARY AND GTEST_MAIN_LIBRARY)
-				add_library(${pluginName}::gtest UNKNOWN IMPORTED)
-				set_target_properties(${pluginName}::gtest PROPERTIES
-					IMPORTED_LOCATION "${GTEST_LIBRARY}"
-					INTERFACE_INCLUDE_DIRECTORIES "${GTEST_INCLUDE_DIR}"
-				)
-				add_library(${pluginName}::gtest_main UNKNOWN IMPORTED)
-				set_target_properties(${pluginName}::gtest_main PROPERTIES
-					IMPORTED_LOCATION "${GTEST_MAIN_LIBRARY}"
-					INTERFACE_LINK_LIBRARIES ${pluginName}::gtest
-					INTERFACE_INCLUDE_DIRECTORIES "${GTEST_INCLUDE_DIR}"
-				)
-				set(${pluginName}_GTEST_LIBRARIES ${pluginName}::gtest ${pluginName}::gtest_main)
-			else()
-				include(FetchContent)
-				FetchContent_Declare(
-					googletest
-					GIT_REPOSITORY https://github.com/google/googletest.git
-					# GIT_TAG v1.14.0
-				)
-				FetchContent_MakeAvailable(googletest)
-				set(${pluginName}_GTEST_LIBRARIES gtest gtest_main)
-			endif(GTEST_INCLUDE_DIR AND GTEST_LIBRARY AND GTEST_MAIN_LIBRARY)
+			FetchContent_MakeAvailable(googletest)
+			set(${pluginName}_GTEST_LIBRARIES gtest gtest_main)
 		endif(TARGET GTest::gtest AND TARGET GTest::gtest_main)
 	endif(TARGET gtest AND TARGET gtest_main)
 
 	# function to create C++ tests, which are compiled and linked against gtest and the plugin
 	function(addTest testName)
 		add_executable(${testName} ${CMAKE_CURRENT_SOURCE_DIR}/test/${testName}.cpp)
+		target_include_directories(${testName} PRIVATE ${${pluginName}_GTEST_INCLUDE_DIRS})
 		target_link_libraries(${testName} PRIVATE ${pluginName} ${${pluginName}_GTEST_LIBRARIES} pthread ${COVERAGE_LIBS})
 		add_test(NAME ${testName}Cpp COMMAND ${${pluginName}_TESTS_PATH}/${testName})
 	endfunction()
