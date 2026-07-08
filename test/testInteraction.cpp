@@ -565,17 +565,6 @@ TEST(PhotoDisintegration, interactionTag) {
 }
 
 // PhotoDisintegration - Superheavy extension ---------------------------------
-namespace {
-// Returns true when the CMB superheavy rate file is present on this system.
-// Tests guarded by this helper are skipped (early return) when the extended
-// TALYS 1.9 data files have not yet been installed.
-bool superheavyFilesPresent() {
-	std::string path = getDataPath("Photodisintegration/rate_CMB_superheavy.txt");
-	std::ifstream f(path.c_str());
-	return f.good();
-}
-} // anonymous namespace
-
 
 TEST(PhotoDisintegration, superheavy_standardTablesSkipHeavyNuclei) {
 	// With standard tables (superheavy=false), nuclei with Z > 26 have no
@@ -635,9 +624,6 @@ TEST(PhotoDisintegration, superheavy_lead) {
 	// using the superheavy CMB tables.  A, Z, and energy conservation are
 	// verified across all interactions in the step.
 	// This test can stochastically fail.
-	if (!superheavyFilesPresent())
-		return;
-
 	ref_ptr<PhotonField> cmb = new CMB();
 	PhotoDisintegration pd(cmb, false, 0.1, true);
 	Candidate c;
@@ -672,9 +658,6 @@ TEST(PhotoDisintegration, superheavy_lead) {
 TEST(PhotoDisintegration, superheavy_allHeavyIsotopes) {
 	// With superheavy=true, processing any nucleus in Z=27..NUCLEAR_ZMAX must
 	// not crash, even for isotopes whose slots are empty in the rate table.
-	if (!superheavyFilesPresent())
-		return;
-
 	ref_ptr<PhotonField> cmb = new CMB();
 	PhotoDisintegration pd(cmb, false, 0.1, true);
 	Candidate c;
@@ -693,9 +676,6 @@ TEST(PhotoDisintegration, superheavy_setPhotonFieldReloads) {
 	// tables.  Pb-208 (only in superheavy tables) is used as the discriminating
 	// nucleus: with standard tables it has no rate so it must not limit the next
 	// step; with superheavy tables it has a rate so it must limit the next step.
-	if (!superheavyFilesPresent())
-		return;
-
 	ref_ptr<PhotonField> cmb = new CMB();
 	PhotoDisintegration pd(cmb);  // start with standard tables
 
@@ -725,7 +705,6 @@ TEST(PhotoDisintegration, superheavy_overlapRatesConsistent) {
 	// tables must yield consistent energy loss lengths (within 1%).
 	// The cross sections branches for A<=12 are using the same existing
 	// data since CRPropa 2.0
-	if (!superheavyFilesPresent()) return;
 	ref_ptr<PhotonField> cmb = new CMB();
 	ref_ptr<PhotonField> irb = new IRB_Gilmore12();
 	PhotoDisintegration pd_cmb_std(cmb);
