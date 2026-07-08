@@ -568,13 +568,14 @@ foreach(CRPROPA_BUNDLED_INCLUDE_DIR IN LISTS CRPROPA_BUNDLED_INCLUDE_DIRS)
 endforeach()
 
 if(ENABLE_PYTHON AND Python_FOUND)
-  find_program(PYBIND11_STUBGEN_EXECUTABLE NAMES "pybind11-stubgen")
+	find_program(PYBIND11_STUBGEN_EXECUTABLE NAMES "pybind11-stubgen")
 	if(PYBIND11_STUBGEN_EXECUTABLE)
 		message(STATUS "Found pybind11-stubgen at ${PYBIND11_STUBGEN_EXECUTABLE}")
 		install(CODE "execute_process(COMMAND ${PYBIND11_STUBGEN_EXECUTABLE} --ignore-all-errors -o ${Python_SITELIB} crpropa)")
-    install(CODE "execute_process(COMMAND echo -- Generated python stubs over pybind11-stubgen for crpropa)")
-	endif()
-endif()
+		install(CODE "execute_process(COMMAND echo -- Generated python stubs over pybind11-stubgen for crpropa)")
+	endif(PYBIND11_STUBGEN_EXECUTABLE)
+endif(ENABLE_PYTHON AND Python_FOUND)
+
 
 # ------------------------------------------------------------------
 # Documentation
@@ -612,11 +613,13 @@ endif(BUILD_DOC AND DOXYGEN_FOUND AND SPHINX_EXECUTABLE)
 if(ENABLE_TESTING)
 
   enable_testing()
+  set(CRPROPA_TESTS_PATH ${CMAKE_CURRENT_BINARY_DIR} CACHE PATH "")  
+  mark_as_advanced(CRPROPA_TESTS_PATH)
 
   function(addTest testName)
     add_executable(${testName} ${CMAKE_CURRENT_SOURCE_DIR}/test/${testName}.cpp)
     target_link_libraries(${testName} PRIVATE crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
-    add_test(NAME ${testName} COMMAND ${testName})
+    add_test(NAME ${testName} COMMAND ${CRPROPA_TESTS_PATH}/${testName})
   endfunction()
 
   addTest(testCore)
@@ -640,7 +643,7 @@ if(ENABLE_TESTING)
 
     function(addTestPy testName)
       configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test/${testName}.py ${CMAKE_CURRENT_BINARY_DIR}/${testName}.py COPYONLY)
-      add_test(NAME ${testName} COMMAND ${Python_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/${testName}.py)
+      add_test(NAME ${testName} COMMAND ${Python_EXECUTABLE} ${CRPROPA_TESTS_PATH}/${testName}.py)
     endfunction()
 
     addTestPy(testSimulationExecution)
