@@ -18,7 +18,7 @@ All files related to the python package (so the swig header and eventual python 
 Additional python tools like for example a `utils.py` or a `__main__.py` should be added to `python/myPlugin/`.
 
 Finally you should create tests that test if your code is working (technically and physically) to `test/`.
-You then need to add them into the test section in the `CMakeLists.txt` after lines 366 (for C++) and 401 (for Python).
+You then need to add them into the test section in the `CMakeLists.txt` after lines 364 (for C++) and 383 (for Python).
 
 ## Using a specific CRPropa version instead of the one installed in the system
 

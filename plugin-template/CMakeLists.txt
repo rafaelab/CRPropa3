@@ -359,7 +359,6 @@ if(ENABLE_TESTING)
 		add_test(NAME ${testName}Cpp COMMAND ${${pluginName}_TESTS_PATH}/${testName})
 	endfunction()
 
-
 	# first add the cpp tests
 	addTest(testPlugin testPlugin)
 
@@ -373,6 +372,15 @@ if(ENABLE_TESTING)
 			FILES_MATCHING PATTERN "*.py"
 		)
 
+		function(addTestPy testName)
+			configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test/${testName}.py ${CMAKE_CURRENT_BINARY_DIR}/${testName}.py COPYONLY)
+			add_test(NAME ${testName}Py COMMAND ${Python_EXECUTABLE} ${${pluginName}_TESTS_PATH}/${testName}.py)
+		endfunction()
+
+		# add python tests here, just copy paste the add_test statements and change test name and path
+		# add_test(NAME testPluginPython COMMAND ${Python_EXECUTABLE} testPlugin.py)
+		addTestPy(testPlugin)
+
 		if(USE_OWN_CRPROPA)
 			set(CRPropa_PYTHON_TEST_PACKAGE_DIR "${CMAKE_CURRENT_BINARY_DIR}/crpropa")
 			file(MAKE_DIRECTORY "${CRPropa_PYTHON_TEST_PACKAGE_DIR}")
@@ -385,21 +393,10 @@ if(ENABLE_TESTING)
 					"$<TARGET_FILE:crpropa>"
 					"${CRPropa_PYTHON_TEST_PACKAGE_DIR}"
 			)
+			set_tests_properties(testPluginPy PROPERTIES DEPENDS moveCRPropaPlugin)
 		endif(USE_OWN_CRPROPA)
 
 
-		function(addTestPy testName)
-			configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test/${testName}.py ${CMAKE_CURRENT_BINARY_DIR}/${testName}.py COPYONLY)
-			add_test(NAME ${testName}Py COMMAND ${Python_EXECUTABLE} ${${pluginName}_TESTS_PATH}/${testName}.py)
-		endfunction()
-
-		# add python tests here, just copy paste the add_test statements and change test name and path
-		# add_test(NAME testPluginPython COMMAND ${Python_EXECUTABLE} testPlugin.py)
-		addTestPy(testPlugin)
-		
-		if(USE_OWN_CRPROPA)
-			set_tests_properties(testPlugin PROPERTIES DEPENDS moveCRPropaPlugin)
-		endif(USE_OWN_CRPROPA)
 	endif(ENABLE_PYTHON AND Python_FOUND)
 
 endif(ENABLE_TESTING)
