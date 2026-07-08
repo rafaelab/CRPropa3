@@ -11,6 +11,7 @@ on:
       - "**.py"
       - "**.i"
       - "**/CMakeLists.txt"
+      - "conda-build/*"
       - "!plugin-template/**"
       - "!doc/**"
   release:
