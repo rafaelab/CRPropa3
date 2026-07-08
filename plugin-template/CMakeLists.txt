@@ -284,40 +284,87 @@ if(ENABLE_TESTING)
 		endif (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 15)
 	endif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
 
-	# googletest (provided, see https://code.google.com/p/googletest/wiki/FAQ
-	#     Why is it not recommended use a pre-compiled copy of Google Test?)
-	# Here are only the apple fixes for gtest
+	# googletest (provided by CRPropa when building it in-tree, otherwise found or fetched here)
 	if(APPLE)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGTEST_USE_OWN_TR1_TUPLE=1")
 	endif(APPLE)
 
-	# gtest ships with CRPropa, so its headers and libraries follow CRPropa's paths:
-	if(USE_OWN_CRPROPA)
-		# gtest is built together with CRPropa (see FetchContent above); use its targets directly
-		set(GTEST_INCLUDE_DIR ${CRPropa_SOURCE_DIR}/libs/gtest/include)
-		set(GTEST_LIBRARIES gtest gtest_main)
+	# look for gtest and gtest_main targets (provided by CRPropa when building it in-tree)
+	# if not found, try to find installed gtest or fetch it from github (ensures compatibility with CRPropa < 3.3)
+	set(${pluginName}_GTEST_LIBRARIES)
+	if(TARGET gtest AND TARGET gtest_main)
+		set(${pluginName}_GTEST_LIBRARIES gtest gtest_main)
 	else()
-		# headers sit under the CRPropa include dir (gtest/), libraries next to (install) or under lib/ (build tree) libcrpropa
-		set(GTEST_INCLUDE_DIR ${CRPropa_INCLUDE_DIR})
-		find_library(GTEST_LIBRARY NAMES gtest HINTS ${CRPropa_LIBRARY_DIR} ${CRPropa_LIBRARY_DIR}/lib)
-		find_library(GTEST_MAIN_LIBRARY NAMES gtest_main HINTS ${CRPropa_LIBRARY_DIR} ${CRPropa_LIBRARY_DIR}/lib)
-		set(GTEST_LIBRARIES ${GTEST_LIBRARY} ${GTEST_MAIN_LIBRARY})
-	endif(USE_OWN_CRPROPA)
+		find_package(GTest QUIET)
+		if(TARGET GTest::gtest AND TARGET GTest::gtest_main)
+			set(${pluginName}_GTEST_LIBRARIES GTest::gtest GTest::gtest_main)
+		elseif(TARGET GTest::GTest AND TARGET GTest::Main)
+			set(${pluginName}_GTEST_LIBRARIES GTest::GTest GTest::Main)
+		else()
+			find_path(GTEST_INCLUDE_DIR
+				NAMES gtest/gtest.h
+				HINTS
+					${CRPropa_INCLUDE_DIR}
+					${CRPropa_INSTALL_PREFIX}/include
+					${CRPropa_INSTALL_PREFIX}/libs/gtest/include
+			)
+			find_library(GTEST_LIBRARY
+				NAMES gtest
+				HINTS
+					${CRPropa_LIBRARY_DIR}
+					${CRPropa_LIBRARY_DIR}/lib
+					${CRPropa_INSTALL_PREFIX}/lib
+					${CRPropa_INSTALL_PREFIX}/libs/gtest
+			)
+			find_library(GTEST_MAIN_LIBRARY
+				NAMES gtest_main
+				HINTS
+					${CRPropa_LIBRARY_DIR}
+					${CRPropa_LIBRARY_DIR}/lib
+					${CRPropa_INSTALL_PREFIX}/lib
+					${CRPropa_INSTALL_PREFIX}/libs/gtest
+			)
+			if(GTEST_INCLUDE_DIR AND GTEST_LIBRARY AND GTEST_MAIN_LIBRARY)
+				add_library(${pluginName}::gtest UNKNOWN IMPORTED)
+				set_target_properties(${pluginName}::gtest PROPERTIES
+					IMPORTED_LOCATION "${GTEST_LIBRARY}"
+					INTERFACE_INCLUDE_DIRECTORIES "${GTEST_INCLUDE_DIR}"
+				)
+				add_library(${pluginName}::gtest_main UNKNOWN IMPORTED)
+				set_target_properties(${pluginName}::gtest_main PROPERTIES
+					IMPORTED_LOCATION "${GTEST_MAIN_LIBRARY}"
+					INTERFACE_LINK_LIBRARIES ${pluginName}::gtest
+					INTERFACE_INCLUDE_DIRECTORIES "${GTEST_INCLUDE_DIR}"
+				)
+				set(${pluginName}_GTEST_LIBRARIES ${pluginName}::gtest ${pluginName}::gtest_main)
+			else()
+				include(FetchContent)
+				FetchContent_Declare(
+					googletest
+					GIT_REPOSITORY https://github.com/google/googletest.git
+					# GIT_TAG v1.14.0
+				)
+				FetchContent_MakeAvailable(googletest)
+				set(${pluginName}_GTEST_LIBRARIES gtest gtest_main)
+			endif(GTEST_INCLUDE_DIR AND GTEST_LIBRARY AND GTEST_MAIN_LIBRARY)
+		endif(TARGET GTest::gtest AND TARGET GTest::gtest_main)
+	endif(TARGET gtest AND TARGET gtest_main)
 
 	# function to create C++ tests, which are compiled and linked against gtest and the plugin
 	function(addTest testName)
-		add_executable(${testName} ${CMAKE_CURRENT_SOURCE_DIR}/test/${testName}.cpp)
-		target_link_libraries(${testName} PRIVATE crpropa gtest gtest_main pthread ${COVERAGE_LIBS})
+		if(argc GREATER 1)
+			set(testSourceName ${ARGV1})
+		else()
+			set(testSourceName ${testName})
+		endif(argc GREATER 1)
+		add_executable(${testName} ${CMAKE_CURRENT_SOURCE_DIR}/test/${testSourceName}.cpp)
+		target_link_libraries(${testName} PRIVATE ${pluginName} ${${pluginName}_GTEST_LIBRARIES} pthread ${COVERAGE_LIBS})
 		add_test(NAME ${testName} COMMAND ${testName})
 	endfunction()
 
-	# first add the cpp tests:
-	# add_executable(testPluginCPP ${CMAKE_CURRENT_SOURCE_DIR}/test/testPlugin.cpp)
-	addTest(testPluginCPP)
+	# first add the cpp tests
+	addTest(testPluginCPP testPlugin)
 
-	# target_include_directories(testPluginCPP PRIVATE ${GTEST_INCLUDE_DIR})
-	# target_link_libraries(testPluginCPP ${pluginName} ${GTEST_LIBRARIES} pthread)
-	# add_test(testPluginCPP testPluginCPP)
 
 
 	if(ENABLE_PYTHON AND Python_FOUND)
