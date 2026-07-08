@@ -544,13 +544,6 @@ if(ENABLE_PYTHON AND Python_FOUND)
   install(TARGETS crpropa-swig LIBRARY DESTINATION "${Python_INSTALL_PACKAGE_DIR}/crpropa")
   install(FILES ${CRPROPA_SWIG_INPUTS} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/crpropa/swig_interface)
 
-  find_program(PYBIND11_STUBGEN_EXECUTABLE NAMES "pybind11-stubgen")
-	if(PYBIND11_STUBGEN_EXECUTABLE)
-		message(STATUS "Found pybind11-stubgen at ${PYBIND11_STUBGEN_EXECUTABLE}")
-		install(CODE "execute_process(COMMAND ${PYBIND11_STUBGEN_EXECUTABLE} --ignore-all-errors -o ${Python_SITELIB} crpropa)")
-    install(CODE "execute_process(COMMAND echo -- Generated python stubs over pybind11-stubgen for crpropa)")
-	endif()
-
 endif(ENABLE_PYTHON AND Python_FOUND)
 
 # ----------------------------------------------------------------------------
