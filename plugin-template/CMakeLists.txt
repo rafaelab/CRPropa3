@@ -353,13 +353,13 @@ if(ENABLE_TESTING)
 	# function to create C++ tests, which are compiled and linked against gtest and the plugin
 	function(addTest testName)
 		if(argc GREATER 1)
-			set(testSourceName ${ARGV1})
+			set(testSourceName ${argv1})
 		else()
 			set(testSourceName ${testName})
 		endif(argc GREATER 1)
 		add_executable(${testName} ${CMAKE_CURRENT_SOURCE_DIR}/test/${testSourceName}.cpp)
 		target_link_libraries(${testName} PRIVATE ${pluginName} ${${pluginName}_GTEST_LIBRARIES} pthread ${COVERAGE_LIBS})
-		add_test(NAME ${testName} COMMAND ${testName})
+		add_test(NAME ${testName} COMMAND $<TARGET_FILE:${testName}>)
 	endfunction()
 
 	# first add the cpp tests
@@ -392,12 +392,13 @@ if(ENABLE_TESTING)
 
 		function(addTestPy testName)
 			configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test/${testName}.py ${CMAKE_CURRENT_BINARY_DIR}/${testName}.py COPYONLY)
-			add_test(NAME ${testName} COMMAND ${Python_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/${testName}.py)
+			add_test(NAME ${testName} COMMAND ${Python_EXECUTABLE} $<TARGET_FILE:${testName}>/${testName}.py)
 		endfunction()
 
 		# add python tests here, just copy paste the add_test statements and change test name and path
 		# add_test(NAME testPluginPython COMMAND ${Python_EXECUTABLE} testPlugin.py)
 		addTestPy(testPluginPy)
+		
 		if(USE_OWN_CRPROPA)
 			set_tests_properties(testPluginPy PROPERTIES DEPENDS moveCRPropaPlugin)
 		endif(USE_OWN_CRPROPA)
