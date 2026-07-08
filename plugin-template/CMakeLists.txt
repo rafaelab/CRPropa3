@@ -274,6 +274,8 @@ endif(ENABLE_PYTHON)
 # the testing part, where tests for your code should be added
 if(ENABLE_TESTING)
 	enable_testing()
+	set(${pluginName}_TESTS_PATH ${CMAKE_CURRENT_BINARY_DIR} CACHE PATH "")  
+	mark_as_advanced(${pluginName}_TESTS_PATH)
 
 
 	# temporary workaround for newer clang versions due to its handling of unwinding
@@ -352,18 +354,14 @@ if(ENABLE_TESTING)
 
 	# function to create C++ tests, which are compiled and linked against gtest and the plugin
 	function(addTest testName)
-		if(argc GREATER 1)
-			set(testSourceName ${argv1})
-		else()
-			set(testSourceName ${testName})
-		endif(argc GREATER 1)
-		add_executable(${testName} ${CMAKE_CURRENT_SOURCE_DIR}/test/${testSourceName}.cpp)
+		add_executable(${testName} ${CMAKE_CURRENT_SOURCE_DIR}/test/${testName}.cpp)
 		target_link_libraries(${testName} PRIVATE ${pluginName} ${${pluginName}_GTEST_LIBRARIES} pthread ${COVERAGE_LIBS})
-		add_test(NAME ${testName} COMMAND $<TARGET_FILE:${testName}>)
+		add_test(NAME ${testName}Cpp COMMAND ${${pluginName}_TESTS_PATH}/${testName})
 	endfunction()
 
+
 	# first add the cpp tests
-	addTest(testPluginCPP testPlugin)
+	addTest(testPlugin testPlugin)
 
 
 
@@ -392,15 +390,15 @@ if(ENABLE_TESTING)
 
 		function(addTestPy testName)
 			configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test/${testName}.py ${CMAKE_CURRENT_BINARY_DIR}/${testName}.py COPYONLY)
-			add_test(NAME ${testName} COMMAND ${Python_EXECUTABLE} $<TARGET_FILE:${testName}>/${testName}.py)
+			add_test(NAME ${testName}Py COMMAND ${Python_EXECUTABLE} ${${pluginName}_TESTS_PATH}/${testName}.py)
 		endfunction()
 
 		# add python tests here, just copy paste the add_test statements and change test name and path
 		# add_test(NAME testPluginPython COMMAND ${Python_EXECUTABLE} testPlugin.py)
-		addTestPy(testPluginPy)
+		addTestPy(testPlugin)
 		
 		if(USE_OWN_CRPROPA)
-			set_tests_properties(testPluginPy PROPERTIES DEPENDS moveCRPropaPlugin)
+			set_tests_properties(testPlugin PROPERTIES DEPENDS moveCRPropaPlugin)
 		endif(USE_OWN_CRPROPA)
 	endif(ENABLE_PYTHON AND Python_FOUND)
 
