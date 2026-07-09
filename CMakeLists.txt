@@ -97,9 +97,6 @@ if(ENABLE_TESTING)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/libs/gtest)
   list(APPEND CRPROPA_BUNDLED_LIBRARY_TARGETS gtest gtest_main)
   list(APPEND CRPROPA_BUNDLED_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/libs/gtest/include)
-  if(APPLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGTEST_USE_OWN_TR1_TUPLE=1")
-  endif(APPLE)
 
   # temporary workaround for newer clang versions due to its handling of unwinding
   #   see: https://github.com/google/googletest/issues/3062

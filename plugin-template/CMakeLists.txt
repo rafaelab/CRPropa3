@@ -286,11 +286,6 @@ if(ENABLE_TESTING)
 		endif (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 15)
 	endif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
 
-	# googletest (provided by CRPropa when building it in-tree, otherwise found or fetched here)
-	if(APPLE)
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGTEST_USE_OWN_TR1_TUPLE=1")
-	endif(APPLE)
-
 	# look for gtest and gtest_main targets (provided by CRPropa when building it in-tree)
 	# if not found, try to find installed gtest or fetch it from github (ensures compatibility with CRPropa < 3.3)
 	set(${pluginName}_GTEST_LIBRARIES)
