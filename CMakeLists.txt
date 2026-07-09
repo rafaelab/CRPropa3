@@ -106,6 +106,9 @@ if(ENABLE_TESTING)
     endif (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 15)
   endif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
 
+  if(APPLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGTEST_USE_OWN_TR1_TUPLE=1")
+  endif(APPLE)
 endif(ENABLE_TESTING)
 
 #
@@ -522,15 +525,6 @@ if(ENABLE_PYTHON AND Python_FOUND)
     OUTPUT_NAME "_crpropa"
     SUFFIX ".so"
   )
-
-  if(APPLE)
-    set_target_properties(crpropa-swig PROPERTIES
-      INSTALL_RPATH "@loader_path;@loader_path/../../${PYTHON_PROJECT}/.libs"
-    )
-    set_property(TARGET crpropa-swig APPEND PROPERTY
-      LINK_FLAGS "-flat_namespace -undefined suppress"
-    )
-  endif()
 
   if(BUILD_DOC AND DOXYGEN_FOUND)
     add_dependencies(crpropa-swig docstrings_from_doxy)
