@@ -1,4 +1,5 @@
 #include "crpropa/module/NuclearDecay.h"
+#include "crpropa/Common.h"
 #include "crpropa/Units.h"
 #include "crpropa/ParticleID.h"
 #include "crpropa/ParticleMass.h"
@@ -27,7 +28,7 @@ NuclearDecay::NuclearDecay(bool electrons, bool photons, bool neutrinos, double 
 		throw std::runtime_error(
 				"crpropa::NuclearDecay: could not open file " + filename);
 
-	decayTable.resize(27 * 31);
+	decayTable.resize((NUCLEAR_ZMAX + 1) * NUCLEAR_NSTRIDE);
 	std::string line;
 	while (std::getline(infile,line)) {
 		std::stringstream stream(line);
@@ -47,7 +48,7 @@ NuclearDecay::NuclearDecay(bool electrons, bool photons, bool neutrinos, double 
 			decay.intensity.push_back(gamma[i+1]);
 		}
 		if (infile)
-			decayTable[Z * 31 + N].push_back(decay);
+			decayTable[Z * NUCLEAR_NSTRIDE + N].push_back(decay);
 	}
 	infile.close();
 }
@@ -83,7 +84,9 @@ void NuclearDecay::process(Candidate *candidate) const {
 		int N = A - Z;
 
 		// check if particle can decay
-		const std::vector<DecayMode> &decays = decayTable[Z * 31 + N];
+		if ((Z > NUCLEAR_ZMAX) or (N > NUCLEAR_NMAX))
+			return;
+		const std::vector<DecayMode> &decays = decayTable[Z * NUCLEAR_NSTRIDE + N];
 		if (decays.size() == 0)
 			return;
 
@@ -146,8 +149,10 @@ void NuclearDecay::gammaEmission(Candidate *candidate, int channel) const {
 	int Z = chargeNumber(id);
 	int N = massNumber(id) - Z;
 
+	if ((Z > NUCLEAR_ZMAX) or (N > NUCLEAR_NMAX))
+		return;
 	// get photon energies and emission probabilities for decay channel
-	const std::vector<DecayMode> &decays = decayTable[Z * 31 + N];
+	const std::vector<DecayMode> &decays = decayTable[Z * NUCLEAR_NSTRIDE + N];
 	size_t idecay = decays.size();
 	while (idecay-- != 0) {
 		if (decays[idecay].channel == channel)
@@ -292,8 +297,10 @@ double NuclearDecay::meanFreePath(int id, double gamma) {
 	int Z = chargeNumber(id);
 	int N = A - Z;
 
+	if ((Z > NUCLEAR_ZMAX) or (N > NUCLEAR_NMAX))
+		return std::numeric_limits<double>::max();
 	// check if particle can decay
-	const std::vector<DecayMode> &decays = decayTable[Z * 31 + N];
+	const std::vector<DecayMode> &decays = decayTable[Z * NUCLEAR_NSTRIDE + N];
 	if (decays.size() == 0)
 		return std::numeric_limits<double>::max();
 

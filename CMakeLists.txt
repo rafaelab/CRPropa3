@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.14)
 
 project(CRPropa Fortran C CXX)
 set(CRPROPA_RELEASE_VERSION 3.2.2+)  # Update for new release
-set(CRPROPA_DATAFILE_VER "2024-04-30")  # Version of data files
+set(CRPROPA_DATAFILE_VER "2026-07-08")  # Version of data files
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
@@ -279,16 +279,16 @@ endif(APPLE)
 # ----------------------------------------------------------------------------
 OPTION(DOWNLOAD_DATA "Download CRPropa data files" ON)
 if(DOWNLOAD_DATA)
-  message("-- Downloading data files from sciebo ~ 73 MB")
+  message("-- Downloading data files from sciebo ~ 260 MB")
   file(DOWNLOAD
   https://ruhr-uni-bochum.sciebo.de/public.php/webdav/data-${CRPROPA_DATAFILE_VER}.tar.gz-CHECKSUM
     ${CMAKE_CURRENT_BINARY_DIR}/data-${CRPROPA_DATAFILE_VER}.tar.gz-CHECKSUM
-    USERPWD "3juW9sntQX2IWBS")
+    USERPWD "Nag8KQLoCjpG5es")
   file(STRINGS ${CMAKE_CURRENT_BINARY_DIR}/data-${CRPROPA_DATAFILE_VER}.tar.gz-CHECKSUM DATA_CHECKSUM LIMIT_COUNT 1 LENGTH_MINIMUM 32 LENGTH_MAXIMUM 32)
   file(DOWNLOAD
   https://ruhr-uni-bochum.sciebo.de/public.php/webdav/data-${CRPROPA_DATAFILE_VER}.tar.gz
     ${CMAKE_CURRENT_BINARY_DIR}/data-${CRPROPA_DATAFILE_VER}.tar.gz
-    USERPWD "3juW9sntQX2IWBS"
+    USERPWD "Nag8KQLoCjpG5es"
     EXPECTED_MD5 "${DATA_CHECKSUM}")
 else()
   message("-- Downloading of data file disabled")

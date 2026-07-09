@@ -34,8 +34,8 @@ private:
 		std::vector<double> emissionProbability; // emission probability as function of nucleus Lorentz factor
 	};
 
-	std::vector<std::vector<double> > pdRate; // pdRate[Z * 31 + N] = total interaction rate
-	std::vector<std::vector<Branch> > pdBranch; // pdTable[Z * 31 + N] = branching ratios
+	std::vector<std::vector<double> > pdRate; // pdRate[Z * NUCLEAR_NSTRIDE + N] = total interaction rate
+	std::vector<std::vector<Branch> > pdBranch; // pdBranch[Z * NUCLEAR_NSTRIDE + N] = branching ratios
 	mutable std::map<int, std::vector<PhotonEmission> > pdPhoton; // map of emitted photon energies and photon emission probabilities
 
 	static const double lgmin; // minimum log10(Lorentz-factor)
@@ -44,14 +44,21 @@ private:
 
 public:
 	/** Constructor.
-	 @param photonField		target photon field
-	 @param havePhotons		if true, add secondary photons as candidates
-	 @param limit			step size limit as fraction of mean free path
+	 @param photonField  target photon field
+	 @param havePhotons  if true, add secondary photons as candidates
+	 @param limit        step size limit as fraction of mean free path
+	 @param superheavy   if true, also load rate/branching _superheavy files extending
+	                     coverage from A≥56 up to Pb; files are loaded if present and
+	                     silently skipped with a warning if not yet generated
 	 */
-	PhotoDisintegration(ref_ptr<PhotonField> photonField, bool havePhotons = false, double limit = 0.1);
+	PhotoDisintegration(ref_ptr<PhotonField> photonField, bool havePhotons = false, double limit = 0.1, bool superheavy = false);
 
-	// set the target photon field
-	void setPhotonField(ref_ptr<PhotonField> photonField);
+	/** Set the target photon field and reload all interaction tables.
+	 @param photonField  target photon field
+	 @param superheavy   if true, also load rate_<field>_superheavy.txt and
+	                     branching_<field>_superheavy.txt (logged as warning if absent)
+	 */
+	void setPhotonField(ref_ptr<PhotonField> photonField, bool superheavy = false);
 
 	// decide if secondary photons are added to the simulation
 	void setHavePhotons(bool havePhotons);
