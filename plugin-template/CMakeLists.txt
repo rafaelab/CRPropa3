@@ -148,7 +148,7 @@ set(${pluginName}_EXTRA_SOURCES)
 if(USE_OWN_CRPROPA)
 	if(NOT crpropa_POPULATED)
 		include(FetchContent)
-
+		
 		# pulls repository specified and can even be pinned on specific commit
 		FetchContent_Declare(
 			crpropa
@@ -156,30 +156,27 @@ if(USE_OWN_CRPROPA)
 			# # The GIT_TAG option enables you to specify a commit hash or specific tag, see:
 			# #   https://cmake.org/cmake/help/latest/module/ExternalProject.html#git
 			# GIT_TAG f5cf064cf60b8a4771deab6d963b01d44df13c3f
+			GIT_TAG master
 		)
 
+		# contains .cmake files necessary for finding modules
+		list(APPEND CMAKE_MODULE_PATH "${CRPropa_SOURCE_DIR}/cmake")
+		
 		# # may be useful to set some options for CRPropa before building it, e.g.:
-		# set(CMAKE_ARGS per set befor add_subdirectory (FORCE option overwrites existing entries):
+		# set(CMAKE_ARGS per set before add_subdirectory (FORCE option overwrites existing entries)
 		# set(ENABLE_GIT OFF CACHE BOOL "")
 		# set(OMP_SCHEDULE "dynamic" CACHE STRING "")
 		# set(FAST_WAVES ON CACHE BOOL "")
 		# set(SIMD_EXTENSIONS "avx+fma" CACHE STRING "")
-
-		# NOTE: FetchContent always exposes result variables in lowercase
-		# (crpropa_SOURCE_DIR, crpropa_BINARY_DIR, crpropa_POPULATED),
-		# regardless of the case used above or passed to MakeAvailable below.
-		FetchContent_MakeAvailable(CRPropa)
-
-
-		# contains .cmake files necessary for finding modules
-		list(APPEND CMAKE_MODULE_PATH "${crpropa_SOURCE_DIR}/cmake")
-		set(CRPropa_SOURCE_DIR "${crpropa_SOURCE_DIR}")
-		set(CRPropa_INCLUDE_DIR "${crpropa_SOURCE_DIR}/include")
-		set(CRPropa_LIBRARY_DIR "${crpropa_BINARY_DIR}/lib")
-
+		
+		FetchContent_MakeAvailable(crpropa)
 	endif(NOT crpropa_POPULATED)
 
+	set(CRPropa_SOURCE_DIR "${crpropa_SOURCE_DIR}")
+	set(CRPropa_BINARY_DIR "${crpropa_BINARY_DIR}")
+
 	list(APPEND ${pluginName}_EXTRA_INCLUDES ${CRPropa_SOURCE_DIR}/include)
+	list(APPEND ${pluginName}_EXTRA_INCLUDES ${CRPropa_BINARY_DIR}/include)
 	list(APPEND ${pluginName}_EXTRA_INCLUDES ${CRPROPA_EXTRA_INCLUDES})
 	list(APPEND ${pluginName}_EXTRA_LIBRARIES crpropa)
 	set(CRPropa_SWIG_INTERFACE_FILES ${CRPropa_SOURCE_DIR}/python)
@@ -192,7 +189,7 @@ else()
 	# - `CRPropa_SWIG_PATH`: the path to CRPropa SWIG interface files
 	find_package(CRPropa REQUIRED)
 
-	# append header to includes, library to libraries and remember location of swig_interface files
+	# append header to includes, library to libraries and remember location of sw ig_interface files
 	list(APPEND ${pluginName}_EXTRA_INCLUDES ${CRPropa_INCLUDE_DIR})
 	list(APPEND ${pluginName}_EXTRA_LIBRARIES ${CRPropa_LIBRARY})
 	set(CRPropa_SWIG_INTERFACE_FILES ${CRPropa_SWIG_PATH})
@@ -296,6 +293,10 @@ if(ENABLE_TESTING)
 		endif (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 15)
 	endif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
 
+	if(APPLE)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGTEST_USE_OWN_TR1_TUPLE=1")
+	endif(APPLE)
+
 	# Reuse CRPropa's own gtest if at all possible; only if that fails, look for the system's gtest (or download it)
 	set(${pluginName}_GTEST_LIBRARIES)
 	set(${pluginName}_GTEST_INCLUDE_DIRS)
@@ -303,23 +304,26 @@ if(ENABLE_TESTING)
 	# install CRPropa together with plugin
 	if(USE_OWN_CRPROPA)
 		set(${pluginName}_GTEST_INCLUDE_DIRS "${CRPropa_SOURCE_DIR}/libs/gtest/include")
-		set(${pluginName}_GTEST_LIBRARIES gtest)
+		set(${pluginName}_GTEST_LIBRARIES gtest gtest_main)
 
 	else()
 		# check if CRPropa's bundled gtest is available (it should be, if CRPropa was built with ENABLE_TESTING, for versions of CRPropa >= 3.3) 
-		if(IS_DIRECTORY "${CRPropa_INCLUDE_DIR}/gtest" AND IS_DIRECTORY "${CRPropa_LIBRARY_DIR}")
+		# Resolve GTest from CRPropa's bundle first, else fall back to system.
+		find_library(gtestCRPropa     NAMES gtest      PATHS "${CRPropa_LIBRARY_DIR}" NO_DEFAULT_PATH)
+		find_library(gtestCRPropaMain NAMES gtest_main PATHS "${CRPropa_LIBRARY_DIR}" NO_DEFAULT_PATH)
+		if(IS_DIRECTORY "${CRPropa_INCLUDE_DIR}/gtest" AND gtestCRPropa AND gtestCRPropaMain)
 			set(${pluginName}_GTEST_INCLUDE_DIRS "${CRPropa_INCLUDE_DIR}")
-			set(${pluginName}_GTEST_LIBRARIES "${CRPropa_LIBRARY_DIR}/libgtest.a")
-			message(STATUS "Using CRPropa's bundled GTest package")
+			set(${pluginName}_GTEST_LIBRARIES    "${gtestCRPropa}" "${gtestCRPropaMain}")
+			message(STATUS "GTest: using CRPropa's bundled version, (${gtestCRPropa}, ${gtestCRPropaMain})")
 		# otherwise try to find a system-installed gtest package (or download it if not found)
 		else()
 			find_package(GTest QUIET)
 			if(TARGET GTest::gtest)
 				set(${pluginName}_GTEST_LIBRARIES GTest::gtest)
-				message(STATUS "Using system's GTest package")
+				message(STATUS "GTest: using system's GTest package")
 			elseif(TARGET GTest::GTest)
 				set(${pluginName}_GTEST_LIBRARIES GTest::GTest)
-				message(STATUS "Using system's legacy GTest package.")
+				message(STATUS "GTest: using system's legacy GTest package.")
 			else()
 				include(FetchContent)
 				FetchContent_Declare(
@@ -332,7 +336,7 @@ if(ENABLE_TESTING)
 				list(APPEND ${pluginName}_GTEST_INCLUDE_DIRS "${gtest_SOURCE_DIR}/include" "${gtest_SOURCE_DIR}")
 				message(STATUS "Downloading GTests from Github.")
 			endif()
-		endif(IS_DIRECTORY "${CRPropa_INCLUDE_DIR}/gtest" AND IS_DIRECTORY "${CRPropa_LIBRARY_DIR}")
+		endif(IS_DIRECTORY "${CRPropa_INCLUDE_DIR}/gtest" AND gtestCRPropa AND gtestCRPropaMain)
 	endif(USE_OWN_CRPROPA)
 
 	# function to create C++ tests, which are compiled and linked against gtest and the plugin

@@ -12,13 +12,13 @@ All include should be in `include/myPlugin/`, so that the `myPlugin` folder can 
 minimum risk of overwriting any existing files in the install location.
 Additionally a file `include/myPlugin.h` should be provided where all header files in `include/myPlugin/` are included so the user has an easy way of including the whole project.
 
-The source files should be placed in `src/`. They then need to be added after line 199 in the `CMakeLists.txt`.
+The source files should be placed in `src/`. They then need to be added after line 201 in the `CMakeLists.txt`.
 
 All files related to the python package (so the swig header and eventual python tools) should be placed in `python/`.
 Additional python tools like for example a `utils.py` or a `__main__.py` should be added to `python/myPlugin/`.
 
 Finally you should create tests that test if your code is working (technically and physically) to `test/`.
-You then need to add them into the test section in the `CMakeLists.txt` after lines 343 (for C++) and 378 (for Python).
+You then need to add them into the test section in the `CMakeLists.txt` after lines 351 (for C++) and 386 (for Python).
 
 ## Using a specific CRPropa version instead of the one installed in the system
 
