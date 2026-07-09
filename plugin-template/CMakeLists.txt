@@ -62,6 +62,7 @@ option(ENABLE_PYTHON "Create Python bindings with SWIG" On)
 option(USE_OWN_CRPROPA "Use builtin CRPropa instead of in CRPROPA_PATH installed CRPropa" Off)
 option(ENABLE_TESTING "Build tests and enable test target" On)
 option(ENABLE_COVERAGE "Add code for coverage analysis." Off)
+option(ENABLE_PYBIND11_STUBGEN "Generate Pybind11 stubs" Off)
 
 
 # This token means "relative to the loaded binary" on each platform.
@@ -262,9 +263,6 @@ if(ENABLE_PYTHON)
 		)
 
 		if(APPLE)
-			# The Python module lives in <site-packages>/${pluginName}/ while libmyPlugin and libcrpropa live in <prefix>/lib. 
-			# Point the rpath at both the module directory and the install lib dir. 
-			# The options -flat_namespace/ -undefined suppress let CRPropa symbols resolve from the already loaded crpropa Python module at import time.
 			set_target_properties(${pluginName}-swig PROPERTIES INSTALL_RPATH "@loader_path;${CMAKE_INSTALL_PREFIX}/lib")
 			set_property(TARGET ${pluginName}-swig APPEND PROPERTY LINK_FLAGS "-flat_namespace -undefined suppress")
 		endif(APPLE)
@@ -407,10 +405,11 @@ if(ENABLE_PYTHON AND Python_FOUND)
 endif(ENABLE_PYTHON AND Python_FOUND)
 
 
-
-find_program(PYBIND11_STUBGEN_EXECUTABLE NAMES "pybind11-stubgen")
-if(PYBIND11_STUBGEN_EXECUTABLE)
-	message(STATUS "Found pybind11-stubgen at ${PYBIND11_STUBGEN_EXECUTABLE}")
-	install(CODE "execute_process(COMMAND ${PYBIND11_STUBGEN_EXECUTABLE} --ignore-all-errors -o ${Python_SITELIB} ${pluginName})")
-	install(CODE "execute_process(COMMAND echo -- Generated python stubs over pybind11-stubgen for ${pluginName})")
-endif(PYBIND11_STUBGEN_EXECUTABLE)
+if(ENABLE_PYBIND11_STUBGEN AND ENABLE_PYTHON AND Python_FOUND)
+	find_program(PYBIND11_STUBGEN_EXECUTABLE NAMES "pybind11-stubgen")
+	if(PYBIND11_STUBGEN_EXECUTABLE)
+		message(STATUS "Found pybind11-stubgen at ${PYBIND11_STUBGEN_EXECUTABLE}")
+		install(CODE "execute_process(COMMAND ${PYBIND11_STUBGEN_EXECUTABLE} --ignore-all-errors -o ${Python_SITELIB} ${pluginName})")
+		install(CODE "execute_process(COMMAND echo -- Generated python stubs over pybind11-stubgen for ${pluginName})")
+	endif(PYBIND11_STUBGEN_EXECUTABLE)
+endif(ENABLE_PYBIND11_STUBGEN AND ENABLE_PYTHON AND Python_FOUND)

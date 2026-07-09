@@ -278,6 +278,7 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH False)
 
 
 
+
 # ----------------------------------------------------------------------------
 # Download data files (interaction data, masses, decay data ...)
 # ----------------------------------------------------------------------------
@@ -519,12 +520,20 @@ if(ENABLE_PYTHON AND Python_FOUND)
   )
   
   target_link_libraries(crpropa-swig crpropa ${Python_LIBRARIES} ${Python_LIBRARY})
-  
   set_target_properties(crpropa-swig PROPERTIES
     PREFIX ""
     OUTPUT_NAME "_crpropa"
     SUFFIX ".so"
   )
+
+  if(APPLE)
+    set_target_properties(crpropa-swig PROPERTIES
+      BUILD_RPATH "$<TARGET_FILE_DIR:crpropa>"
+      INSTALL_RPATH "@loader_path;${CMAKE_INSTALL_FULL_LIBDIR}"
+    )
+    set_property(TARGET crpropa-swig APPEND PROPERTY LINK_FLAGS "-flat_namespace -undefined suppress")
+  endif(APPLE)
+  
 
   if(BUILD_DOC AND DOXYGEN_FOUND)
     add_dependencies(crpropa-swig docstrings_from_doxy)
@@ -558,14 +567,18 @@ foreach(CRPROPA_BUNDLED_INCLUDE_DIR IN LISTS CRPROPA_BUNDLED_INCLUDE_DIRS)
 	install(DIRECTORY ${CRPROPA_BUNDLED_INCLUDE_DIR}/ DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.h" PATTERN "*.hh" PATTERN "*.hpp" PATTERN "*.hxx")
 endforeach()
 
-if(ENABLE_PYTHON AND Python_FOUND)
-	find_program(PYBIND11_STUBGEN_EXECUTABLE NAMES "pybind11-stubgen")
-	if(PYBIND11_STUBGEN_EXECUTABLE)
-		message(STATUS "Found pybind11-stubgen at ${PYBIND11_STUBGEN_EXECUTABLE}")
-		install(CODE "execute_process(COMMAND ${PYBIND11_STUBGEN_EXECUTABLE} --ignore-all-errors -o ${Python_SITELIB} crpropa)")
-		install(CODE "execute_process(COMMAND echo -- Generated python stubs over pybind11-stubgen for crpropa)")
-	endif(PYBIND11_STUBGEN_EXECUTABLE)
-endif(ENABLE_PYTHON AND Python_FOUND)
+option(ENABLE_PYBIND11_STUBGEN "Generate Pybind11 stubs" On)
+if(ENABLE_PYBIND11_STUBGEN)
+  if(ENABLE_PYTHON AND Python_FOUND)
+    find_program(PYBIND11_STUBGEN_EXECUTABLE NAMES "pybind11-stubgen")
+    if(PYBIND11_STUBGEN_EXECUTABLE)
+      message(STATUS "Found pybind11-stubgen at ${PYBIND11_STUBGEN_EXECUTABLE}")
+      install(CODE "execute_process(COMMAND ${PYBIND11_STUBGEN_EXECUTABLE} --ignore-all-errors -o ${Python_SITELIB} crpropa)")
+      install(CODE "execute_process(COMMAND echo -- Generated python stubs over pybind11-stubgen for crpropa)")
+    endif(PYBIND11_STUBGEN_EXECUTABLE)
+  endif(ENABLE_PYTHON AND Python_FOUND)
+endif(ENABLE_PYBIND11_STUBGEN)
+
 
 
 # ------------------------------------------------------------------
