@@ -158,9 +158,6 @@ if(USE_OWN_CRPROPA)
 			# GIT_TAG f5cf064cf60b8a4771deab6d963b01d44df13c3f
 		)
 
-		# contains .cmake files necessary for finding modules
-		list(APPEND CMAKE_MODULE_PATH "${crpropa_SOURCE_DIR}/cmake")
-
 		# # may be useful to set some options for CRPropa before building it, e.g.:
 		# set(CMAKE_ARGS per set befor add_subdirectory (FORCE option overwrites existing entries):
 		# set(ENABLE_GIT OFF CACHE BOOL "")
@@ -172,12 +169,20 @@ if(USE_OWN_CRPROPA)
 		# (crpropa_SOURCE_DIR, crpropa_BINARY_DIR, crpropa_POPULATED),
 		# regardless of the case used above or passed to MakeAvailable below.
 		FetchContent_MakeAvailable(CRPropa)
+
+
+		# contains .cmake files necessary for finding modules
+		list(APPEND CMAKE_MODULE_PATH "${crpropa_SOURCE_DIR}/cmake")
+		set(CRPropa_SOURCE_DIR "${crpropa_SOURCE_DIR}")
+		set(CRPropa_INCLUDE_DIR "${crpropa_SOURCE_DIR}/include")
+		set(CRPropa_LIBRARY_DIR "${crpropa_BINARY_DIR}/lib")
+
 	endif(NOT crpropa_POPULATED)
 
-	list(APPEND ${pluginName}_EXTRA_INCLUDES ${crpropa_SOURCE_DIR}/include)
+	list(APPEND ${pluginName}_EXTRA_INCLUDES ${CRPropa_SOURCE_DIR}/include)
 	list(APPEND ${pluginName}_EXTRA_INCLUDES ${CRPROPA_EXTRA_INCLUDES})
 	list(APPEND ${pluginName}_EXTRA_LIBRARIES crpropa)
-	set(CRPropa_SWIG_INTERFACE_FILES ${crpropa_SOURCE_DIR}/python)
+	set(CRPropa_SWIG_INTERFACE_FILES ${CRPropa_SOURCE_DIR}/python)
 else()
 	# Find an installed CRPropa using cmake/FindCRPropa.cmake (found via CMAKE_MODULE_PATH set above). 
 	# Every location can be overridden manually:
@@ -295,12 +300,11 @@ if(ENABLE_TESTING)
 	set(${pluginName}_GTEST_LIBRARIES)
 	set(${pluginName}_GTEST_INCLUDE_DIRS)
 
-	# message(STATUS "======== ${CRPropa_LIBRARY_DIR} ========")
-
 	# install CRPropa together with plugin
 	if(USE_OWN_CRPROPA)
-		set(${pluginName}_GTEST_INCLUDE_DIRS "${CRPropa_INCLUDE_DIR}")
-		set(${pluginName}_GTEST_LIBRARIES "${CRPropa_LIBRARY_DIR}/libgtest.a")
+		set(${pluginName}_GTEST_INCLUDE_DIRS "${CRPropa_SOURCE_DIR}/libs/gtest/include")
+		set(${pluginName}_GTEST_LIBRARIES gtest)
+
 	else()
 		# check if CRPropa's bundled gtest is available (it should be, if CRPropa was built with ENABLE_TESTING, for versions of CRPropa >= 3.3) 
 		if(IS_DIRECTORY "${CRPropa_INCLUDE_DIR}/gtest" AND IS_DIRECTORY "${CRPropa_LIBRARY_DIR}")
