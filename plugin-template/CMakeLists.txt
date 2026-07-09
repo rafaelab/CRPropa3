@@ -29,7 +29,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fdiagnostics-color=always")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdiagnostics-color=always")
 
 # enable extra warnings on debug builds
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -Wextra")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wextra")
 
 # find cmake modules
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
@@ -61,6 +61,8 @@ message(STATUS "C++ compilation flags: ${CMAKE_CXX_FLAGS}")
 option(ENABLE_PYTHON "Create Python bindings with SWIG" On)
 option(USE_OWN_CRPROPA "Use builtin CRPropa instead of in CRPROPA_PATH installed CRPropa" Off)
 option(ENABLE_TESTING "Build tests and enable test target" On)
+option(ENABLE_COVERAGE "Add code for coverage analysis." Off)
+
 
 # This token means "relative to the loaded binary" on each platform.
 # It should work for unix-based platforms (Linux, MacOS).
@@ -126,6 +128,14 @@ if(ENABLE_PYTHON)
 	message(STATUS "  package install directory: ${Python_INSTALL_PACKAGE_DIR}")
 
 endif(ENABLE_PYTHON)
+
+# support coverage
+if(ENABLE_COVERAGE)
+	if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+		set(COVERAGE_LIBS "-coverage -lgcov")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
+	endif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+endif(ENABLE_COVERAGE)
 
 
 # add other extra libraries by appending to these variables (see below on the example of CRPropa):
@@ -313,7 +323,7 @@ if(ENABLE_TESTING)
 			FetchContent_Declare(
 				googletest
 				GIT_REPOSITORY https://github.com/google/googletest.git
-				# GIT_TAG v1.14.0
+				# GIT_TAG v1.14.0 # use this to pin to a specific version; advisable for reproducibility
 			)
 			FetchContent_MakeAvailable(googletest)
 			set(${pluginName}_GTEST_LIBRARIES gtest gtest_main)
