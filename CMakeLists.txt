@@ -53,7 +53,7 @@ endif(FAST_WAVES)
 set(CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS} -ggdb -fno-omit-frame-pointer")
 
 # Enable extra warnings on debug builds
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -Wextra")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wextra")
 
 # Set default build-type to release to enable performance improvements
 if(NOT CMAKE_BUILD_TYPE)
